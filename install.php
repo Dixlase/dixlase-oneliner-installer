@@ -1,0 +1,780 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Dixlase CMS - Quick Install Script
+ *
+ * Usage:
+ *   curl -sS https://install.dixlase.com | php
+ *   curl -sS https://install.dixlase.com | php -- --dir=/var/www/dixlase
+ *   curl -sS https://install.dixlase.com | php -- --version=1.0.0
+ *   curl -sS https://install.dixlase.com | php -- --no-composer
+ *
+ * Copyright (C) 2026 exc-D inc.
+ * https://exc-d.com
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ */
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+define('DIXLASE_MIN_PHP', '8.2.0');
+define('DIXLASE_REPO', 'exc-d/dixlase');
+define('DIXLASE_API_LATEST', 'https://api.github.com/repos/' . DIXLASE_REPO . '/releases/latest');
+define('DIXLASE_RELEASE_URL', 'https://github.com/' . DIXLASE_REPO . '/releases/download');
+define('DIXLASE_CHECKSUM_FILE', 'checksums.sha256');
+
+define('DIXLASE_REQUIRED_EXTENSIONS', [
+    'openssl',
+    'pdo',
+    'mbstring',
+    'tokenizer',
+    'xml',
+    'ctype',
+    'json',
+    'bcmath',
+    'curl',
+    'fileinfo',
+    'gd',
+]);
+
+// ---------------------------------------------------------------------------
+// Terminal helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Determine whether the terminal supports colour output.
+ */
+function supports_color(): bool
+{
+    if (getenv('NO_COLOR') !== false) {
+        return false;
+    }
+
+    if (getenv('FORCE_COLOR') !== false) {
+        return true;
+    }
+
+    if (! defined('STDOUT')) {
+        return false;
+    }
+
+    if (PHP_OS_FAMILY === 'Windows') {
+        return (getenv('ANSICON') !== false)
+            || (getenv('ConEmuANSI') === 'ON')
+            || str_contains((string) getenv('TERM'), 'xterm');
+    }
+
+    return function_exists('posix_isatty') && @posix_isatty(STDOUT);
+}
+
+/** @var bool */
+$colorEnabled = supports_color();
+
+function style(string $text, string $code): string
+{
+    global $colorEnabled;
+
+    if (! $colorEnabled) {
+        return $text;
+    }
+
+    return "\033[{$code}m{$text}\033[0m";
+}
+
+function bold(string $t): string    { return style($t, '1'); }
+function green(string $t): string   { return style($t, '0;32'); }
+function yellow(string $t): string  { return style($t, '0;33'); }
+function red(string $t): string     { return style($t, '0;31'); }
+function cyan(string $t): string    { return style($t, '0;36'); }
+function dim(string $t): string     { return style($t, '2'); }
+
+function info(string $msg): void    { fwrite(STDOUT, green('  ✓ ') . $msg . PHP_EOL); }
+function warn(string $msg): void    { fwrite(STDERR, yellow('  ⚠ ') . $msg . PHP_EOL); }
+function error(string $msg): void   { fwrite(STDERR, red('  ✗ ') . $msg . PHP_EOL); }
+function step(string $msg): void    { fwrite(STDOUT, PHP_EOL . bold(cyan('▸ ')) . bold($msg) . PHP_EOL); }
+
+/**
+ * Print an error and exit with a non-zero status.
+ *
+ * @return never
+ */
+function fatal(string $msg): void
+{
+    error($msg);
+    exit(1);
+}
+
+// ---------------------------------------------------------------------------
+// Banner
+// ---------------------------------------------------------------------------
+
+function banner(): void
+{
+    $lines = [
+        '',
+        bold(cyan('  ╔══════════════════════════════════════════╗')),
+        bold(cyan('  ║')) . bold('         Dixlase CMS Installer            ') . bold(cyan('║')),
+        bold(cyan('  ╚══════════════════════════════════════════╝')),
+        '',
+    ];
+
+    fwrite(STDOUT, implode(PHP_EOL, $lines) . PHP_EOL);
+}
+
+// ---------------------------------------------------------------------------
+// Argument parsing
+// ---------------------------------------------------------------------------
+
+function parse_args(array $argv): array
+{
+    $options = [
+        'dir'         => getcwd(),
+        'version'     => null,   // null = latest
+        'no_composer' => false,
+        'help'        => false,
+    ];
+
+    foreach ($argv as $arg) {
+        if ($arg === '--help' || $arg === '-h') {
+            $options['help'] = true;
+        } elseif ($arg === '--no-composer') {
+            $options['no_composer'] = true;
+        } elseif (str_starts_with($arg, '--dir=')) {
+            $options['dir'] = substr($arg, 6);
+        } elseif (str_starts_with($arg, '--version=')) {
+            $options['version'] = ltrim(substr($arg, 10), 'v');
+        }
+    }
+
+    // Resolve to absolute path
+    if ($options['dir'] !== '' && $options['dir'][0] !== '/') {
+        $options['dir'] = getcwd() . '/' . $options['dir'];
+    }
+
+    $options['dir'] = rtrim($options['dir'], '/');
+
+    return $options;
+}
+
+function show_help(): void
+{
+    fwrite(STDOUT, <<<'HELP'
+
+Usage:
+  curl -sS https://install.dixlase.com | php
+  curl -sS https://install.dixlase.com | php -- [options]
+
+Options:
+  --dir=PATH          Installation directory (default: current directory)
+  --version=X.X.X     Install a specific version (default: latest)
+  --no-composer       Skip running composer install
+  -h, --help          Show this help message
+
+HELP
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Environment checks
+// ---------------------------------------------------------------------------
+
+function check_php_version(): void
+{
+    step('Checking PHP version');
+
+    $current = PHP_VERSION;
+
+    if (version_compare($current, DIXLASE_MIN_PHP, '<')) {
+        fatal("PHP {$current} detected. Dixlase requires PHP " . DIXLASE_MIN_PHP . ' or higher.');
+    }
+
+    info("PHP {$current}");
+}
+
+function check_extensions(): void
+{
+    step('Checking PHP extensions');
+
+    $missing = [];
+
+    foreach (DIXLASE_REQUIRED_EXTENSIONS as $ext) {
+        if (! extension_loaded($ext)) {
+            $missing[] = $ext;
+        }
+    }
+
+    if (count($missing) > 0) {
+        error('Missing PHP extensions: ' . implode(', ', $missing));
+        fwrite(STDERR, PHP_EOL);
+        fwrite(STDERR, '  Install them and try again. For example (Debian/Ubuntu):' . PHP_EOL);
+        fwrite(STDERR, '    sudo apt-get install ' . implode(' ', array_map(
+            fn ($e) => "php-{$e}",
+            $missing
+        )) . PHP_EOL);
+        exit(1);
+    }
+
+    info('All required extensions are installed (' . count(DIXLASE_REQUIRED_EXTENSIONS) . ' checked)');
+}
+
+function check_composer(): bool
+{
+    step('Checking Composer');
+
+    // Try `composer` in PATH
+    $result = exec('composer --version 2>/dev/null', $output, $code);
+
+    if ($code === 0 && $result !== '') {
+        info(trim($result));
+        return true;
+    }
+
+    // Try local composer.phar
+    if (file_exists('composer.phar')) {
+        info('Found local composer.phar');
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Resolve the Composer binary path.
+ */
+function composer_bin(): string
+{
+    exec('command -v composer 2>/dev/null', $output, $code);
+
+    if ($code === 0 && ! empty($output[0])) {
+        return 'composer';
+    }
+
+    if (file_exists('composer.phar')) {
+        return PHP_BINARY . ' composer.phar';
+    }
+
+    return 'composer';
+}
+
+// ---------------------------------------------------------------------------
+// Download helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch the latest release version from the GitHub API.
+ */
+function fetch_latest_version(): string
+{
+    step('Fetching latest release information');
+
+    $ctx = stream_context_create([
+        'http' => [
+            'header'  => "User-Agent: DixlaseInstaller/1.0\r\n",
+            'timeout' => 30,
+        ],
+    ]);
+
+    $json = @file_get_contents(DIXLASE_API_LATEST, false, $ctx);
+
+    if ($json === false) {
+        fatal('Could not fetch release information from GitHub. Check your network connection.');
+    }
+
+    $data = json_decode($json, true);
+
+    if (! isset($data['tag_name'])) {
+        fatal('Unexpected API response from GitHub.');
+    }
+
+    $version = ltrim($data['tag_name'], 'v');
+    info("Latest version: {$version}");
+
+    return $version;
+}
+
+/**
+ * Download a file with a progress indicator.
+ *
+ * @return bool True on success.
+ */
+function download_file(string $url, string $dest): bool
+{
+    $ctx = stream_context_create([
+        'http' => [
+            'header'  => "User-Agent: DixlaseInstaller/1.0\r\n",
+            'timeout' => 300,
+        ],
+    ]);
+
+    $source = @fopen($url, 'r', false, $ctx);
+
+    if ($source === false) {
+        return false;
+    }
+
+    $target = fopen($dest, 'w');
+
+    if ($target === false) {
+        fclose($source);
+        return false;
+    }
+
+    $downloaded = 0;
+    $lastPrint  = 0;
+
+    while (! feof($source)) {
+        $chunk = fread($source, 8192);
+
+        if ($chunk === false) {
+            break;
+        }
+
+        fwrite($target, $chunk);
+        $downloaded += strlen($chunk);
+
+        $mb = round($downloaded / 1048576, 1);
+        if ($mb - $lastPrint >= 0.5 || feof($source)) {
+            fwrite(STDOUT, "\r" . dim("    Downloaded: {$mb} MB"));
+            $lastPrint = $mb;
+        }
+    }
+
+    fwrite(STDOUT, PHP_EOL);
+    fclose($source);
+    fclose($target);
+
+    return $downloaded > 0;
+}
+
+/**
+ * Verify the SHA-256 checksum of a downloaded file.
+ */
+function verify_checksum(string $file, string $version): bool
+{
+    $checksumUrl = DIXLASE_RELEASE_URL . "/v{$version}/" . DIXLASE_CHECKSUM_FILE;
+
+    $ctx = stream_context_create([
+        'http' => [
+            'header'  => "User-Agent: DixlaseInstaller/1.0\r\n",
+            'timeout' => 30,
+        ],
+    ]);
+
+    $checksumData = @file_get_contents($checksumUrl, false, $ctx);
+
+    if ($checksumData === false) {
+        warn('Checksum file not available — skipping verification.');
+        return true;
+    }
+
+    $basename   = basename($file);
+    $actualHash = hash_file('sha256', $file);
+
+    foreach (explode("\n", trim($checksumData)) as $line) {
+        $parts = preg_split('/\s+/', trim($line), 2);
+
+        if (count($parts) === 2 && $parts[1] === $basename) {
+            if (hash_equals($parts[0], $actualHash)) {
+                info('Checksum verified (SHA-256)');
+                return true;
+            }
+
+            error('Checksum mismatch!');
+            error("  Expected: {$parts[0]}");
+            error("  Got:      {$actualHash}");
+            return false;
+        }
+    }
+
+    warn('File not listed in checksum file — skipping verification.');
+    return true;
+}
+
+// ---------------------------------------------------------------------------
+// Installation steps
+// ---------------------------------------------------------------------------
+
+function download_dixlase(string $dir, string $version): void
+{
+    step("Downloading Dixlase v{$version}");
+
+    $zipName = "dixlase-v{$version}.zip";
+    $url     = DIXLASE_RELEASE_URL . "/v{$version}/{$zipName}";
+    $tmpZip  = sys_get_temp_dir() . "/{$zipName}";
+
+    if (! download_file($url, $tmpZip)) {
+        @unlink($tmpZip);
+        fatal("Failed to download {$url}");
+    }
+
+    // Checksum verification
+    if (! verify_checksum($tmpZip, $version)) {
+        @unlink($tmpZip);
+        fatal('Download verification failed. The file may have been tampered with.');
+    }
+
+    // Extract
+    step('Extracting files');
+
+    if (! class_exists('ZipArchive')) {
+        // Fallback to unzip command
+        $escaped = escapeshellarg($tmpZip);
+        $escDir  = escapeshellarg($dir);
+        exec("unzip -o {$escaped} -d {$escDir} 2>&1", $output, $code);
+
+        if ($code !== 0) {
+            @unlink($tmpZip);
+            fatal('Failed to extract ZIP archive. Install the php-zip extension or the unzip command.');
+        }
+    } else {
+        $zip = new ZipArchive();
+
+        if ($zip->open($tmpZip) !== true) {
+            @unlink($tmpZip);
+            fatal('Failed to open ZIP archive.');
+        }
+
+        // Detect if the archive has a top-level directory
+        $topDir = null;
+        if ($zip->numFiles > 0) {
+            $firstName = $zip->getNameIndex(0);
+            if (str_contains($firstName, '/')) {
+                $topDir = explode('/', $firstName)[0];
+            }
+        }
+
+        $zip->extractTo(sys_get_temp_dir());
+        $zip->close();
+
+        // Move files from nested directory to target
+        $extractedPath = $topDir
+            ? sys_get_temp_dir() . '/' . $topDir
+            : sys_get_temp_dir();
+
+        if ($topDir && is_dir($extractedPath)) {
+            // Ensure target directory exists
+            if (! is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+
+            // Move all files
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($extractedPath, RecursiveDirectoryIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::SELF_FIRST
+            );
+
+            foreach ($iterator as $item) {
+                $target = $dir . '/' . $iterator->getSubPathname();
+
+                if ($item->isDir()) {
+                    if (! is_dir($target)) {
+                        mkdir($target, 0755, true);
+                    }
+                } else {
+                    $targetDir = dirname($target);
+
+                    if (! is_dir($targetDir)) {
+                        mkdir($targetDir, 0755, true);
+                    }
+
+                    rename($item->getPathname(), $target);
+                }
+            }
+
+            // Clean up extracted directory
+            remove_directory($extractedPath);
+        }
+    }
+
+    @unlink($tmpZip);
+
+    info('Files extracted to ' . $dir);
+}
+
+/**
+ * Recursively remove a directory.
+ */
+function remove_directory(string $dir): void
+{
+    if (! is_dir($dir)) {
+        return;
+    }
+
+    $items = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::CHILD_FIRST
+    );
+
+    foreach ($items as $item) {
+        if ($item->isDir()) {
+            @rmdir($item->getPathname());
+        } else {
+            @unlink($item->getPathname());
+        }
+    }
+
+    @rmdir($dir);
+}
+
+function run_composer(string $dir): void
+{
+    step('Installing dependencies via Composer');
+
+    $bin     = composer_bin();
+    $escDir  = escapeshellarg($dir);
+    $command = "{$bin} install --no-dev --optimize-autoloader --no-interaction --working-dir={$escDir} 2>&1";
+
+    $handle = popen($command, 'r');
+
+    if ($handle === false) {
+        fatal('Failed to run Composer. Please run it manually: composer install --no-dev --optimize-autoloader');
+    }
+
+    while (! feof($handle)) {
+        $line = fgets($handle);
+
+        if ($line !== false) {
+            fwrite(STDOUT, dim('    ' . rtrim($line)) . PHP_EOL);
+        }
+    }
+
+    $exitCode = pclose($handle);
+
+    if ($exitCode !== 0) {
+        fatal('Composer install failed (exit code ' . $exitCode . '). Check the output above for errors.');
+    }
+
+    info('Dependencies installed');
+}
+
+function setup_environment(string $dir): void
+{
+    step('Setting up environment');
+
+    $envExample = $dir . '/.env.example';
+    $envFile    = $dir . '/.env';
+
+    if (! file_exists($envExample)) {
+        fatal('.env.example not found. The download may be incomplete.');
+    }
+
+    if (file_exists($envFile)) {
+        warn('.env already exists — skipping copy (existing configuration preserved).');
+    } else {
+        if (! copy($envExample, $envFile)) {
+            fatal('Failed to copy .env.example to .env');
+        }
+
+        info('.env file created');
+    }
+
+    // Generate APP_KEY
+    $artisan = $dir . '/artisan';
+
+    if (file_exists($artisan)) {
+        $escDir = escapeshellarg($dir);
+        exec(PHP_BINARY . " {$escDir}/artisan key:generate --force 2>&1", $output, $code);
+
+        if ($code === 0) {
+            info('Application key generated');
+        } else {
+            warn('Could not generate application key. Run: php artisan key:generate');
+        }
+    } else {
+        warn('artisan not found — skipping key generation.');
+    }
+}
+
+function set_permissions(string $dir): void
+{
+    step('Setting permissions');
+
+    $dirs = [
+        $dir . '/storage',
+        $dir . '/bootstrap/cache',
+    ];
+
+    foreach ($dirs as $path) {
+        if (! is_dir($path)) {
+            @mkdir($path, 0775, true);
+        }
+
+        chmod_recursive($path, 0755, 0664);
+    }
+
+    // Make storage and bootstrap/cache group-writable
+    foreach ($dirs as $path) {
+        @chmod($path, 0775);
+    }
+
+    info('Permissions set for storage/ and bootstrap/cache/');
+}
+
+/**
+ * Recursively set permissions on files and directories.
+ */
+function chmod_recursive(string $path, int $dirMode, int $fileMode): void
+{
+    if (! is_dir($path)) {
+        return;
+    }
+
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::SELF_FIRST
+    );
+
+    foreach ($iterator as $item) {
+        if ($item->isDir()) {
+            @chmod($item->getPathname(), $dirMode);
+        } else {
+            @chmod($item->getPathname(), $fileMode);
+        }
+    }
+}
+
+function create_storage_link(string $dir): void
+{
+    $artisan = $dir . '/artisan';
+
+    if (! file_exists($artisan)) {
+        return;
+    }
+
+    $escDir = escapeshellarg($dir);
+    exec(PHP_BINARY . " {$escDir}/artisan storage:link 2>&1", $output, $code);
+
+    if ($code === 0) {
+        info('Storage symlink created');
+    } else {
+        warn('Could not create storage symlink. Run: php artisan storage:link');
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Completion message
+// ---------------------------------------------------------------------------
+
+function show_complete(string $dir): void
+{
+    fwrite(STDOUT, PHP_EOL);
+    fwrite(STDOUT, bold(green('  ╔══════════════════════════════════════════╗')) . PHP_EOL);
+    fwrite(STDOUT, bold(green('  ║')) . bold('      Installation Complete!              ') . bold(green('║')) . PHP_EOL);
+    fwrite(STDOUT, bold(green('  ╚══════════════════════════════════════════╝')) . PHP_EOL);
+    fwrite(STDOUT, PHP_EOL);
+    fwrite(STDOUT, '  Dixlase has been installed to:' . PHP_EOL);
+    fwrite(STDOUT, '  ' . cyan($dir) . PHP_EOL);
+    fwrite(STDOUT, PHP_EOL);
+    fwrite(STDOUT, bold('  Next steps:') . PHP_EOL);
+    fwrite(STDOUT, PHP_EOL);
+    fwrite(STDOUT, '  1. Point your web server document root to:' . PHP_EOL);
+    fwrite(STDOUT, '     ' . cyan($dir . '/public') . PHP_EOL);
+    fwrite(STDOUT, PHP_EOL);
+    fwrite(STDOUT, '  2. Open your browser and visit your site URL.' . PHP_EOL);
+    fwrite(STDOUT, '     The ' . bold('Installation Wizard') . ' will guide you through:' . PHP_EOL);
+    fwrite(STDOUT, '     • Database configuration' . PHP_EOL);
+    fwrite(STDOUT, '     • Admin account creation' . PHP_EOL);
+    fwrite(STDOUT, '     • Mail server settings' . PHP_EOL);
+    fwrite(STDOUT, PHP_EOL);
+    fwrite(STDOUT, dim('  Documentation: https://docs.dixlase.com') . PHP_EOL);
+    fwrite(STDOUT, dim('  Support:       https://github.com/' . DIXLASE_REPO . '/issues') . PHP_EOL);
+    fwrite(STDOUT, PHP_EOL);
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+function main(array $argv): int
+{
+    // Remove script name from args
+    array_shift($argv);
+
+    // Remove the `--` separator that `php -- --opt` passes through
+    $argv = array_values(array_filter($argv, fn ($a) => $a !== '--'));
+
+    $options = parse_args($argv);
+
+    banner();
+
+    if ($options['help']) {
+        show_help();
+        return 0;
+    }
+
+    $dir = $options['dir'];
+
+    // --- Pre-flight checks ---
+
+    check_php_version();
+    check_extensions();
+
+    $composerAvailable = check_composer();
+
+    if (! $composerAvailable && ! $options['no_composer']) {
+        error('Composer is required but was not found.');
+        fwrite(STDERR, PHP_EOL);
+        fwrite(STDERR, '  Install Composer:' . PHP_EOL);
+        fwrite(STDERR, '    curl -sS https://getcomposer.org/installer | php' . PHP_EOL);
+        fwrite(STDERR, '    sudo mv composer.phar /usr/local/bin/composer' . PHP_EOL);
+        fwrite(STDERR, PHP_EOL);
+        fwrite(STDERR, '  Or re-run with ' . bold('--no-composer') . ' to skip this step.' . PHP_EOL);
+        return 1;
+    }
+
+    // --- Ensure target directory ---
+
+    if (! is_dir($dir)) {
+        if (! @mkdir($dir, 0755, true)) {
+            fatal("Cannot create directory: {$dir}");
+        }
+    }
+
+    if (! is_writable($dir)) {
+        fatal("Directory is not writable: {$dir}");
+    }
+
+    // --- Determine version ---
+
+    $version = $options['version'] ?? fetch_latest_version();
+
+    // --- Download & extract ---
+
+    download_dixlase($dir, $version);
+
+    // --- Composer install ---
+
+    if (! $options['no_composer']) {
+        run_composer($dir);
+    } else {
+        step('Skipping Composer install');
+        warn('Remember to run: composer install --no-dev --optimize-autoloader');
+    }
+
+    // --- Environment setup ---
+
+    setup_environment($dir);
+
+    // --- Permissions ---
+
+    set_permissions($dir);
+
+    // --- Storage link ---
+
+    create_storage_link($dir);
+
+    // --- Done ---
+
+    show_complete($dir);
+
+    return 0;
+}
+
+// Run
+exit(main($argv));
