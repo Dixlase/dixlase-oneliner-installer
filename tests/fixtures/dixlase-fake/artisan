@@ -1,0 +1,22 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Test fixture: a stand-in for Laravel's artisan that satisfies the commands
+ * install.php invokes (key:generate, storage:link). Behaviour is the bare
+ * minimum needed for the installer's success-path assertions.
+ */
+
+$cmd = $argv[1] ?? '';
+
+switch ($cmd) {
+    case 'key:generate':
+        echo "Application key set successfully.\n";
+        exit(0);
+    case 'storage:link':
+        echo "The [public/storage] link has been connected.\n";
+        exit(0);
+    default:
+        fwrite(STDERR, "fake artisan: unknown command '{$cmd}'\n");
+        exit(1);
+}

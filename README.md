@@ -1,5 +1,7 @@
 # Dixlase Oneliner Installer
 
+[![CI](https://github.com/Dixlase/dixlase-oneliner-installer/actions/workflows/ci.yml/badge.svg)](https://github.com/Dixlase/dixlase-oneliner-installer/actions/workflows/ci.yml)
+
 One-line installer for [Dixlase](https://github.com/Dixlase/dixlase-core). A single PHP script downloads and bootstraps Dixlase on a server with one shell command.
 
 For Japanese, see [README.ja.md](./README.ja.md).
@@ -85,10 +87,34 @@ Translation dictionaries live at `lang/<locale>/<source-path>.tsv` (tab-separate
 ├── install.php             # Single-file PHP installer (the thing served at install.dixlase.com)
 ├── convert-comments.sh     # Switch script comments / messages between locales
 ├── lang/{en,ja}/           # Translation dictionaries (TSV)
+├── tests/                  # bats integration suite + fixtures + helpers
+├── .github/workflows/      # GitHub Actions CI
 ├── CLAUDE.md / CLAUDE.ja.md # Coding rules for contributors and AI tools
 ├── LICENSE                 # MIT
 └── README.md / README.ja.md
 ```
+
+## Tests
+
+The [bats](https://github.com/bats-core/bats-core) suite under `tests/` covers help output, argument validation, the full ZIP delivery path (against a local mock GitHub server), the `convert-comments.sh` round-trip, and banner alignment in both locales.
+
+```bash
+brew install bats-core              # macOS
+sudo apt-get install -y bats        # Debian / Ubuntu
+
+bats tests/
+```
+
+CI runs the same suite on PHP 8.2 / 8.3 / 8.4 — see [.github/workflows/ci.yml](./.github/workflows/ci.yml).
+
+### URL overrides
+
+`install.php` reads two optional environment variables, so tests, internal mirrors, and air-gapped installs can redirect downloads without editing the script:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `DIXLASE_API_LATEST_URL` | `https://api.github.com/repos/Dixlase/dixlase-core/releases/latest` | Endpoint that returns `{"tag_name": "vX.Y.Z"}` |
+| `DIXLASE_RELEASE_URL_BASE` | `https://github.com/Dixlase/dixlase-core/releases/download` | Base URL; the script appends `/v<version>/dixlase-v<version>.zip` and `/v<version>/checksums.sha256` |
 
 ## License
 

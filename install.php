@@ -28,8 +28,10 @@
 define('DIXLASE_MIN_PHP', '8.2.0');
 define('DIXLASE_REPO', 'Dixlase/dixlase-core');
 define('DIXLASE_PACKAGE', 'dixlase/dixlase-core');
-define('DIXLASE_API_LATEST', 'https://api.github.com/repos/' . DIXLASE_REPO . '/releases/latest');
-define('DIXLASE_RELEASE_URL', 'https://github.com/' . DIXLASE_REPO . '/releases/download');
+// URLs are overridable via env vars so tests, mirrors, and air-gapped installs
+// can point the script at a local server without touching the source.
+define('DIXLASE_API_LATEST', getenv('DIXLASE_API_LATEST_URL') ?: 'https://api.github.com/repos/' . DIXLASE_REPO . '/releases/latest');
+define('DIXLASE_RELEASE_URL', getenv('DIXLASE_RELEASE_URL_BASE') ?: 'https://github.com/' . DIXLASE_REPO . '/releases/download');
 define('DIXLASE_CHECKSUM_FILE', 'checksums.sha256');
 
 define('DIXLASE_REQUIRED_EXTENSIONS', [
