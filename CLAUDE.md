@@ -1,50 +1,116 @@
-# Dixlase Install Scripts
+# Dixlase Oneliner Installer — Coding Rules
 
-Dixlase CMS のワンライナーインストールスクリプト群。
+For Japanese, see [CLAUDE.ja.md](./CLAUDE.ja.md).
 
-## プロジェクト概要
+Rules every contributor (human or AI) must follow when working in this repository.
 
-- `curl -sS https://install.dixlase.com | php` で Dixlase をサーバーにインストール
-- PHP 単体で動作（外部依存なし）
-- GitHub Releases からの ZIP ダウンロード・展開・環境構築を自動化
+## Project overview
 
-## 技術スタック
+- Pipe-friendly installer: `curl -sS https://install.dixlase.com | php`
+- Single-file PHP script (`install.php`); no runtime dependencies beyond a PHP 8.2+ interpreter
+- Two delivery paths:
+  - `composer create-project dixlase/dixlase-core` (preferred when Composer is on PATH)
+  - GitHub Releases ZIP fallback (when Composer is missing)
+- Target: Dixlase CMS (Laravel 12 based) — repo `Dixlase/dixlase-core`
 
-- PHP 8.2+ （スクリプト実行要件）
-- 対象: Dixlase CMS（Laravel 12 ベース）
+## Commit message convention
 
-## 規約
+Follow the unified commit message convention used across all Dixlase projects.
 
-### コードコメント言語
-- コードコメントと PHPDoc ブロックは全て日本語で記述する
+### Required rules
 
-### ライセンスヘッダー
-- PHP ファイルには AGPL v3 ライセンスヘッダーを PHPDoc ブロック形式で挿入する
+1. **No `Co-Authored-By:` line**
+   - Forbid every `Co-Authored-By` line, including Claude / `noreply@anthropic.com`.
 
-### Git コミットメッセージ
-- コミットメッセージに `Co-Authored-By` 行を含めない
-- conventional commit 形式を使用する（例: `feat:`, `fix:`, `refactor:`）
-- コミットメッセージは**日英バイリンガル形式**で記述する
-- タイトルは英語・日本語を連続して冒頭に配置し、その後に英語の箇条書き、`----` 区切り、日本語の箇条書きの順
-- 日本語タイトル行には conventional commit プレフィックス（`feat:` / `fix:` 等）を**付けない**
-- 例:
-  ```
-  feat: add user profile page
-  ユーザープロフィールページを追加
+2. **Use a Conventional Commits prefix**
+   - `feat:` — new feature
+   - `fix:` — bug fix
+   - `refactor:` — code change that does not alter behaviour
+   - `docs:` — documentation-only change
+   - `test:` — adding or updating tests
+   - `chore:` — tooling, dependencies, other maintenance
 
-  - Add ProfileController with show/edit actions
-  - Create profile Blade views with avatar upload
+3. **Bilingual format (English / Japanese)**
+   - Subject: English title on line 1, Japanese title on line 2 (no Conventional Commits prefix on the Japanese line)
+   - Body: English bullets first, then a `----` separator, then Japanese bullets
 
-  ----
+### Template
 
-  - ProfileControllerにshow/editアクションを追加
-  - アバターアップロード付きプロフィールBladeビューを作成
-  ```
+```
+feat: add user profile page
+ユーザープロフィールページを追加
 
-### PHP スタイル
-- 制御構文では単一行でも常に波括弧を使用する
-- メソッドと関数には常に明示的な戻り値型を宣言する
-- インラインコメントより PHPDoc ブロックを優先する
+- Add ProfileController with show/edit actions
+- Create profile Blade views with avatar upload
 
-### 応答
-- 説明は簡潔に — 自明な詳細の説明ではなく重要な点に集中する
+----
+
+- ProfileControllerにshow/editアクションを追加
+- アバターアップロード付きプロフィールBladeビューを作成
+```
+
+## File editing policy
+
+- `install.php` must run on PHP 8.2 with only stdlib extensions (the same set listed in `DIXLASE_REQUIRED_EXTENSIONS`).
+- Helper shell scripts (e.g. `convert-comments.sh`) are POSIX-compliant `bash` so they run on both macOS and Linux.
+- For commands that differ between BSD and GNU (e.g. `sed -i`), pick a form that works in both environments (e.g. `sed -i.bak ... && rm *.bak`).
+- Hardcoded paths and machine-specific values are forbidden (this is a public installer).
+
+## PHP style
+
+- Always use braces for control structures, even on single-line bodies.
+- Always declare explicit return types on methods and functions.
+- Prefer PHPDoc blocks over inline comments for non-trivial helpers.
+- Insert an AGPL v3 license header at the top of every PHP source file (PHPDoc-style block).
+
+## Language of in-source comments and strings
+
+- **All comments and user-facing strings (`info()` / `warn()` / `error()` / `step()` / help text / banners / prompts) in source code must be written in English** (the default locale). Do not write Japanese comments or Japanese UI strings directly.
+- Exceptions where Japanese is required:
+  - `*.ja.md` documents such as `README.ja.md` / `CLAUDE.ja.md`
+  - Translation dictionaries under `lang/ja/` (this directory is the canonical Japanese source)
+  - Bilingual commit messages (see the convention above)
+- When you find Japanese comments or Japanese UI strings while editing an existing file:
+  1. Replace them with English
+  2. Append the English-to-Japanese pair to `lang/ja/<source-path>.tsv`
+  3. Append the identity (English-to-English) to `lang/en/<source-path>.tsv` (regenerable via `./convert-comments.sh`)
+
+## Translation library (`lang/{en,ja}/`)
+
+Each source file (currently `install.php`, future scripts) has a corresponding translation dictionary at `lang/<locale>/<source-path>.tsv`.
+
+### Format
+
+Tab-separated, one pair per line:
+
+```
+<english-text>	<locale-text>
+```
+
+- One source-side text and one target-locale text per line, separated by `\t`
+- `lang/en/<file>.tsv` is identity (col1 == col2). `lang/ja/<file>.tsv` is the English-to-Japanese mapping.
+- Empty lines and lines with too few columns are ignored.
+- Comment lines (starting with `#`) are ordinary entries. Do not put meta comments inside dictionary files.
+
+### Key construction
+
+- **Inline comments** (`// Text` form): use `// Text` as the key, without leading indentation (sed's partial match preserves the line's indentation).
+- **PHPDoc lines** (` * Text` form): use ` * Text` as the key, including the leading ` * `.
+- **String literals** (`'…'` / `"…"`): use the text inside the quotes verbatim as the key, including surrounding whitespace, so display formatting is preserved.
+- **Substitution risk**: prefer keys long enough to be unique. If a fragment like `'     The '` would false-match elsewhere on reverse, fold it together with surrounding code (e.g. `'     The ' . bold('Installation Wizard') . ' will guide you through:'`) into a single key.
+
+### Bulk conversion script
+
+`./convert-comments.sh` is a bash script that reads the dictionaries and rewrites source files:
+
+```bash
+./convert-comments.sh ja                # all files: en -> ja
+./convert-comments.sh ja install.php    # single file: en -> ja
+./convert-comments.sh ja --reverse      # all files: ja -> en (restore)
+```
+
+Always validate with a round-trip (`ja` then `ja --reverse`) and `php -l install.php` after editing the dictionaries.
+
+## Response style
+
+- Keep explanations short — focus on what matters, not the obvious.

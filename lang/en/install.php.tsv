@@ -1,0 +1,124 @@
+// Constants	// Constants
+// Terminal helpers	// Terminal helpers
+// Interactive prompts	// Interactive prompts
+// Banner	// Banner
+// Argument parsing	// Argument parsing
+// Environment checks	// Environment checks
+// Download helpers	// Download helpers
+// Installation steps	// Installation steps
+// Completion message	// Completion message
+// Main	// Main
+// Try `composer` in PATH	// Try `composer` in PATH
+// Try local composer.phar	// Try local composer.phar
+// Checksum verification	// Checksum verification
+// Extract	// Extract
+// Fallback to unzip command	// Fallback to unzip command
+// Detect if the archive has a top-level directory	// Detect if the archive has a top-level directory
+// Move files from nested directory to target	// Move files from nested directory to target
+// Ensure target directory exists	// Ensure target directory exists
+// Move all files	// Move all files
+// Clean up extracted directory	// Clean up extracted directory
+// Generate APP_KEY	// Generate APP_KEY
+// Make storage and bootstrap/cache group-writable	// Make storage and bootstrap/cache group-writable
+// Remove script name from args	// Remove script name from args
+// Remove the `--` separator that `php -- --opt` passes through	// Remove the `--` separator that `php -- --opt` passes through
+ * Determine whether the terminal supports colour output.	 * Determine whether the terminal supports colour output.
+ * Print an error and exit with a non-zero status.	 * Print an error and exit with a non-zero status.
+ * Detect whether STDIN is attached to a terminal (so prompts make sense).	 * Detect whether STDIN is attached to a terminal (so prompts make sense).
+ * Read a line from STDIN, returning the default if empty.	 * Read a line from STDIN, returning the default if empty.
+ * Yes/no prompt. $default is the value used on empty input or when not interactive.	 * Yes/no prompt. $default is the value used on empty input or when not interactive.
+ * Resolve a (possibly empty / relative) path to an absolute path with no trailing slash.	 * Resolve a (possibly empty / relative) path to an absolute path with no trailing slash.
+ * Resolve the Composer binary path.	 * Resolve the Composer binary path.
+ * Fetch the latest release version from the GitHub API.	 * Fetch the latest release version from the GitHub API.
+ * Download a file with a progress indicator.	 * Download a file with a progress indicator.
+ * Verify the SHA-256 checksum of a downloaded file.	 * Verify the SHA-256 checksum of a downloaded file.
+ * Recursively remove a directory.	 * Recursively remove a directory.
+ * Install Dixlase via "composer create-project". Streams Composer's output live.	 * Install Dixlase via "composer create-project". Streams Composer's output live.
+ * Returns true on success; false lets the caller decide whether to fall back.	 * Returns true on success; false lets the caller decide whether to fall back.
+ * Recursively set permissions on files and directories.	 * Recursively set permissions on files and directories.
+Checking PHP version	Checking PHP version
+Checking PHP extensions	Checking PHP extensions
+Missing PHP extensions: 	Missing PHP extensions: 
+  Install them and try again. For example (Debian/Ubuntu):	  Install them and try again. For example (Debian/Ubuntu):
+All required extensions are installed (	All required extensions are installed (
+ checked)	 checked)
+Checking Composer	Checking Composer
+Found local composer.phar	Found local composer.phar
+Fetching latest release information	Fetching latest release information
+Could not fetch release information from GitHub. Check your network connection.	Could not fetch release information from GitHub. Check your network connection.
+Unexpected API response from GitHub.	Unexpected API response from GitHub.
+Latest version: 	Latest version: 
+    Downloaded: 	    Downloaded: 
+Checksum file not available — skipping verification.	Checksum file not available — skipping verification.
+Checksum verified (SHA-256)	Checksum verified (SHA-256)
+Checksum mismatch!	Checksum mismatch!
+File not listed in checksum file — skipping verification.	File not listed in checksum file — skipping verification.
+Downloading Dixlase v	Downloading Dixlase v
+Failed to download 	Failed to download 
+Download verification failed. The file may have been tampered with.	Download verification failed. The file may have been tampered with.
+Extracting files	Extracting files
+Failed to extract ZIP archive. Install the php-zip extension or the unzip command.	Failed to extract ZIP archive. Install the php-zip extension or the unzip command.
+Failed to open ZIP archive.	Failed to open ZIP archive.
+Files extracted to 	Files extracted to 
+Installing Dixlase via composer create-project	Installing Dixlase via composer create-project
+Failed to launch Composer.	Failed to launch Composer.
+composer create-project failed (exit code 	composer create-project failed (exit code 
+Dixlase installed via Composer	Dixlase installed via Composer
+Installing dependencies via Composer	Installing dependencies via Composer
+Failed to run Composer. Please run it manually: composer install --no-dev --optimize-autoloader	Failed to run Composer. Please run it manually: composer install --no-dev --optimize-autoloader
+Composer install failed (exit code 	Composer install failed (exit code 
+). Check the output above for errors.	). Check the output above for errors.
+Dependencies installed	Dependencies installed
+Setting up environment	Setting up environment
+.env.example not found. The download may be incomplete.	.env.example not found. The download may be incomplete.
+.env already exists — skipping copy (existing configuration preserved).	.env already exists — skipping copy (existing configuration preserved).
+Failed to copy .env.example to .env	Failed to copy .env.example to .env
+.env file created	.env file created
+Application key generated	Application key generated
+Could not generate application key. Run: php artisan key:generate	Could not generate application key. Run: php artisan key:generate
+artisan not found — skipping key generation.	artisan not found — skipping key generation.
+Setting permissions	Setting permissions
+Permissions set for storage/ and bootstrap/cache/	Permissions set for storage/ and bootstrap/cache/
+Storage symlink created	Storage symlink created
+Could not create storage symlink. Run: php artisan storage:link	Could not create storage symlink. Run: php artisan storage:link
+Composer is required for --method=composer but was not found.	Composer is required for --method=composer but was not found.
+  Install Composer:	  Install Composer:
+  Or re-run with 	  Or re-run with 
+ to use the ZIP fallback.	 to use the ZIP fallback.
+Composer not found — the ZIP path will skip "composer install".	Composer not found — the ZIP path will skip "composer install".
+You will need to run it yourself before the site can boot.	You will need to run it yourself before the site can boot.
+Falling back to the ZIP delivery path.	Falling back to the ZIP delivery path.
+Skipping Composer install	Skipping Composer install
+Remember to run: composer install --no-dev --optimize-autoloader	Remember to run: composer install --no-dev --optimize-autoloader
+Cancelled by user.	Cancelled by user.
+Installation directory	Installation directory
+Proceed with installation?	Proceed with installation?
+  Method:    	  Method:    
+  Directory: 	  Directory: 
+  Version:   	  Version:   
+Cannot create directory: 	Cannot create directory: 
+Directory is not writable: 	Directory is not writable: 
+Invalid --method value: 	Invalid --method value: 
+ (expected auto, composer, or zip)	 (expected auto, composer, or zip)
+Usage:	Usage:
+Options:	Options:
+  --dir=PATH          Installation directory (default: current directory)	  --dir=PATH          Installation directory (default: current directory)
+  --version=X.X.X     Install a specific version (default: latest)	  --version=X.X.X     Install a specific version (default: latest)
+  --method=MODE       Delivery method: auto, composer, or zip (default: auto)	  --method=MODE       Delivery method: auto, composer, or zip (default: auto)
+  --no-composer       Skip "composer install" in the zip fallback path	  --no-composer       Skip "composer install" in the zip fallback path
+  --non-interactive   Disable prompts even when STDIN is a terminal	  --non-interactive   Disable prompts even when STDIN is a terminal
+  -y, --yes           Auto-confirm every prompt	  -y, --yes           Auto-confirm every prompt
+  -h, --help          Show this help message	  -h, --help          Show this help message
+         Dixlase CMS Installer            	         Dixlase CMS Installer            
+      Installation Complete!              	      Installation Complete!              
+  Dixlase has been installed to:	  Dixlase has been installed to:
+  Next steps:	  Next steps:
+  1. Point your web server document root to:	  1. Point your web server document root to:
+  2. Open your browser and visit your site URL.	  2. Open your browser and visit your site URL.
+'     The ' . bold('Installation Wizard') . ' will guide you through:'	'     The ' . bold('Installation Wizard') . ' will guide you through:'
+     • Database configuration	     • Database configuration
+     • Admin account creation	     • Admin account creation
+     • Mail server settings	     • Mail server settings
+  Documentation: https://docs.dixlase.com	  Documentation: https://docs.dixlase.com
+  Support:       https://github.com/	  Support:       https://github.com/
+/issues	/issues

@@ -1,0 +1,124 @@
+// Constants	// 定数
+// Terminal helpers	// ターミナル補助関数
+// Interactive prompts	// 対話プロンプト
+// Banner	// バナー
+// Argument parsing	// 引数解析
+// Environment checks	// 環境チェック
+// Download helpers	// ダウンロード補助関数
+// Installation steps	// インストール手順
+// Completion message	// 完了メッセージ
+// Main	// メイン処理
+// Try `composer` in PATH	// PATH 上の `composer` を試す
+// Try local composer.phar	// ローカルの composer.phar を試す
+// Checksum verification	// チェックサム検証
+// Extract	// 展開
+// Fallback to unzip command	// unzip コマンドにフォールバック
+// Detect if the archive has a top-level directory	// アーカイブにトップレベルディレクトリがあるか検出
+// Move files from nested directory to target	// ネストされたディレクトリから対象ディレクトリにファイルを移動
+// Ensure target directory exists	// 対象ディレクトリの存在を保証
+// Move all files	// 全ファイルを移動
+// Clean up extracted directory	// 展開先ディレクトリをクリーンアップ
+// Generate APP_KEY	// APP_KEY を生成
+// Make storage and bootstrap/cache group-writable	// storage と bootstrap/cache をグループ書き込み可にする
+// Remove script name from args	// 引数からスクリプト名を除去
+// Remove the `--` separator that `php -- --opt` passes through	// `php -- --opt` で渡される `--` 区切りを除去
+ * Determine whether the terminal supports colour output.	 * ターミナルがカラー出力をサポートするか判定する。
+ * Print an error and exit with a non-zero status.	 * エラーを出力して非ゼロステータスで終了する。
+ * Detect whether STDIN is attached to a terminal (so prompts make sense).	 * STDIN がターミナルに接続されているかを検出する (プロンプト可否の判定用)。
+ * Read a line from STDIN, returning the default if empty.	 * STDIN から 1 行を読み取り、空ならデフォルトを返す。
+ * Yes/no prompt. $default is the value used on empty input or when not interactive.	 * Yes/No プロンプト。$default は空入力時または非対話時の値。
+ * Resolve a (possibly empty / relative) path to an absolute path with no trailing slash.	 * 空または相対パスを末尾スラッシュなしの絶対パスに解決する。
+ * Resolve the Composer binary path.	 * Composer のバイナリパスを解決する。
+ * Fetch the latest release version from the GitHub API.	 * GitHub API から最新リリースのバージョンを取得する。
+ * Download a file with a progress indicator.	 * 進捗表示付きでファイルをダウンロードする。
+ * Verify the SHA-256 checksum of a downloaded file.	 * ダウンロード済みファイルの SHA-256 チェックサムを検証する。
+ * Recursively remove a directory.	 * ディレクトリを再帰的に削除する。
+ * Install Dixlase via "composer create-project". Streams Composer's output live.	 * "composer create-project" 経由で Dixlase をインストールし、Composer の出力をライブ表示する。
+ * Returns true on success; false lets the caller decide whether to fall back.	 * 成功時は true を返す; false なら呼び出し側がフォールバック判断を行う。
+ * Recursively set permissions on files and directories.	 * ファイルとディレクトリに再帰的に権限を設定する。
+Checking PHP version	PHP バージョンを確認中
+Checking PHP extensions	PHP 拡張モジュールを確認中
+Missing PHP extensions: 	不足している PHP 拡張モジュール:
+  Install them and try again. For example (Debian/Ubuntu):	  インストールして再実行してください。例 (Debian/Ubuntu):
+All required extensions are installed (	必要な拡張モジュールはすべてインストール済み (
+ checked)	 個確認)
+Checking Composer	Composer を確認中
+Found local composer.phar	ローカルの composer.phar を検出
+Fetching latest release information	最新リリース情報を取得中
+Could not fetch release information from GitHub. Check your network connection.	GitHub からリリース情報を取得できませんでした。ネットワーク接続を確認してください。
+Unexpected API response from GitHub.	GitHub から想定外の API 応答を受信しました。
+Latest version: 	最新バージョン:
+    Downloaded: 	    ダウンロード:
+Checksum file not available — skipping verification.	チェックサムファイルが利用できないため検証をスキップします。
+Checksum verified (SHA-256)	チェックサムを検証 (SHA-256)
+Checksum mismatch!	チェックサム不一致!
+File not listed in checksum file — skipping verification.	チェックサムファイルに対象が記載されていないため検証をスキップします。
+Downloading Dixlase v	Dixlase v をダウンロード中
+Failed to download 	ダウンロード失敗:
+Download verification failed. The file may have been tampered with.	ダウンロード検証に失敗しました。ファイルが改ざんされた可能性があります。
+Extracting files	ファイルを展開中
+Failed to extract ZIP archive. Install the php-zip extension or the unzip command.	ZIP アーカイブの展開に失敗しました。php-zip 拡張または unzip コマンドをインストールしてください。
+Failed to open ZIP archive.	ZIP アーカイブを開けませんでした。
+Files extracted to 	ファイル展開先:
+Installing Dixlase via composer create-project	composer create-project で Dixlase をインストール中
+Failed to launch Composer.	Composer の起動に失敗しました。
+composer create-project failed (exit code 	composer create-project が失敗しました (exit code
+Dixlase installed via Composer	Composer 経由で Dixlase をインストール完了
+Installing dependencies via Composer	Composer で依存関係をインストール中
+Failed to run Composer. Please run it manually: composer install --no-dev --optimize-autoloader	Composer の実行に失敗しました。手動で実行してください: composer install --no-dev --optimize-autoloader
+Composer install failed (exit code 	composer install が失敗しました (exit code
+). Check the output above for errors.	)。上記の出力からエラーを確認してください。
+Dependencies installed	依存関係をインストール完了
+Setting up environment	環境をセットアップ中
+.env.example not found. The download may be incomplete.	.env.example が見つかりません。ダウンロードが不完全な可能性があります。
+.env already exists — skipping copy (existing configuration preserved).	.env が既に存在します — コピーをスキップ (既存設定を維持)。
+Failed to copy .env.example to .env	.env.example から .env へのコピーに失敗しました
+.env file created	.env ファイルを作成
+Application key generated	アプリケーションキーを生成
+Could not generate application key. Run: php artisan key:generate	アプリケーションキーを生成できませんでした。実行: php artisan key:generate
+artisan not found — skipping key generation.	artisan が見つかりません — キー生成をスキップします。
+Setting permissions	権限を設定中
+Permissions set for storage/ and bootstrap/cache/	storage/ と bootstrap/cache/ の権限を設定
+Storage symlink created	Storage シンボリックリンクを作成
+Could not create storage symlink. Run: php artisan storage:link	Storage シンボリックリンクを作成できませんでした。実行: php artisan storage:link
+Composer is required for --method=composer but was not found.	--method=composer には Composer が必要ですが見つかりませんでした。
+  Install Composer:	  Composer をインストール:
+  Or re-run with 	  または以下で再実行:
+ to use the ZIP fallback.	 で ZIP フォールバックを使用
+Composer not found — the ZIP path will skip "composer install".	Composer が見つかりません — ZIP パスでは "composer install" をスキップします。
+You will need to run it yourself before the site can boot.	サイト起動前に手動で実行する必要があります。
+Falling back to the ZIP delivery path.	ZIP 配布パスにフォールバックします。
+Skipping Composer install	Composer install をスキップ
+Remember to run: composer install --no-dev --optimize-autoloader	後で実行してください: composer install --no-dev --optimize-autoloader
+Cancelled by user.	ユーザによりキャンセルされました。
+Installation directory	インストール先ディレクトリ
+Proceed with installation?	インストールを続行しますか?
+  Method:    	  方式:
+  Directory: 	  ディレクトリ:
+  Version:   	  バージョン:
+Cannot create directory: 	ディレクトリを作成できません:
+Directory is not writable: 	ディレクトリに書き込み権限がありません:
+Invalid --method value: 	--method の値が不正:
+ (expected auto, composer, or zip)	 (期待値: auto, composer, zip)
+Usage:	使い方:
+Options:	オプション:
+  --dir=PATH          Installation directory (default: current directory)	  --dir=PATH          インストール先ディレクトリ (デフォルト: カレントディレクトリ)
+  --version=X.X.X     Install a specific version (default: latest)	  --version=X.X.X     特定のバージョンをインストール (デフォルト: 最新)
+  --method=MODE       Delivery method: auto, composer, or zip (default: auto)	  --method=MODE       配布方式: auto, composer, または zip (デフォルト: auto)
+  --no-composer       Skip "composer install" in the zip fallback path	  --no-composer       zip フォールバックパスで "composer install" をスキップ
+  --non-interactive   Disable prompts even when STDIN is a terminal	  --non-interactive   STDIN がターミナルでもプロンプトを無効化
+  -y, --yes           Auto-confirm every prompt	  -y, --yes           全プロンプトを自動承認
+  -h, --help          Show this help message	  -h, --help          このヘルプメッセージを表示
+         Dixlase CMS Installer            	       Dixlase CMS インストーラー         
+      Installation Complete!              	        インストール完了!                 
+  Dixlase has been installed to:	  Dixlase のインストール先:
+  Next steps:	  次のステップ:
+  1. Point your web server document root to:	  1. Web サーバのドキュメントルートを以下に向ける:
+  2. Open your browser and visit your site URL.	  2. ブラウザでサイト URL を開く。
+'     The ' . bold('Installation Wizard') . ' will guide you through:'	'     ' . bold('インストールウィザード') . ' が以下を案内します:'
+     • Database configuration	     • データベース設定
+     • Admin account creation	     • 管理者アカウント作成
+     • Mail server settings	     • メールサーバ設定
+  Documentation: https://docs.dixlase.com	  ドキュメント:  https://docs.dixlase.com
+  Support:       https://github.com/	  サポート:      https://github.com/
+/issues	/issues
