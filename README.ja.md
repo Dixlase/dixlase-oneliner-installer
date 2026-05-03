@@ -1,5 +1,7 @@
 # Dixlase ワンライナーインストーラー
 
+[![CI](https://github.com/Dixlase/dixlase-oneliner-installer/actions/workflows/ci.yml/badge.svg)](https://github.com/Dixlase/dixlase-oneliner-installer/actions/workflows/ci.yml)
+
 [Dixlase](https://github.com/Dixlase/dixlase-core) を 1 行のシェルコマンドでサーバーにインストールするための、単一ファイルの PHP スクリプトです。
 
 For English, see [README.md](./README.md).
@@ -85,10 +87,34 @@ php install.php --non-interactive --yes --dir=/srv/dixlase
 ├── install.php             # 単一ファイルの PHP インストーラー (install.dixlase.com から配信)
 ├── convert-comments.sh     # スクリプトのコメント / メッセージをロケール間で切り替える
 ├── lang/{en,ja}/           # 翻訳辞書 (TSV)
+├── tests/                  # bats による結合テスト一式 (fixture / ヘルパ含む)
+├── .github/workflows/      # GitHub Actions CI
 ├── CLAUDE.md / CLAUDE.ja.md # 貢献者・AI 向けのコーディングルール
 ├── LICENSE                 # MIT
 └── README.md / README.ja.md
 ```
+
+## テスト
+
+`tests/` 配下の [bats](https://github.com/bats-core/bats-core) スイートが、ヘルプ表示、引数バリデーション、ローカルモック GitHub サーバを使った ZIP 経路 E2E、`convert-comments.sh` の往復、バナーの日英桁数チェックを網羅します。
+
+```bash
+brew install bats-core              # macOS
+sudo apt-get install -y bats        # Debian / Ubuntu
+
+bats tests/
+```
+
+CI は同じスイートを PHP 8.2 / 8.3 / 8.4 のマトリクスで実行します。詳細は [.github/workflows/ci.yml](./.github/workflows/ci.yml) を参照。
+
+### URL の上書き
+
+`install.php` は 2 つのオプション環境変数を読み込みます。テスト・内部ミラー・エアギャップ環境からの導入時に、スクリプト本体を編集することなくダウンロード先を切り替えられます。
+
+| 環境変数 | デフォルト | 用途 |
+| --- | --- | --- |
+| `DIXLASE_API_LATEST_URL` | `https://api.github.com/repos/Dixlase/dixlase-core/releases/latest` | `{"tag_name": "vX.Y.Z"}` を返すエンドポイント |
+| `DIXLASE_RELEASE_URL_BASE` | `https://github.com/Dixlase/dixlase-core/releases/download` | ベース URL。スクリプトが `/v<version>/dixlase-v<version>.zip` および `/v<version>/checksums.sha256` を付加して取得する |
 
 ## ライセンス
 
