@@ -4,11 +4,17 @@
 /**
  * Dixlase CMS - Quick Install Script
  *
+ * Pipe-friendly installer. Two delivery paths:
+ *   - composer create-project (preferred when Composer is on PATH)
+ *   - GitHub Releases ZIP fallback (when Composer is missing)
+ *
  * Usage:
  *   curl -sS https://install.dixlase.com | php
  *   curl -sS https://install.dixlase.com | php -- --dir=/var/www/dixlase
  *   curl -sS https://install.dixlase.com | php -- --version=1.0.0
- *   curl -sS https://install.dixlase.com | php -- --no-composer
+ *   curl -sS https://install.dixlase.com | php -- --method=zip
+ *   php install.php                                  # interactive
+ *   php install.php --non-interactive --yes          # CI mode
  *
  * Copyright (C) 2026 exc-D inc.
  * https://exc-d.com
@@ -24,7 +30,8 @@
 // ---------------------------------------------------------------------------
 
 define('DIXLASE_MIN_PHP', '8.2.0');
-define('DIXLASE_REPO', 'exc-d/dixlase');
+define('DIXLASE_REPO', 'Dixlase/dixlase-core');
+define('DIXLASE_PACKAGE', 'dixlase/dixlase-core');
 define('DIXLASE_API_LATEST', 'https://api.github.com/repos/' . DIXLASE_REPO . '/releases/latest');
 define('DIXLASE_RELEASE_URL', 'https://github.com/' . DIXLASE_REPO . '/releases/download');
 define('DIXLASE_CHECKSUM_FILE', 'checksums.sha256');
@@ -111,6 +118,78 @@ function fatal(string $msg): void
 }
 
 // ---------------------------------------------------------------------------
+// Interactive prompts
+// ---------------------------------------------------------------------------
+
+/**
+ * Detect whether STDIN is attached to a terminal (so prompts make sense).
+ */
+function stdin_is_tty(): bool
+{
+    if (! defined('STDIN')) {
+        return false;
+    }
+
+    if (function_exists('stream_isatty')) {
+        return @stream_isatty(STDIN);
+    }
+
+    if (function_exists('posix_isatty')) {
+        return @posix_isatty(STDIN);
+    }
+
+    return false;
+}
+
+/**
+ * Read a line from STDIN, returning the default if empty.
+ */
+function ask(string $question, string $default = ''): string
+{
+    $hint   = $default !== '' ? ' [' . dim($default) . ']' : '';
+    $prompt = '  ' . cyan('? ') . $question . $hint . ': ';
+
+    fwrite(STDOUT, $prompt);
+
+    $line = fgets(STDIN);
+
+    if ($line === false) {
+        return $default;
+    }
+
+    $line = trim($line);
+
+    return $line === '' ? $default : $line;
+}
+
+/**
+ * Yes/no prompt. $default is the value used on empty input or when not interactive.
+ */
+function confirm(string $question, bool $default = true, bool $assumeYes = false): bool
+{
+    if ($assumeYes) {
+        return true;
+    }
+
+    $hint = $default ? 'Y/n' : 'y/N';
+    fwrite(STDOUT, '  ' . cyan('? ') . $question . ' [' . dim($hint) . ']: ');
+
+    $line = fgets(STDIN);
+
+    if ($line === false) {
+        return $default;
+    }
+
+    $line = strtolower(trim($line));
+
+    if ($line === '') {
+        return $default;
+    }
+
+    return $line === 'y' || $line === 'yes';
+}
+
+// ---------------------------------------------------------------------------
 // Banner
 // ---------------------------------------------------------------------------
 
@@ -134,10 +213,14 @@ function banner(): void
 function parse_args(array $argv): array
 {
     $options = [
-        'dir'         => getcwd(),
-        'version'     => null,   // null = latest
-        'no_composer' => false,
-        'help'        => false,
+        'dir'             => null,    // resolved later (cwd or prompted)
+        'dir_specified'   => false,
+        'version'         => null,    // null = latest
+        'method'          => 'auto',  // auto|composer|zip
+        'no_composer'     => false,   // applies to zip path
+        'non_interactive' => false,
+        'assume_yes'      => false,
+        'help'            => false,
     ];
 
     foreach ($argv as $arg) {
@@ -145,21 +228,41 @@ function parse_args(array $argv): array
             $options['help'] = true;
         } elseif ($arg === '--no-composer') {
             $options['no_composer'] = true;
+        } elseif ($arg === '--non-interactive') {
+            $options['non_interactive'] = true;
+        } elseif ($arg === '--yes' || $arg === '-y') {
+            $options['assume_yes'] = true;
         } elseif (str_starts_with($arg, '--dir=')) {
-            $options['dir'] = substr($arg, 6);
+            $options['dir']           = substr($arg, 6);
+            $options['dir_specified'] = true;
         } elseif (str_starts_with($arg, '--version=')) {
             $options['version'] = ltrim(substr($arg, 10), 'v');
+        } elseif (str_starts_with($arg, '--method=')) {
+            $value = strtolower(substr($arg, 9));
+            if (! in_array($value, ['auto', 'composer', 'zip'], true)) {
+                fatal("Invalid --method value: {$value} (expected auto, composer, or zip)");
+            }
+            $options['method'] = $value;
         }
     }
 
-    // Resolve to absolute path
-    if ($options['dir'] !== '' && $options['dir'][0] !== '/') {
-        $options['dir'] = getcwd() . '/' . $options['dir'];
+    return $options;
+}
+
+/**
+ * Resolve a (possibly empty / relative) path to an absolute path with no trailing slash.
+ */
+function resolve_path(string $path): string
+{
+    if ($path === '') {
+        $path = getcwd();
     }
 
-    $options['dir'] = rtrim($options['dir'], '/');
+    if ($path[0] !== '/' && (PHP_OS_FAMILY !== 'Windows' || ! preg_match('/^[A-Za-z]:/', $path))) {
+        $path = getcwd() . '/' . $path;
+    }
 
-    return $options;
+    return rtrim($path, '/');
 }
 
 function show_help(): void
@@ -169,11 +272,15 @@ function show_help(): void
 Usage:
   curl -sS https://install.dixlase.com | php
   curl -sS https://install.dixlase.com | php -- [options]
+  php install.php [options]
 
 Options:
   --dir=PATH          Installation directory (default: current directory)
   --version=X.X.X     Install a specific version (default: latest)
-  --no-composer       Skip running composer install
+  --method=MODE       Delivery method: auto, composer, or zip (default: auto)
+  --no-composer       Skip "composer install" in the zip fallback path
+  --non-interactive   Disable prompts even when STDIN is a terminal
+  -y, --yes           Auto-confirm every prompt
   -h, --help          Show this help message
 
 HELP
@@ -522,6 +629,48 @@ function remove_directory(string $dir): void
     @rmdir($dir);
 }
 
+/**
+ * Install Dixlase via "composer create-project". Streams Composer's output live.
+ * Returns true on success; false lets the caller decide whether to fall back.
+ */
+function composer_create_project(string $dir, ?string $version): bool
+{
+    step('Installing Dixlase via composer create-project');
+
+    $bin    = composer_bin();
+    $escDir = escapeshellarg($dir);
+    $pkg    = DIXLASE_PACKAGE;
+    $spec   = $version !== null ? "{$pkg}:^{$version}" : $pkg;
+
+    $command = "{$bin} create-project " . escapeshellarg($spec) . " {$escDir}"
+        . ' --prefer-dist --no-interaction --remove-vcs 2>&1';
+
+    $handle = popen($command, 'r');
+
+    if ($handle === false) {
+        error('Failed to launch Composer.');
+        return false;
+    }
+
+    while (! feof($handle)) {
+        $line = fgets($handle);
+
+        if ($line !== false) {
+            fwrite(STDOUT, dim('    ' . rtrim($line)) . PHP_EOL);
+        }
+    }
+
+    $exitCode = pclose($handle);
+
+    if ($exitCode !== 0) {
+        error('composer create-project failed (exit code ' . $exitCode . ').');
+        return false;
+    }
+
+    info('Dixlase installed via Composer');
+    return true;
+}
+
 function run_composer(string $dir): void
 {
     step('Installing dependencies via Composer');
@@ -708,7 +857,9 @@ function main(array $argv): int
         return 0;
     }
 
-    $dir = $options['dir'];
+    // --- Decide whether prompts are allowed ---
+
+    $interactive = stdin_is_tty() && ! $options['non_interactive'];
 
     // --- Pre-flight checks ---
 
@@ -717,15 +868,56 @@ function main(array $argv): int
 
     $composerAvailable = check_composer();
 
-    if (! $composerAvailable && ! $options['no_composer']) {
-        error('Composer is required but was not found.');
+    // --- Choose delivery method ---
+
+    $method = $options['method'];
+
+    if ($method === 'auto') {
+        $method = $composerAvailable ? 'composer' : 'zip';
+    }
+
+    if ($method === 'composer' && ! $composerAvailable) {
+        error('Composer is required for --method=composer but was not found.');
         fwrite(STDERR, PHP_EOL);
         fwrite(STDERR, '  Install Composer:' . PHP_EOL);
         fwrite(STDERR, '    curl -sS https://getcomposer.org/installer | php' . PHP_EOL);
         fwrite(STDERR, '    sudo mv composer.phar /usr/local/bin/composer' . PHP_EOL);
         fwrite(STDERR, PHP_EOL);
-        fwrite(STDERR, '  Or re-run with ' . bold('--no-composer') . ' to skip this step.' . PHP_EOL);
+        fwrite(STDERR, '  Or re-run with ' . bold('--method=zip') . ' to use the ZIP fallback.' . PHP_EOL);
         return 1;
+    }
+
+    if ($method === 'zip' && ! $composerAvailable && ! $options['no_composer']) {
+        warn('Composer not found — the ZIP path will skip "composer install".');
+        warn('You will need to run it yourself before the site can boot.');
+        $options['no_composer'] = true;
+    }
+
+    // --- Resolve installation directory ---
+
+    if ($options['dir_specified']) {
+        $dir = resolve_path((string) $options['dir']);
+    } elseif ($interactive) {
+        $answer = ask('Installation directory', getcwd());
+        $dir    = resolve_path($answer);
+    } else {
+        $dir = resolve_path(getcwd());
+    }
+
+    // --- Confirm before proceeding (interactive only) ---
+
+    if ($interactive && ! $options['assume_yes']) {
+        fwrite(STDOUT, PHP_EOL);
+        fwrite(STDOUT, '  Method:    ' . cyan($method) . PHP_EOL);
+        fwrite(STDOUT, '  Directory: ' . cyan($dir) . PHP_EOL);
+        $version = $options['version'] !== null ? 'v' . $options['version'] : 'latest';
+        fwrite(STDOUT, '  Version:   ' . cyan($version) . PHP_EOL);
+        fwrite(STDOUT, PHP_EOL);
+
+        if (! confirm('Proceed with installation?', true)) {
+            warn('Cancelled by user.');
+            return 1;
+        }
     }
 
     // --- Ensure target directory ---
@@ -740,36 +932,32 @@ function main(array $argv): int
         fatal("Directory is not writable: {$dir}");
     }
 
-    // --- Determine version ---
+    // --- Run the chosen delivery path ---
 
-    $version = $options['version'] ?? fetch_latest_version();
-
-    // --- Download & extract ---
-
-    download_dixlase($dir, $version);
-
-    // --- Composer install ---
-
-    if (! $options['no_composer']) {
-        run_composer($dir);
-    } else {
-        step('Skipping Composer install');
-        warn('Remember to run: composer install --no-dev --optimize-autoloader');
+    if ($method === 'composer') {
+        if (! composer_create_project($dir, $options['version'])) {
+            warn('Falling back to the ZIP delivery path.');
+            $method = 'zip';
+        }
     }
 
-    // --- Environment setup ---
+    if ($method === 'zip') {
+        $version = $options['version'] ?? fetch_latest_version();
+        download_dixlase($dir, $version);
+
+        if (! $options['no_composer']) {
+            run_composer($dir);
+        } else {
+            step('Skipping Composer install');
+            warn('Remember to run: composer install --no-dev --optimize-autoloader');
+        }
+    }
+
+    // --- Common post-install steps ---
 
     setup_environment($dir);
-
-    // --- Permissions ---
-
     set_permissions($dir);
-
-    // --- Storage link ---
-
     create_storage_link($dir);
-
-    // --- Done ---
 
     show_complete($dir);
 
