@@ -11,7 +11,7 @@ For English, see [CLAUDE.md](./CLAUDE.md).
 - 2 つの配布経路をサポート:
   - `composer create-project dixlase/dixlase-core` (Composer が PATH にあるとき優先)
   - GitHub Releases ZIP フォールバック (Composer がないとき)
-- 対象: Dixlase CMS (Laravel 12 ベース)。リポジトリは `Dixlase/dixlase-core`
+- 対象: Dixlase。リポジトリは `Dixlase/dixlase-core`
 
 ## コミットメッセージ規約
 

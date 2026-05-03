@@ -2,7 +2,7 @@
 <?php
 
 /**
- * Dixlase CMS - Quick Install Script
+ * Dixlase - Quick Install Script
  *
  * Pipe-friendly installer. Two delivery paths:
  *   - composer create-project (preferred when Composer is on PATH)
@@ -198,7 +198,7 @@ function banner(): void
     $lines = [
         '',
         bold(cyan('  ╔══════════════════════════════════════════╗')),
-        bold(cyan('  ║')) . bold('         Dixlase CMS Installer            ') . bold(cyan('║')),
+        bold(cyan('  ║')) . bold('            Dixlase Installer             ') . bold(cyan('║')),
         bold(cyan('  ╚══════════════════════════════════════════╝')),
         '',
     ];
