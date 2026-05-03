@@ -109,7 +109,7 @@ Options:	オプション:
   --non-interactive   Disable prompts even when STDIN is a terminal	  --non-interactive   STDIN がターミナルでもプロンプトを無効化
   -y, --yes           Auto-confirm every prompt	  -y, --yes           全プロンプトを自動承認
   -h, --help          Show this help message	  -h, --help          このヘルプメッセージを表示
-         Dixlase CMS Installer            	       Dixlase CMS インストーラー         
+            Dixlase Installer             	          Dixlase インストーラー          
       Installation Complete!              	        インストール完了!                 
   Dixlase has been installed to:	  Dixlase のインストール先:
   Next steps:	  次のステップ:

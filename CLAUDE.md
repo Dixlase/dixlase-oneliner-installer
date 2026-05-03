@@ -11,7 +11,7 @@ Rules every contributor (human or AI) must follow when working in this repositor
 - Two delivery paths:
   - `composer create-project dixlase/dixlase-core` (preferred when Composer is on PATH)
   - GitHub Releases ZIP fallback (when Composer is missing)
-- Target: Dixlase CMS (Laravel 12 based) — repo `Dixlase/dixlase-core`
+- Target: Dixlase — repo `Dixlase/dixlase-core`
 
 ## Commit message convention
 
