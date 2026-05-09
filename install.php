@@ -9,10 +9,10 @@
  *   - GitHub Releases ZIP fallback (when Composer is missing)
  *
  * Usage:
- *   curl -sS https://install.dixlase.com | php
- *   curl -sS https://install.dixlase.com | php -- --dir=/var/www/dixlase
- *   curl -sS https://install.dixlase.com | php -- --version=1.0.0
- *   curl -sS https://install.dixlase.com | php -- --method=zip
+ *   curl -sS https://install.dixlase.net | php
+ *   curl -sS https://install.dixlase.net | php -- --dir=/var/www/dixlase
+ *   curl -sS https://install.dixlase.net | php -- --version=1.0.0
+ *   curl -sS https://install.dixlase.net | php -- --method=zip
  *   php install.php                                  # interactive
  *   php install.php --non-interactive --yes          # CI mode
  *
@@ -268,8 +268,8 @@ function show_help(): void
     fwrite(STDOUT, <<<'HELP'
 
 Usage:
-  curl -sS https://install.dixlase.com | php
-  curl -sS https://install.dixlase.com | php -- [options]
+  curl -sS https://install.dixlase.net | php
+  curl -sS https://install.dixlase.net | php -- [options]
   php install.php [options]
 
 Options:

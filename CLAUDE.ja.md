@@ -6,7 +6,7 @@ For English, see [CLAUDE.md](./CLAUDE.md).
 
 ## プロジェクト概要
 
-- ワンライナーインストーラ: `curl -sS https://install.dixlase.com | php`
+- ワンライナーインストーラ: `curl -sS https://install.dixlase.net | php`
 - 単一ファイルの PHP スクリプト (`install.php`)。PHP 8.2+ 以外の実行時依存はなし
 - 2 つの配布経路をサポート:
   - `composer create-project dixlase/dixlase-core` (Composer が PATH にあるとき優先)

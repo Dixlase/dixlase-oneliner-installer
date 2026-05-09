@@ -9,7 +9,7 @@ For Japanese, see [README.ja.md](./README.ja.md).
 ## Quick Start
 
 ```bash
-curl -sS https://install.dixlase.com | php
+curl -sS https://install.dixlase.net | php
 ```
 
 That's it. The script picks the best delivery path for your environment and walks through the rest. When run interactively (`php install.php`), it asks for the install directory and confirms before proceeding.
@@ -35,8 +35,8 @@ After either path, common post-install steps run: copy `.env.example` → `.env`
 
 ```
 Usage:
-  curl -sS https://install.dixlase.com | php
-  curl -sS https://install.dixlase.com | php -- [options]
+  curl -sS https://install.dixlase.net | php
+  curl -sS https://install.dixlase.net | php -- [options]
   php install.php [options]
 
 Options:
@@ -53,13 +53,13 @@ Examples:
 
 ```bash
 # Install latest into /var/www/dixlase
-curl -sS https://install.dixlase.com | php -- --dir=/var/www/dixlase
+curl -sS https://install.dixlase.net | php -- --dir=/var/www/dixlase
 
 # Pin a specific version
-curl -sS https://install.dixlase.com | php -- --version=1.0.0
+curl -sS https://install.dixlase.net | php -- --version=1.0.0
 
 # Force the ZIP fallback even if Composer is available
-curl -sS https://install.dixlase.com | php -- --method=zip
+curl -sS https://install.dixlase.net | php -- --method=zip
 
 # Run locally with full prompts
 php install.php
@@ -84,7 +84,7 @@ Translation dictionaries live at `lang/<locale>/<source-path>.tsv` (tab-separate
 
 ```
 .
-├── install.php             # Single-file PHP installer (the thing served at install.dixlase.com)
+├── install.php             # Single-file PHP installer (the thing served at install.dixlase.net)
 ├── convert-comments.sh     # Switch script comments / messages between locales
 ├── lang/{en,ja}/           # Translation dictionaries (TSV)
 ├── tests/                  # bats integration suite + fixtures + helpers
