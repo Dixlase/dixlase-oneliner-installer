@@ -6,7 +6,7 @@ Rules every contributor (human or AI) must follow when working in this repositor
 
 ## Project overview
 
-- Pipe-friendly installer: `curl -sS https://install.dixlase.com | php`
+- Pipe-friendly installer: `curl -sS https://install.dixlase.net | php`
 - Single-file PHP script (`install.php`); no runtime dependencies beyond a PHP 8.2+ interpreter
 - Two delivery paths:
   - `composer create-project dixlase/dixlase-core` (preferred when Composer is on PATH)

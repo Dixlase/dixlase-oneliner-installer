@@ -9,7 +9,7 @@ For English, see [README.md](./README.md).
 ## クイックスタート
 
 ```bash
-curl -sS https://install.dixlase.com | php
+curl -sS https://install.dixlase.net | php
 ```
 
 これだけで、環境に応じて最適な配布経路が自動選択され、Dixlase のセットアップまで完了します。`php install.php` でローカル実行した場合は、インストール先ディレクトリを尋ねた上で続行確認を行う対話モードになります。
@@ -35,8 +35,8 @@ curl -sS https://install.dixlase.com | php
 
 ```
 使い方:
-  curl -sS https://install.dixlase.com | php
-  curl -sS https://install.dixlase.com | php -- [options]
+  curl -sS https://install.dixlase.net | php
+  curl -sS https://install.dixlase.net | php -- [options]
   php install.php [options]
 
 オプション:
@@ -53,13 +53,13 @@ curl -sS https://install.dixlase.com | php
 
 ```bash
 # 最新版を /var/www/dixlase にインストール
-curl -sS https://install.dixlase.com | php -- --dir=/var/www/dixlase
+curl -sS https://install.dixlase.net | php -- --dir=/var/www/dixlase
 
 # 特定のバージョンを固定
-curl -sS https://install.dixlase.com | php -- --version=1.0.0
+curl -sS https://install.dixlase.net | php -- --version=1.0.0
 
 # Composer があっても ZIP フォールバックを強制
-curl -sS https://install.dixlase.com | php -- --method=zip
+curl -sS https://install.dixlase.net | php -- --method=zip
 
 # ローカル対話実行
 php install.php
@@ -84,7 +84,7 @@ php install.php --non-interactive --yes --dir=/srv/dixlase
 
 ```
 .
-├── install.php             # 単一ファイルの PHP インストーラー (install.dixlase.com から配信)
+├── install.php             # 単一ファイルの PHP インストーラー (install.dixlase.net から配信)
 ├── convert-comments.sh     # スクリプトのコメント / メッセージをロケール間で切り替える
 ├── lang/{en,ja}/           # 翻訳辞書 (TSV)
 ├── tests/                  # bats による結合テスト一式 (fixture / ヘルパ含む)
