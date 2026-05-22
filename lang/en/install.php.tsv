@@ -122,3 +122,18 @@ Options:	Options:
   Documentation: https://docs.dixlase.com	  Documentation: https://docs.dixlase.com
   Support:       https://github.com/	  Support:       https://github.com/
 /issues	/issues
+// GitHub authentication	// GitHub authentication
+ * Read the GitHub token from the environment (used for private-repo installs).	 * Read the GitHub token from the environment (used for private-repo installs).
+ * DIXLASE_GITHUB_TOKEN takes precedence over the conventional GITHUB_TOKEN.	 * DIXLASE_GITHUB_TOKEN takes precedence over the conventional GITHUB_TOKEN.
+ * Decide whether the token may be sent to a given host. The token is attached	 * Decide whether the token may be sent to a given host. The token is attached
+ * only to GitHub hosts, or to a host explicitly configured through the URL	 * only to GitHub hosts, or to a host explicitly configured through the URL
+ * override env vars, so it can never leak to an unrelated mirror.	 * override env vars, so it can never leak to an unrelated mirror.
+ * Build the HTTP request header block for a request to $url. An Authorization	 * Build the HTTP request header block for a request to $url. An Authorization
+ * header is appended when a token is set and the host is allowed to receive it.	 * header is appended when a token is set and the host is allowed to receive it.
+// Private repo: resolve the package straight from its Git VCS rather	// Private repo: resolve the package straight from its Git VCS rather
+// than Packagist, and hand Composer the token via COMPOSER_AUTH (passed	// than Packagist, and hand Composer the token via COMPOSER_AUTH (passed
+// through the environment so it never appears in the process list).	// through the environment so it never appears in the process list).
+GitHub authentication	GitHub authentication
+Token detected — private repository access enabled	Token detected — private repository access enabled
+Environment:	Environment:
+  GITHUB_TOKEN        GitHub token for installing from a private Dixlase repo	  GITHUB_TOKEN        GitHub token for installing from a private Dixlase repo

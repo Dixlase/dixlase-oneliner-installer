@@ -68,6 +68,19 @@ php install.php
 php install.php --non-interactive --yes --dir=/srv/dixlase
 ```
 
+## Private repositories
+
+While Dixlase is hosted in a private repository (or before it is published to Packagist), pass a GitHub token through the `GITHUB_TOKEN` environment variable:
+
+```bash
+curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
+```
+
+- Use a **fine-grained personal access token** scoped to **`Dixlase/dixlase-core`** with **Contents: Read-only** — nothing more is needed.
+- The token is read from `DIXLASE_GITHUB_TOKEN` (preferred) or `GITHUB_TOKEN`. Provide the token via the environment, never as a CLI argument, so it stays out of the shell history and process list.
+- It is sent **only** to GitHub hosts (and to any host you explicitly set via the URL override env vars below); it is never forwarded to a third-party mirror.
+- The Composer path uses it automatically: `install.php` resolves `dixlase/dixlase-core` straight from its Git VCS and hands Composer the same token via `COMPOSER_AUTH`. You only ever set `GITHUB_TOKEN`.
+
 ## Localization
 
 Comments and user-facing messages in `install.php` default to English. To switch them to Japanese (or back), use the bundled converter:

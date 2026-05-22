@@ -68,6 +68,19 @@ php install.php
 php install.php --non-interactive --yes --dir=/srv/dixlase
 ```
 
+## プライベートリポジトリ
+
+Dixlase がプライベートリポジトリにある間 (または Packagist 公開前) は、`GITHUB_TOKEN` 環境変数で GitHub トークンを渡します:
+
+```bash
+curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
+```
+
+- **`Dixlase/dixlase-core`** に絞った **Fine-grained PAT** で、権限は **Contents: Read-only** のみで十分です。
+- トークンは `DIXLASE_GITHUB_TOKEN` (優先) または `GITHUB_TOKEN` から読み取られます。シェル履歴やプロセス一覧に残さないため、CLI 引数ではなく必ず**環境変数**で渡してください。
+- トークンは **GitHub ホストのみ** (および下記 URL 上書き環境変数で明示的に指定したホスト) に送信され、第三者のミラーには転送されません。
+- Composer 経路では自動的に使われます。`install.php` が `dixlase/dixlase-core` を Git VCS から直接解決し、同じトークンを `COMPOSER_AUTH` 経由で Composer に渡します。利用者が設定するのは `GITHUB_TOKEN` だけです。
+
 ## ローカライゼーション
 
 `install.php` のコメントと UI メッセージはデフォルトで英語です。日本語に切り替える (または戻す) には付属の変換スクリプトを使います:

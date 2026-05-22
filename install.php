@@ -15,6 +15,7 @@
  *   curl -sS https://install.dixlase.net | php -- --method=zip
  *   php install.php                                  # interactive
  *   php install.php --non-interactive --yes          # CI mode
+ *   curl -sS https://install.dixlase.net | GITHUB_TOKEN=... php   # private repo
  *
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2026 exc-D inc.
@@ -281,6 +282,9 @@ Options:
   -y, --yes           Auto-confirm every prompt
   -h, --help          Show this help message
 
+Environment:
+  GITHUB_TOKEN        GitHub token for installing from a private Dixlase repo
+
 HELP
     );
 }
@@ -368,6 +372,65 @@ function composer_bin(): string
 }
 
 // ---------------------------------------------------------------------------
+// GitHub authentication
+// ---------------------------------------------------------------------------
+
+/**
+ * Read the GitHub token from the environment (used for private-repo installs).
+ * DIXLASE_GITHUB_TOKEN takes precedence over the conventional GITHUB_TOKEN.
+ */
+function github_token(): string
+{
+    return trim((string) (getenv('DIXLASE_GITHUB_TOKEN') ?: getenv('GITHUB_TOKEN') ?: ''));
+}
+
+/**
+ * Decide whether the token may be sent to a given host. The token is attached
+ * only to GitHub hosts, or to a host explicitly configured through the URL
+ * override env vars, so it can never leak to an unrelated mirror.
+ */
+function token_allowed_for_host(string $host): bool
+{
+    if ($host === '') {
+        return false;
+    }
+
+    if ($host === 'github.com'
+        || $host === 'api.github.com'
+        || str_ends_with($host, '.githubusercontent.com')) {
+        return true;
+    }
+
+    foreach (['DIXLASE_API_LATEST_URL', 'DIXLASE_RELEASE_URL_BASE'] as $var) {
+        $override = getenv($var);
+
+        if ($override !== false && parse_url((string) $override, PHP_URL_HOST) === $host) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Build the HTTP request header block for a request to $url. An Authorization
+ * header is appended when a token is set and the host is allowed to receive it.
+ */
+function http_request_headers(string $url): string
+{
+    $headers = "User-Agent: DixlaseInstaller/1.0\r\n";
+
+    $token = github_token();
+    $host  = (string) (parse_url($url, PHP_URL_HOST) ?: '');
+
+    if ($token !== '' && token_allowed_for_host($host)) {
+        $headers .= "Authorization: Bearer {$token}\r\n";
+    }
+
+    return $headers;
+}
+
+// ---------------------------------------------------------------------------
 // Download helpers
 // ---------------------------------------------------------------------------
 
@@ -380,7 +443,7 @@ function fetch_latest_version(): string
 
     $ctx = stream_context_create([
         'http' => [
-            'header'  => "User-Agent: DixlaseInstaller/1.0\r\n",
+            'header'  => http_request_headers(DIXLASE_API_LATEST),
             'timeout' => 30,
         ],
     ]);
@@ -412,7 +475,7 @@ function download_file(string $url, string $dest): bool
 {
     $ctx = stream_context_create([
         'http' => [
-            'header'  => "User-Agent: DixlaseInstaller/1.0\r\n",
+            'header'  => http_request_headers($url),
             'timeout' => 300,
         ],
     ]);
@@ -466,7 +529,7 @@ function verify_checksum(string $file, string $version): bool
 
     $ctx = stream_context_create([
         'http' => [
-            'header'  => "User-Agent: DixlaseInstaller/1.0\r\n",
+            'header'  => http_request_headers($checksumUrl),
             'timeout' => 30,
         ],
     ]);
@@ -641,7 +704,26 @@ function composer_create_project(string $dir, ?string $version): bool
     $spec   = $version !== null ? "{$pkg}:^{$version}" : $pkg;
 
     $command = "{$bin} create-project " . escapeshellarg($spec) . " {$escDir}"
-        . ' --prefer-dist --no-interaction --remove-vcs 2>&1';
+        . ' --prefer-dist --no-interaction --remove-vcs';
+
+    $token = github_token();
+
+    if ($token !== '') {
+        // Private repo: resolve the package straight from its Git VCS rather
+        // than Packagist, and hand Composer the token via COMPOSER_AUTH (passed
+        // through the environment so it never appears in the process list).
+        $repo = json_encode([
+            'type' => 'vcs',
+            'url'  => 'https://github.com/' . DIXLASE_REPO,
+        ]);
+        $command .= ' --repository=' . escapeshellarg((string) $repo);
+
+        putenv('COMPOSER_AUTH=' . json_encode([
+            'github-oauth' => ['github.com' => $token],
+        ]));
+    }
+
+    $command .= ' 2>&1';
 
     $handle = popen($command, 'r');
 
@@ -865,6 +947,11 @@ function main(array $argv): int
     check_extensions();
 
     $composerAvailable = check_composer();
+
+    if (github_token() !== '') {
+        step('GitHub authentication');
+        info('Token detected — private repository access enabled');
+    }
 
     // --- Choose delivery method ---
 
