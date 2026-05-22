@@ -43,10 +43,12 @@ build_fake_release() {
 }
 
 # Lay out the served tree and start `php -S` on a free port.
-# Sets globals: MOCK_PID, MOCK_BASE_URL, MOCK_SERVE_ROOT, MOCK_VERSION.
+# Arg 3 (optional): a token the mock will require on every request.
+# Sets globals: MOCK_PID, MOCK_BASE_URL, MOCK_SERVE_ROOT, MOCK_VERSION, MOCK_TOKEN.
 start_mock_github() {
     local releases_dir="$1"
     local version="$2"
+    local expected_token="${3:-}"
 
     MOCK_SERVE_ROOT="$(mktemp -d)"
     mkdir -p "$MOCK_SERVE_ROOT/api" "$MOCK_SERVE_ROOT/releases/download/v$version"
@@ -58,14 +60,20 @@ start_mock_github() {
     port="$(find_free_port)" || return 1
     MOCK_BASE_URL="http://127.0.0.1:$port"
     MOCK_VERSION="$version"
+    MOCK_TOKEN="$expected_token"
 
-    php -S "127.0.0.1:$port" -t "$MOCK_SERVE_ROOT" >/dev/null 2>&1 &
+    # The router enforces the token only when MOCK_EXPECTED_TOKEN is non-empty;
+    # otherwise it is transparent, so the suite always runs through it.
+    MOCK_EXPECTED_TOKEN="$expected_token" \
+        php -S "127.0.0.1:$port" -t "$MOCK_SERVE_ROOT" \
+        "$PROJECT_ROOT/tests/helpers/mock_router.php" >/dev/null 2>&1 &
     MOCK_PID=$!
 
-    # Wait up to 3s for the server to come up.
-    local i
+    # Wait up to 3s for the server to come up (sending the token if required).
+    local i auth=()
+    [[ -n "$expected_token" ]] && auth=(-H "Authorization: Bearer $expected_token")
     for i in $(seq 1 30); do
-        if curl -sf -o /dev/null "$MOCK_BASE_URL/api/latest.json"; then
+        if curl -sf "${auth[@]}" -o /dev/null "$MOCK_BASE_URL/api/latest.json"; then
             return 0
         fi
         sleep 0.1
@@ -89,6 +97,18 @@ stop_mock_github() {
 # Run install.php with the mock URLs wired in via env vars.
 run_installer_with_mock() {
     DIXLASE_API_LATEST_URL="$MOCK_BASE_URL/api/latest.json" \
+        DIXLASE_RELEASE_URL_BASE="$MOCK_BASE_URL/releases/download" \
+        php "$INSTALL_PHP" "$@"
+}
+
+# Same as run_installer_with_mock, but also exports a GitHub token. The token
+# env var name is given as arg 1 (DIXLASE_GITHUB_TOKEN or GITHUB_TOKEN).
+run_installer_with_mock_token() {
+    local token_var="$1"
+    local token_val="$2"
+    shift 2
+    env "${token_var}=${token_val}" \
+        DIXLASE_API_LATEST_URL="$MOCK_BASE_URL/api/latest.json" \
         DIXLASE_RELEASE_URL_BASE="$MOCK_BASE_URL/releases/download" \
         php "$INSTALL_PHP" "$@"
 }

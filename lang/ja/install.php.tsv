@@ -122,3 +122,18 @@ Options:	オプション:
   Documentation: https://docs.dixlase.com	  ドキュメント:  https://docs.dixlase.com
   Support:       https://github.com/	  サポート:      https://github.com/
 /issues	/issues
+// GitHub authentication	// GitHub 認証
+ * Read the GitHub token from the environment (used for private-repo installs).	 * 環境変数から GitHub トークンを読み取る (プライベートリポジトリからのインストール用)。
+ * DIXLASE_GITHUB_TOKEN takes precedence over the conventional GITHUB_TOKEN.	 * DIXLASE_GITHUB_TOKEN が慣用的な GITHUB_TOKEN より優先される。
+ * Decide whether the token may be sent to a given host. The token is attached	 * トークンを指定ホストに送ってよいか判定する。トークンは GitHub ホスト、
+ * only to GitHub hosts, or to a host explicitly configured through the URL	 * または URL 上書き環境変数で明示的に設定したホストにのみ付与され、
+ * override env vars, so it can never leak to an unrelated mirror.	 * 無関係なミラーに漏れることはない。
+ * Build the HTTP request header block for a request to $url. An Authorization	 * $url へのリクエスト用 HTTP ヘッダブロックを構築する。トークンが設定され
+ * header is appended when a token is set and the host is allowed to receive it.	 * かつホストが受信を許可されているとき Authorization ヘッダを付加する。
+// Private repo: resolve the package straight from its Git VCS rather	// プライベートリポジトリ: パッケージを Packagist ではなく Git VCS から
+// than Packagist, and hand Composer the token via COMPOSER_AUTH (passed	// 直接解決し、トークンを COMPOSER_AUTH 経由で Composer に渡す
+// through the environment so it never appears in the process list).	// (環境変数で渡すためプロセス一覧に現れない)。
+GitHub authentication	GitHub 認証
+Token detected — private repository access enabled	トークンを検出 — プライベートリポジトリへのアクセスを有効化
+Environment:	環境変数:
+  GITHUB_TOKEN        GitHub token for installing from a private Dixlase repo	  GITHUB_TOKEN        プライベート Dixlase リポジトリからのインストール用 GitHub トークン
