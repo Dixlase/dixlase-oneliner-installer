@@ -718,6 +718,11 @@ function composer_create_project(string $dir, ?string $version): bool
         ]);
         $command .= ' --repository=' . escapeshellarg((string) $repo);
 
+        // Allow dev versions for private installs (untagged branches). With
+        // prefer-stable still in effect on the project, tagged releases win
+        // automatically once they exist, so this stays safe long-term.
+        $command .= ' --stability=dev';
+
         putenv('COMPOSER_AUTH=' . json_encode([
             'github-oauth' => ['github.com' => $token],
         ]));

@@ -133,6 +133,9 @@ Options:	Options:
 // Private repo: resolve the package straight from its Git VCS rather	// Private repo: resolve the package straight from its Git VCS rather
 // than Packagist, and hand Composer the token via COMPOSER_AUTH (passed	// than Packagist, and hand Composer the token via COMPOSER_AUTH (passed
 // through the environment so it never appears in the process list).	// through the environment so it never appears in the process list).
+// Allow dev versions for private installs (untagged branches). With	// Allow dev versions for private installs (untagged branches). With
+// prefer-stable still in effect on the project, tagged releases win	// prefer-stable still in effect on the project, tagged releases win
+// automatically once they exist, so this stays safe long-term.	// automatically once they exist, so this stays safe long-term.
 GitHub authentication	GitHub authentication
 Token detected — private repository access enabled	Token detected — private repository access enabled
 Environment:	Environment:
