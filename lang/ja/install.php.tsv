@@ -133,6 +133,9 @@ Options:	オプション:
 // Private repo: resolve the package straight from its Git VCS rather	// プライベートリポジトリ: パッケージを Packagist ではなく Git VCS から
 // than Packagist, and hand Composer the token via COMPOSER_AUTH (passed	// 直接解決し、トークンを COMPOSER_AUTH 経由で Composer に渡す
 // through the environment so it never appears in the process list).	// (環境変数で渡すためプロセス一覧に現れない)。
+// Allow dev versions for private installs (untagged branches). With	// プライベートインストール (タグ未付与ブランチ) のため dev 版を許容。
+// prefer-stable still in effect on the project, tagged releases win	// プロジェクトの prefer-stable は有効なので、タグ付きリリースが存在すれば
+// automatically once they exist, so this stays safe long-term.	// 自動的にそちらが選ばれ、長期的にも安全。
 GitHub authentication	GitHub 認証
 Token detected — private repository access enabled	トークンを検出 — プライベートリポジトリへのアクセスを有効化
 Environment:	環境変数:
