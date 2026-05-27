@@ -93,6 +93,18 @@ curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
 
 翻訳辞書は `lang/<locale>/<source-path>.tsv` に配置されます (タブ区切りの `<英語テキスト>\t<ロケール側テキスト>` ペア)。新しいロケールを追加したり既存のものを拡張する場合は、既存ファイルと同じ場所に新しい TSV を置いてください。フォーマットの詳細は [CLAUDE.md](./CLAUDE.md) を参照してください。
 
+## ドキュメント
+
+シナリオ別のデプロイガイドは [`docs/ja/`](./docs/ja/) 配下にあります。目的に合うものを選んでください:
+
+- [ローカル開発環境へのインストール](./docs/ja/deploy-local-dev.md) — PHP ビルトインサーバ、Laravel Herd、ddev 等
+- [Docker でのインストール](./docs/ja/deploy-docker.md) — 専用の Docker インストーラリポへの案内
+- [VPS / クラウド VM へのインストール](./docs/ja/deploy-vps.md) — 推奨のセルフホスト経路 (Ubuntu 例)
+- [共用 / レンタルホスティングへのインストール](./docs/ja/deploy-shared-hosting.md) — SFTP のみのプランへの回避策・PaaS を含む
+- [トラブルシュート](./docs/ja/troubleshooting.md) — よくある失敗と原因・修正手順
+
+英語版は [`docs/`](./docs/) を参照。
+
 ## リポジトリ構成
 
 ```
@@ -100,6 +112,7 @@ curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
 ├── install.php             # 単一ファイルの PHP インストーラー (install.dixlase.net から配信)
 ├── convert-comments.sh     # スクリプトのコメント / メッセージをロケール間で切り替える
 ├── lang/{en,ja}/           # 翻訳辞書 (TSV)
+├── docs/, docs/ja/         # デプロイガイド + トラブルシュート (英 / 日)
 ├── tests/                  # bats による結合テスト一式 (fixture / ヘルパ含む)
 ├── .github/workflows/      # GitHub Actions CI
 ├── CLAUDE.md / CLAUDE.ja.md # 貢献者・AI 向けのコーディングルール

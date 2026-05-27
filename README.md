@@ -93,6 +93,18 @@ Comments and user-facing messages in `install.php` default to English. To switch
 
 Translation dictionaries live at `lang/<locale>/<source-path>.tsv` (tab-separated `<english-text>\t<locale-text>` pairs). To add a new locale or extend an existing one, drop a new TSV next to the existing files; see [CLAUDE.md](./CLAUDE.md) for the format.
 
+## Documentation
+
+Per-scenario deployment guides live under [`docs/`](./docs/). Pick the one that matches your target:
+
+- [Local development install](./docs/deploy-local-dev.md) — PHP built-in server, Laravel Herd, ddev, etc.
+- [Docker install](./docs/deploy-docker.md) — pointer to the dedicated Docker installer repo
+- [VPS / cloud VM install](./docs/deploy-vps.md) — the recommended self-host path (Ubuntu example)
+- [Shared / rental hosting install](./docs/deploy-shared-hosting.md) — incl. the workaround for SFTP-only plans and PaaS
+- [Troubleshooting](./docs/troubleshooting.md) — common failures and their root cause
+
+Japanese mirror under [`docs/ja/`](./docs/ja/).
+
 ## Repository layout
 
 ```
@@ -100,6 +112,7 @@ Translation dictionaries live at `lang/<locale>/<source-path>.tsv` (tab-separate
 ├── install.php             # Single-file PHP installer (the thing served at install.dixlase.net)
 ├── convert-comments.sh     # Switch script comments / messages between locales
 ├── lang/{en,ja}/           # Translation dictionaries (TSV)
+├── docs/, docs/ja/         # Deployment guides + troubleshooting (en / ja)
 ├── tests/                  # bats integration suite + fixtures + helpers
 ├── .github/workflows/      # GitHub Actions CI
 ├── CLAUDE.md / CLAUDE.ja.md # Coding rules for contributors and AI tools
