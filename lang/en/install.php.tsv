@@ -149,3 +149,4 @@ Environment:	Environment:
  * for the caller to display on failure (it lives under sys_get_temp_dir()).	 * for the caller to display on failure (it lives under sys_get_temp_dir()).
 Full log saved to 	Full log saved to 
 Check the log above for errors.	Check the log above for errors.
+No GITHUB_TOKEN detected — needed if installing from a private repository.	No GITHUB_TOKEN detected — needed if installing from a private repository.
