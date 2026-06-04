@@ -565,6 +565,102 @@ function verify_checksum(string $file, string $version): bool
 }
 
 // ---------------------------------------------------------------------------
+// Composer output filtering
+// ---------------------------------------------------------------------------
+
+/**
+ * Decide whether a Composer subprocess line should be surfaced to the user.
+ * Lines matching the noise list are dropped from STDOUT but still recorded in
+ * the install log file, so failures can be diagnosed afterwards.
+ *
+ * The patterns capture three families of noise:
+ *   - generic PHP / Composer chatter (deprecation notices, per-package
+ *     install/download lines, progress bars, funding nag, abandoned-package
+ *     reminders)
+ *   - known upstream warnings in dixlase-core that are recovered automatically
+ *     (case-collision unzip fallback, PSR-4 mismatch warning, deprecated PDO
+ *     MYSQL constant)
+ *   - composer.local.json sync notice (informational only)
+ */
+function should_show_composer_line(string $line): bool
+{
+    static $noise = [
+        '/^\s*(Deprecation Notice|Deprecated):/',
+        '/^\s*-\s+(Installing|Downloading)\s+/',
+        '/\d+\/\d+\s+\[.+\]\s+\d+%/',
+        '/Failed to extract dixlase\/dixlase-core/',
+        '/write error \(disk full/',
+        '/cannot set modif\.\/access times/',
+        '/^\s+No such file or directory\s*$/',
+        '/is probably truncated/',
+        '/identical file names with different capitalization/',
+        '/Unzip with unzip command failed, falling back to ZipArchive class/',
+        '/Package .* is abandoned/',
+        '/packages you are using are looking for funding/',
+        '/Use the `composer fund` command/',
+        '/does not comply with psr-4 autoloading standard/',
+        '/composer\.local\.json synced/',
+        '/Constant PDO::MYSQL_ATTR_SSL_CA is deprecated/',
+    ];
+
+    foreach ($noise as $pattern) {
+        if (preg_match($pattern, $line)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Stream a Composer subprocess to STDOUT, filtering noise, and capture the
+ * full output to a temporary log file so failures can be debugged.
+ *
+ * Returns the subprocess exit code. $logFile is set to the path of the log
+ * for the caller to display on failure (it lives under sys_get_temp_dir()).
+ */
+function run_filtered_composer(string $command, ?string &$logFile = null): int
+{
+    $logFile   = tempnam(sys_get_temp_dir(), 'dixlase-install-');
+    $logHandle = $logFile !== false ? @fopen($logFile, 'w') : false;
+
+    $proc = popen($command, 'r');
+
+    if ($proc === false) {
+        if ($logHandle !== false) {
+            fclose($logHandle);
+        }
+        return 127;
+    }
+
+    while (! feof($proc)) {
+        $line = fgets($proc);
+
+        if ($line === false) {
+            break;
+        }
+
+        if ($logHandle !== false) {
+            fwrite($logHandle, $line);
+        }
+
+        if (should_show_composer_line($line)) {
+            $trimmed = rtrim($line);
+
+            if ($trimmed !== '') {
+                fwrite(STDOUT, dim('    ' . $trimmed) . PHP_EOL);
+            }
+        }
+    }
+
+    if ($logHandle !== false) {
+        fclose($logHandle);
+    }
+
+    return pclose($proc);
+}
+
+// ---------------------------------------------------------------------------
 // Installation steps
 // ---------------------------------------------------------------------------
 
@@ -704,7 +800,7 @@ function composer_create_project(string $dir, ?string $version): bool
     $spec   = $version !== null ? "{$pkg}:^{$version}" : $pkg;
 
     $command = "{$bin} create-project " . escapeshellarg($spec) . " {$escDir}"
-        . ' --prefer-dist --no-interaction --remove-vcs';
+        . ' --prefer-dist --no-interaction --no-progress --remove-vcs';
 
     $token = github_token();
 
@@ -730,26 +826,24 @@ function composer_create_project(string $dir, ?string $version): bool
 
     $command .= ' 2>&1';
 
-    $handle = popen($command, 'r');
+    $logFile  = null;
+    $exitCode = run_filtered_composer($command, $logFile);
 
-    if ($handle === false) {
+    if ($exitCode === 127) {
         error('Failed to launch Composer.');
         return false;
     }
 
-    while (! feof($handle)) {
-        $line = fgets($handle);
-
-        if ($line !== false) {
-            fwrite(STDOUT, dim('    ' . rtrim($line)) . PHP_EOL);
-        }
-    }
-
-    $exitCode = pclose($handle);
-
     if ($exitCode !== 0) {
         error('composer create-project failed (exit code ' . $exitCode . ').');
+        if ($logFile !== null) {
+            warn('Full log saved to ' . $logFile);
+        }
         return false;
+    }
+
+    if ($logFile !== null) {
+        @unlink($logFile);
     }
 
     info('Dixlase installed via Composer');
@@ -762,26 +856,24 @@ function run_composer(string $dir): void
 
     $bin     = composer_bin();
     $escDir  = escapeshellarg($dir);
-    $command = "{$bin} install --no-dev --optimize-autoloader --no-interaction --working-dir={$escDir} 2>&1";
+    $command = "{$bin} install --no-dev --optimize-autoloader --no-interaction --no-progress --working-dir={$escDir} 2>&1";
 
-    $handle = popen($command, 'r');
+    $logFile  = null;
+    $exitCode = run_filtered_composer($command, $logFile);
 
-    if ($handle === false) {
+    if ($exitCode === 127) {
         fatal('Failed to run Composer. Please run it manually: composer install --no-dev --optimize-autoloader');
     }
 
-    while (! feof($handle)) {
-        $line = fgets($handle);
-
-        if ($line !== false) {
-            fwrite(STDOUT, dim('    ' . rtrim($line)) . PHP_EOL);
+    if ($exitCode !== 0) {
+        if ($logFile !== null) {
+            warn('Full log saved to ' . $logFile);
         }
+        fatal('Composer install failed (exit code ' . $exitCode . '). Check the log above for errors.');
     }
 
-    $exitCode = pclose($handle);
-
-    if ($exitCode !== 0) {
-        fatal('Composer install failed (exit code ' . $exitCode . '). Check the output above for errors.');
+    if ($logFile !== null) {
+        @unlink($logFile);
     }
 
     info('Dependencies installed');
