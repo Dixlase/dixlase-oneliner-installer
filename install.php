@@ -601,6 +601,10 @@ function should_show_composer_line(string $line): bool
         '/does not comply with psr-4 autoloading standard/',
         '/composer\.local\.json synced/',
         '/Constant PDO::MYSQL_ATTR_SSL_CA is deprecated/',
+        // SQLSTATE 2002 from the post-create-project `migrate --graceful`:
+        // the install wizard sets DB credentials on first browser visit,
+        // so the placeholder .env's DB_HOST=mysql is expected to fail here.
+        '/SQLSTATE\[HY000\] \[2002\]/',
     ];
 
     foreach ($noise as $pattern) {
@@ -890,9 +894,10 @@ function setup_environment(string $dir): void
         fatal('.env.example not found. The download may be incomplete.');
     }
 
-    if (file_exists($envFile)) {
-        warn('.env already exists — skipping copy (existing configuration preserved).');
-    } else {
+    // Leave an existing .env in place silently. The Dixlase install wizard
+    // populates DB / mail values at first browser visit, so a re-install
+    // doesn't need to warn about "preserved configuration".
+    if (! file_exists($envFile)) {
         if (! copy($envExample, $envFile)) {
             fatal('Failed to copy .env.example to .env');
         }

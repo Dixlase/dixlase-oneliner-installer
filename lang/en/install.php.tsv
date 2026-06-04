@@ -71,7 +71,6 @@ Composer install failed (exit code 	Composer install failed (exit code
 Dependencies installed	Dependencies installed
 Setting up environment	Setting up environment
 .env.example not found. The download may be incomplete.	.env.example not found. The download may be incomplete.
-.env already exists — skipping copy (existing configuration preserved).	.env already exists — skipping copy (existing configuration preserved).
 Failed to copy .env.example to .env	Failed to copy .env.example to .env
 .env file created	.env file created
 Application key generated	Application key generated

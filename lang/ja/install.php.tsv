@@ -71,7 +71,6 @@ Composer install failed (exit code 	composer install が失敗しました (exit
 Dependencies installed	依存関係をインストール完了
 Setting up environment	環境をセットアップ中
 .env.example not found. The download may be incomplete.	.env.example が見つかりません。ダウンロードが不完全な可能性があります。
-.env already exists — skipping copy (existing configuration preserved).	.env が既に存在します — コピーをスキップ (既存設定を維持)。
 Failed to copy .env.example to .env	.env.example から .env へのコピーに失敗しました
 .env file created	.env ファイルを作成
 Application key generated	アプリケーションキーを生成
