@@ -123,10 +123,14 @@ unset GITHUB_TOKEN
 Or store it in your OS keychain and read it at runtime (macOS):
 
 ```bash
+# Save once
 security add-generic-password -s dixlase-installer -a "$USER" -w
-GITHUB_TOKEN=$(security find-generic-password -s dixlase-installer -w) \
-    curl -sS https://install.dixlase.net | php
+
+# Run (env on the right side of the pipe so the token reaches php, not curl)
+curl -sS https://install.dixlase.net | env GITHUB_TOKEN="$(security find-generic-password -s dixlase-installer -w)" php
 ```
+
+> ⚠️ The naive form `GITHUB_TOKEN=$(security ...) curl ... | php` does **not** work — the temporary env assignment applies to `curl` only, not to `php` on the right of the pipe. Either use `env GITHUB_TOKEN=...` in front of `php` as above, or `export GITHUB_TOKEN=$(security ...)` before the pipeline and `unset GITHUB_TOKEN` after.
 
 ## Still stuck?
 

@@ -123,10 +123,14 @@ unset GITHUB_TOKEN
 macOS なら Keychain に格納して取り出す手も:
 
 ```bash
+# 1 度だけ保存
 security add-generic-password -s dixlase-installer -a "$USER" -w
-GITHUB_TOKEN=$(security find-generic-password -s dixlase-installer -w) \
-    curl -sS https://install.dixlase.net | php
+
+# 実行 (env をパイプ右辺に置く。token は php に渡る、curl には渡らない)
+curl -sS https://install.dixlase.net | env GITHUB_TOKEN="$(security find-generic-password -s dixlase-installer -w)" php
 ```
+
+> ⚠️ 素朴な形 `GITHUB_TOKEN=$(security ...) curl ... | php` は **動きません**。`VAR=val` の一時代入はパイプ**左辺の `curl` にしか渡らず**、右辺の `php` には届きません。`env GITHUB_TOKEN=...` を `php` の前に置く (上記の形)、または `export GITHUB_TOKEN=$(security ...)` 後に実行 + 後で `unset GITHUB_TOKEN`、のどちらかを使ってください。
 
 ## それでも詰まったとき
 

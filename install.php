@@ -601,10 +601,15 @@ function should_show_composer_line(string $line): bool
         '/does not comply with psr-4 autoloading standard/',
         '/composer\.local\.json synced/',
         '/Constant PDO::MYSQL_ATTR_SSL_CA is deprecated/',
-        // SQLSTATE 2002 from the post-create-project `migrate --graceful`:
-        // the install wizard sets DB credentials on first browser visit,
-        // so the placeholder .env's DB_HOST=mysql is expected to fail here.
-        '/SQLSTATE\[HY000\] \[2002\]/',
+        // SQLSTATE 2002 + `getaddrinfo for mysql failed` from the post-create
+        // -project `migrate --graceful`: the install wizard sets DB credentials
+        // on first browser visit, so the placeholder .env's DB_HOST=mysql is
+        // expected to fail here. Laravel's --ansi renderer can hard-wrap the
+        // long single-line message into several fgets() lines, so each likely
+        // wrapped fragment gets its own pattern below.
+        '/SQLSTATE\[HY000\]/',
+        '/getaddrinfo for mysql failed/',
+        '/Connection: mysql, Host: mysql/',
     ];
 
     foreach ($noise as $pattern) {
@@ -842,6 +847,9 @@ function composer_create_project(string $dir, ?string $version): bool
         error('composer create-project failed (exit code ' . $exitCode . ').');
         if ($logFile !== null) {
             warn('Full log saved to ' . $logFile);
+        }
+        if (github_token() === '') {
+            warn('No GITHUB_TOKEN detected — needed if installing from a private repository.');
         }
         return false;
     }
