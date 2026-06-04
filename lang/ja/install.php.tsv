@@ -140,3 +140,13 @@ GitHub authentication	GitHub 認証
 Token detected — private repository access enabled	トークンを検出 — プライベートリポジトリへのアクセスを有効化
 Environment:	環境変数:
   GITHUB_TOKEN        GitHub token for installing from a private Dixlase repo	  GITHUB_TOKEN        プライベート Dixlase リポジトリからのインストール用 GitHub トークン
+// Composer output filtering	// Composer 出力フィルタ
+ * Decide whether a Composer subprocess line should be surfaced to the user.	 * Composer サブプロセスの出力行をユーザーに見せるかどうかを判定する。
+ * Lines matching the noise list are dropped from STDOUT but still recorded in	 * ノイズリストに合致する行は STDOUT から落とされるが、インストールログ
+ * the install log file, so failures can be diagnosed afterwards.	 * ファイルには全文残るため、失敗時の事後解析が可能。
+ * Stream a Composer subprocess to STDOUT, filtering noise, and capture the	 * Composer サブプロセスをノイズフィルタ越しに STDOUT へ流しつつ、
+ * full output to a temporary log file so failures can be debugged.	 * 全文を一時ログファイルに保存して失敗時のデバッグに使えるようにする。
+ * Returns the subprocess exit code. $logFile is set to the path of the log	 * サブプロセスの exit code を返す。失敗時に呼び出し側が表示できるよう
+ * for the caller to display on failure (it lives under sys_get_temp_dir()).	 * $logFile にログのパスがセットされる (sys_get_temp_dir() 配下)。
+Full log saved to 	フルログ保存先:
+Check the log above for errors.	エラーは上記ログを確認してください。

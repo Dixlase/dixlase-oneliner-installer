@@ -140,3 +140,13 @@ GitHub authentication	GitHub authentication
 Token detected — private repository access enabled	Token detected — private repository access enabled
 Environment:	Environment:
   GITHUB_TOKEN        GitHub token for installing from a private Dixlase repo	  GITHUB_TOKEN        GitHub token for installing from a private Dixlase repo
+// Composer output filtering	// Composer output filtering
+ * Decide whether a Composer subprocess line should be surfaced to the user.	 * Decide whether a Composer subprocess line should be surfaced to the user.
+ * Lines matching the noise list are dropped from STDOUT but still recorded in	 * Lines matching the noise list are dropped from STDOUT but still recorded in
+ * the install log file, so failures can be diagnosed afterwards.	 * the install log file, so failures can be diagnosed afterwards.
+ * Stream a Composer subprocess to STDOUT, filtering noise, and capture the	 * Stream a Composer subprocess to STDOUT, filtering noise, and capture the
+ * full output to a temporary log file so failures can be debugged.	 * full output to a temporary log file so failures can be debugged.
+ * Returns the subprocess exit code. $logFile is set to the path of the log	 * Returns the subprocess exit code. $logFile is set to the path of the log
+ * for the caller to display on failure (it lives under sys_get_temp_dir()).	 * for the caller to display on failure (it lives under sys_get_temp_dir()).
+Full log saved to 	Full log saved to 
+Check the log above for errors.	Check the log above for errors.
