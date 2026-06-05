@@ -45,7 +45,6 @@ All required extensions are installed (	All required extensions are installed (
 Checking Composer	Checking Composer
 Found local composer.phar	Found local composer.phar
 Fetching latest release information	Fetching latest release information
-Could not fetch release information from GitHub. Check your network connection.	Could not fetch release information from GitHub. Check your network connection.
 Unexpected API response from GitHub.	Unexpected API response from GitHub.
 Latest version: 	Latest version: 
     Downloaded: 	    Downloaded: 
@@ -167,3 +166,24 @@ npm run build failed (exit code 	npm run build failed (exit code
 Frontend asset build did not complete. Re-run:	Frontend asset build did not complete. Re-run:
 Refusing to use existing 	Refusing to use existing 
  as npm cache (not a directory).	 as npm cache (not a directory).
+// GitHub Release API (private-repo-safe asset download)	// GitHub Release API (private-repo-safe asset download)
+Could not fetch release v	Could not fetch release v
+ from the GitHub API.	 from the GitHub API.
+Release v	Release v
+ does not have an asset named '	 does not have an asset named '
+'.	'.
+Failed to download 	Failed to download 
+ via the GitHub API.	 via the GitHub API.
+curl error (	curl error (
+): 	): 
+Could not fetch release info for checksum — skipping verification.	Could not fetch release info for checksum — skipping verification.
+Checksum file not in release assets — skipping verification.	Checksum file not in release assets — skipping verification.
+Failed to download checksum file — skipping verification.	Failed to download checksum file — skipping verification.
+Could not read checksum file — skipping verification.	Could not read checksum file — skipping verification.
+Could not fetch release information from GitHub.	Could not fetch release information from GitHub.
+ZIP delivery path failed — falling back to composer create-project.	ZIP delivery path failed — falling back to composer create-project.
+Failed to download the release ZIP.	Failed to download the release ZIP.
+composer create-project failed.	composer create-project failed.
+Both delivery paths failed.	Both delivery paths failed.
+vendor/ is not in the ZIP and Composer is not available.	vendor/ is not in the ZIP and Composer is not available.
+Install Composer and run: composer install --no-dev --optimize-autoloader	Install Composer and run: composer install --no-dev --optimize-autoloader

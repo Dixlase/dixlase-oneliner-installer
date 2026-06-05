@@ -325,7 +325,7 @@ function check_extensions(): void
     if (count($missing) > 0) {
         error('Missing PHP extensions: ' . implode(', ', $missing));
         fwrite(STDERR, PHP_EOL);
-        fwrite(STDERR, '  Install them and try again. For example (Debian/Ubuntu):' . PHP_EOL);
+        fwrite(STDERR, '  Install them and try again. For example (Debian/Ubuntu): ' . PHP_EOL);
         fwrite(STDERR, '    sudo apt-get install ' . implode(' ', array_map(
             fn ($e) => "php-{$e}",
             $missing
@@ -440,8 +440,12 @@ function http_request_headers(string $url): string
 
 /**
  * Fetch the latest release version from the GitHub API.
+ *
+ * Returns the version string without the leading "v", or null when no
+ * release exists / the API call fails. The null path lets the caller fall
+ * back to the composer create-project method under --method=auto.
  */
-function fetch_latest_version(): string
+function fetch_latest_version(): ?string
 {
     step('Fetching latest release information');
 
@@ -455,19 +459,155 @@ function fetch_latest_version(): string
     $json = @file_get_contents(DIXLASE_API_LATEST, false, $ctx);
 
     if ($json === false) {
-        fatal('Could not fetch release information from GitHub. Check your network connection.');
+        warn('Could not fetch release information from GitHub.');
+        return null;
     }
 
     $data = json_decode($json, true);
 
-    if (! isset($data['tag_name'])) {
-        fatal('Unexpected API response from GitHub.');
+    if (! is_array($data) || ! isset($data['tag_name'])) {
+        warn('Unexpected API response from GitHub.');
+        return null;
     }
 
-    $version = ltrim($data['tag_name'], 'v');
+    $version = ltrim((string) $data['tag_name'], 'v');
     info("Latest version: {$version}");
 
     return $version;
+}
+
+// ---------------------------------------------------------------------------
+// GitHub Release API (private-repo-safe asset download)
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether ZIP downloads should be routed through the GitHub REST API rather
+ * than the public browser_download_url. Requires a token AND the configured
+ * release URL to point at github.com (so the bats mock with 127.0.0.1 keeps
+ * using its static browser-style files).
+ */
+function use_github_api_for_releases(): bool
+{
+    if (github_token() === '') {
+        return false;
+    }
+
+    return parse_url(DIXLASE_RELEASE_URL, PHP_URL_HOST) === 'github.com';
+}
+
+/**
+ * Fetch a release object (including its assets array) by tag via the API.
+ * Returns null on any HTTP / parse error so the caller can fall back.
+ */
+function fetch_release_by_tag(string $tag): ?array
+{
+    $url = 'https://api.github.com/repos/' . DIXLASE_REPO . "/releases/tags/{$tag}";
+
+    $ctx = stream_context_create([
+        'http' => [
+            'header'  => http_request_headers($url),
+            'timeout' => 30,
+        ],
+    ]);
+
+    $json = @file_get_contents($url, false, $ctx);
+
+    if ($json === false) {
+        return null;
+    }
+
+    $data = json_decode($json, true);
+
+    if (! is_array($data) || ! isset($data['assets'])) {
+        return null;
+    }
+
+    return $data;
+}
+
+/**
+ * Find an asset by exact filename in a release object.
+ */
+function find_release_asset(array $release, string $name): ?array
+{
+    foreach ($release['assets'] ?? [] as $asset) {
+        if (isset($asset['name']) && $asset['name'] === $name) {
+            return $asset;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Download a release asset via the GitHub REST API.
+ *
+ * The asset API URL (api.github.com/.../releases/assets/<id>) answers a 302
+ * to a signed objects.githubusercontent.com URL. The signed URL must NOT
+ * receive the Authorization header (S3 returns "InvalidArgument: only one
+ * auth mechanism allowed"). curl's CURLOPT_UNRESTRICTED_AUTH=false strips
+ * the Authorization on cross-host redirects, which is exactly what we need.
+ *
+ * Uses ext-curl (already in DIXLASE_REQUIRED_EXTENSIONS).
+ */
+function download_asset_via_api(string $apiUrl, string $dest): bool
+{
+    $token = github_token();
+
+    if ($token === '') {
+        return false;
+    }
+
+    $fh = @fopen($dest, 'wb');
+
+    if ($fh === false) {
+        return false;
+    }
+
+    $ch = curl_init();
+
+    curl_setopt_array($ch, [
+        CURLOPT_URL              => $apiUrl,
+        CURLOPT_HTTPHEADER       => [
+            'User-Agent: DixlaseInstaller/1.0',
+            'Accept: application/octet-stream',
+            'Authorization: Bearer ' . $token,
+        ],
+        CURLOPT_FOLLOWLOCATION   => true,
+        CURLOPT_UNRESTRICTED_AUTH => false,
+        CURLOPT_FILE             => $fh,
+        CURLOPT_TIMEOUT          => 600,
+        CURLOPT_FAILONERROR      => true,
+        CURLOPT_NOPROGRESS       => false,
+        CURLOPT_PROGRESSFUNCTION => function ($_, $total, $downloaded) {
+            static $lastMb = 0.0;
+            if ($downloaded <= 0) {
+                return 0;
+            }
+            $mb = round($downloaded / 1048576, 1);
+            if ($mb - $lastMb >= 0.5 || ($total > 0 && $downloaded >= $total)) {
+                fwrite(STDOUT, "\r" . dim("    Downloaded: {$mb} MB"));
+                $lastMb = $mb;
+            }
+            return 0;
+        },
+    ]);
+
+    $ok    = curl_exec($ch);
+    $errno = curl_errno($ch);
+    $err   = $errno !== 0 ? curl_error($ch) : '';
+
+    curl_close($ch);
+    fclose($fh);
+    fwrite(STDOUT, PHP_EOL);
+
+    if ($ok === false) {
+        warn('curl error (' . $errno . '): ' . $err);
+        @unlink($dest);
+        return false;
+    }
+
+    return (@filesize($dest) ?: 0) > 0;
 }
 
 /**
@@ -525,26 +665,12 @@ function download_file(string $url, string $dest): bool
 }
 
 /**
- * Verify the SHA-256 checksum of a downloaded file.
+ * Compare a file's SHA-256 to the entries in a checksums.sha256 payload.
+ * Returns false ONLY on a real hash mismatch — missing-file-in-list and
+ * malformed-payload cases are treated as "skip with warn" by the caller.
  */
-function verify_checksum(string $file, string $version): bool
+function verify_checksum_data(string $file, string $checksumData): bool
 {
-    $checksumUrl = DIXLASE_RELEASE_URL . "/v{$version}/" . DIXLASE_CHECKSUM_FILE;
-
-    $ctx = stream_context_create([
-        'http' => [
-            'header'  => http_request_headers($checksumUrl),
-            'timeout' => 30,
-        ],
-    ]);
-
-    $checksumData = @file_get_contents($checksumUrl, false, $ctx);
-
-    if ($checksumData === false) {
-        warn('Checksum file not available — skipping verification.');
-        return true;
-    }
-
     $basename   = basename($file);
     $actualHash = hash_file('sha256', $file);
 
@@ -568,6 +694,72 @@ function verify_checksum(string $file, string $version): bool
     return true;
 }
 
+/**
+ * Verify the SHA-256 checksum of a downloaded file.
+ *
+ * Two paths: when GitHub API mode is active (token set + release URL is
+ * github.com), the checksums.sha256 asset is fetched via the API endpoint
+ * (private-repo-safe). Otherwise the existing browser_download_url path is
+ * used (works for public repos and the bats mock).
+ *
+ * A missing checksums.sha256 (typical for early releases) skips verification
+ * with a warn — same behaviour as before.
+ */
+function verify_checksum(string $file, string $version): bool
+{
+    if (use_github_api_for_releases()) {
+        $release = fetch_release_by_tag("v{$version}");
+
+        if ($release === null) {
+            warn('Could not fetch release info for checksum — skipping verification.');
+            return true;
+        }
+
+        $asset = find_release_asset($release, DIXLASE_CHECKSUM_FILE);
+
+        if ($asset === null) {
+            warn('Checksum file not in release assets — skipping verification.');
+            return true;
+        }
+
+        $tmpSum = sys_get_temp_dir() . '/' . DIXLASE_CHECKSUM_FILE;
+
+        if (! download_asset_via_api($asset['url'], $tmpSum)) {
+            @unlink($tmpSum);
+            warn('Failed to download checksum file — skipping verification.');
+            return true;
+        }
+
+        $checksumData = @file_get_contents($tmpSum);
+        @unlink($tmpSum);
+
+        if ($checksumData === false) {
+            warn('Could not read checksum file — skipping verification.');
+            return true;
+        }
+
+        return verify_checksum_data($file, $checksumData);
+    }
+
+    $checksumUrl = DIXLASE_RELEASE_URL . "/v{$version}/" . DIXLASE_CHECKSUM_FILE;
+
+    $ctx = stream_context_create([
+        'http' => [
+            'header'  => http_request_headers($checksumUrl),
+            'timeout' => 30,
+        ],
+    ]);
+
+    $checksumData = @file_get_contents($checksumUrl, false, $ctx);
+
+    if ($checksumData === false) {
+        warn('Checksum file not available — skipping verification.');
+        return true;
+    }
+
+    return verify_checksum_data($file, $checksumData);
+}
+
 // ---------------------------------------------------------------------------
 // Composer output filtering
 // ---------------------------------------------------------------------------
@@ -589,7 +781,7 @@ function verify_checksum(string $file, string $version): bool
 function should_show_composer_line(string $line): bool
 {
     static $noise = [
-        '/^\s*(Deprecation Notice|Deprecated):/',
+        '/^\s*(Deprecation Notice|Deprecated): /',
         '/^\s*-\s+(Installing|Downloading)\s+/',
         '/\d+\/\d+\s+\[.+\]\s+\d+%/',
         '/Failed to extract dixlase\/dixlase-core/',
@@ -680,26 +872,62 @@ function run_filtered_tool(string $command, callable $shouldShow, ?string &$logF
 // Installation steps
 // ---------------------------------------------------------------------------
 
-function download_dixlase(string $dir, string $version): void
+/**
+ * Download and extract a Dixlase release ZIP into $dir.
+ *
+ * Returns true on success. Returns false (instead of fatal()) when the ZIP
+ * download or extraction fails, so the caller (main()) can fall back to the
+ * composer create-project path when --method=auto is active.
+ *
+ * Chooses between two delivery paths transparently:
+ *   - GitHub API asset endpoint (when token + github.com host — private-repo
+ *     safe; uses curl with auth-strip on the S3 redirect)
+ *   - public browser_download_url (otherwise — works for public repos and
+ *     for the bats mock under 127.0.0.1)
+ */
+function download_dixlase(string $dir, string $version): bool
 {
     step("Downloading Dixlase v{$version}");
 
     $zipName = "dixlase-v{$version}.zip";
-    $url     = DIXLASE_RELEASE_URL . "/v{$version}/{$zipName}";
     $tmpZip  = sys_get_temp_dir() . "/{$zipName}";
 
-    if (! download_file($url, $tmpZip)) {
-        @unlink($tmpZip);
-        fatal("Failed to download {$url}");
+    if (use_github_api_for_releases()) {
+        $release = fetch_release_by_tag("v{$version}");
+
+        if ($release === null) {
+            error("Release v{$version} from the GitHub API.");
+            return false;
+        }
+
+        $asset = find_release_asset($release, $zipName);
+
+        if ($asset === null) {
+            error("Release v{$version} does not have an asset named '{$zipName}'.");
+            return false;
+        }
+
+        if (! download_asset_via_api($asset['url'], $tmpZip)) {
+            @unlink($tmpZip);
+            error("Failed to download {$zipName} via the GitHub API.");
+            return false;
+        }
+    } else {
+        $url = DIXLASE_RELEASE_URL . "/v{$version}/{$zipName}";
+
+        if (! download_file($url, $tmpZip)) {
+            @unlink($tmpZip);
+            error("Failed to download {$url}");
+            return false;
+        }
     }
 
-    // Checksum verification
     if (! verify_checksum($tmpZip, $version)) {
         @unlink($tmpZip);
-        fatal('Download verification failed. The file may have been tampered with.');
+        error('Download verification failed. The file may have been tampered with.');
+        return false;
     }
 
-    // Extract
     step('Extracting files');
 
     if (! class_exists('ZipArchive')) {
@@ -710,14 +938,16 @@ function download_dixlase(string $dir, string $version): void
 
         if ($code !== 0) {
             @unlink($tmpZip);
-            fatal('Failed to extract ZIP archive. Install the php-zip extension or the unzip command.');
+            error('Failed to extract ZIP archive. Install the php-zip extension or the unzip command.');
+            return false;
         }
     } else {
         $zip = new ZipArchive();
 
         if ($zip->open($tmpZip) !== true) {
             @unlink($tmpZip);
-            fatal('Failed to open ZIP archive.');
+            error('Failed to open ZIP archive.');
+            return false;
         }
 
         // Detect if the archive has a top-level directory
@@ -775,6 +1005,7 @@ function download_dixlase(string $dir, string $version): void
     @unlink($tmpZip);
 
     info('Files extracted to ' . $dir);
+    return true;
 }
 
 /**
@@ -1033,6 +1264,13 @@ function build_assets(string $dir, bool $skip): string
         return 'skipped';
     }
 
+    // Pre-built release ZIPs ship public/assets/build/manifest.json directly.
+    // If the manifest is already present, treat the build as done so Node /
+    // npm aren't required at all on the install machine.
+    if (is_file($dir . '/public/assets/build/manifest.json')) {
+        return 'built';
+    }
+
     $pkg = read_dixlase_package_json($dir);
 
     if ($pkg === null) {
@@ -1151,7 +1389,7 @@ function setup_environment(string $dir): void
     $envFile    = $dir . '/.env';
 
     if (! file_exists($envExample)) {
-        fatal('.env.example not found. The download may be incomplete.');
+        fatal('.env.example が見つかりません。ダウンロードが不完全な可能性があります。');
     }
 
     // Leave an existing .env in place silently. The Dixlase install wizard
@@ -1159,7 +1397,7 @@ function setup_environment(string $dir): void
     // doesn't need to warn about "preserved configuration".
     if (! file_exists($envFile)) {
         if (! copy($envExample, $envFile)) {
-            fatal('Failed to copy .env.example to .env');
+            fatal('.env.example から .env へのコピーに失敗しました');
         }
 
         info('.env file created');
@@ -1277,7 +1515,7 @@ function show_complete(string $dir, string $assetsStatus = 'built'): void
         fwrite(STDOUT, PHP_EOL);
         $step++;
     } elseif ($assetsStatus === 'skipped') {
-        fwrite(STDOUT, '  ' . $step . '. Build the frontend assets:' . PHP_EOL);
+        fwrite(STDOUT, '  ' . $step . '. フロントエンドアセットをビルド:' . PHP_EOL);
         fwrite(STDOUT, '     ' . cyan('cd ' . $dir . ' && npm install && npm run build') . PHP_EOL);
         fwrite(STDOUT, PHP_EOL);
         $step++;
@@ -1336,12 +1574,13 @@ function main(array $argv): int
     }
 
     // --- Choose delivery method ---
+    //
+    // auto = prefer ZIP (a release ZIP ships pre-built vendor/ and Vite assets,
+    // so Node/Composer aren't required on the install machine). Fall through
+    // to composer create-project only if the ZIP path fails AND composer is
+    // present. Explicit --method=zip / --method=composer skips the fallback.
 
     $method = $options['method'];
-
-    if ($method === 'auto') {
-        $method = $composerAvailable ? 'composer' : 'zip';
-    }
 
     if ($method === 'composer' && ! $composerAvailable) {
         error('Composer is required for --method=composer but was not found.');
@@ -1350,14 +1589,8 @@ function main(array $argv): int
         fwrite(STDERR, '    curl -sS https://getcomposer.org/installer | php' . PHP_EOL);
         fwrite(STDERR, '    sudo mv composer.phar /usr/local/bin/composer' . PHP_EOL);
         fwrite(STDERR, PHP_EOL);
-        fwrite(STDERR, '  Or re-run with ' . bold('--method=zip') . ' to use the ZIP fallback.' . PHP_EOL);
+        fwrite(STDERR, '  Or re-run with ' . bold('--method=zip') . ' (the default) to use the pre-built release.' . PHP_EOL);
         return 1;
-    }
-
-    if ($method === 'zip' && ! $composerAvailable && ! $options['no_composer']) {
-        warn('Composer not found — the ZIP path will skip "composer install".');
-        warn('You will need to run it yourself before the site can boot.');
-        $options['no_composer'] = true;
     }
 
     // --- Resolve installation directory ---
@@ -1374,8 +1607,9 @@ function main(array $argv): int
     // --- Confirm before proceeding (interactive only) ---
 
     if ($interactive && ! $options['assume_yes']) {
+        $shownMethod = $method === 'auto' ? 'auto (prefers zip)' : $method;
         fwrite(STDOUT, PHP_EOL);
-        fwrite(STDOUT, '  Method:    ' . cyan($method) . PHP_EOL);
+        fwrite(STDOUT, '  Method:    ' . cyan($shownMethod) . PHP_EOL);
         fwrite(STDOUT, '  Directory: ' . cyan($dir) . PHP_EOL);
         $version = $options['version'] !== null ? 'v' . $options['version'] : 'latest';
         fwrite(STDOUT, '  Version:   ' . cyan($version) . PHP_EOL);
@@ -1400,24 +1634,52 @@ function main(array $argv): int
     }
 
     // --- Run the chosen delivery path ---
+    //
+    // Order: ZIP first when auto (or explicit zip), composer second. If zip
+    // fails AND we're in auto mode AND composer is available, fall back to
+    // composer create-project. Explicit method does NOT fall back so users
+    // get the failure they asked for.
 
-    if ($method === 'composer') {
-        if (! composer_create_project($dir, $options['version'])) {
-            warn('Falling back to the ZIP delivery path.');
-            $method = 'zip';
+    $installed = false;
+
+    if ($method === 'zip' || $method === 'auto') {
+        $version = $options['version'] ?? fetch_latest_version();
+
+        if ($version !== null && download_dixlase($dir, $version)) {
+            $installed = true;
+
+            // Only run composer install when the ZIP did NOT ship vendor/
+            // (a pre-built release usually includes it). Skip when --no-composer
+            // was set, or when composer isn't on PATH.
+            if (! is_dir($dir . '/vendor')) {
+                if ($options['no_composer']) {
+                    step('Skipping Composer install');
+                    warn('Remember to run: composer install --no-dev --optimize-autoloader');
+                } elseif (! $composerAvailable) {
+                    warn('vendor/ is not in the ZIP and Composer is not available.');
+                    warn('Install Composer and run: composer install --no-dev --optimize-autoloader');
+                } else {
+                    run_composer($dir);
+                }
+            }
+        } elseif ($method === 'auto' && $composerAvailable) {
+            warn('ZIP delivery path failed — falling back to composer create-project.');
+            $method = 'composer';
+        } else {
+            fatal('Failed to download the release ZIP.');
         }
     }
 
-    if ($method === 'zip') {
-        $version = $options['version'] ?? fetch_latest_version();
-        download_dixlase($dir, $version);
-
-        if (! $options['no_composer']) {
-            run_composer($dir);
+    if (! $installed && $method === 'composer') {
+        if (composer_create_project($dir, $options['version'])) {
+            $installed = true;
         } else {
-            step('Skipping Composer install');
-            warn('Remember to run: composer install --no-dev --optimize-autoloader');
+            fatal('composer create-project failed.');
         }
+    }
+
+    if (! $installed) {
+        fatal('Both delivery paths failed.');
     }
 
     // SECURITY: composer_create_project() set COMPOSER_AUTH (containing the
