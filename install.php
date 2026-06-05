@@ -903,7 +903,7 @@ function download_dixlase(string $dir, string $version): bool
         $asset = find_release_asset($release, $zipName);
 
         if ($asset === null) {
-            error("Release v{$version} does not have an asset named '{$zipName}'.");
+            error("Release v{$version} does not have an asset named '{$zipName}' attached.");
             return false;
         }
 
@@ -1389,7 +1389,7 @@ function setup_environment(string $dir): void
     $envFile    = $dir . '/.env';
 
     if (! file_exists($envExample)) {
-        fatal('.env.example が見つかりません。ダウンロードが不完全な可能性があります。');
+        fatal('.env.example not found. The download may be incomplete.');
     }
 
     // Leave an existing .env in place silently. The Dixlase install wizard
@@ -1397,7 +1397,7 @@ function setup_environment(string $dir): void
     // doesn't need to warn about "preserved configuration".
     if (! file_exists($envFile)) {
         if (! copy($envExample, $envFile)) {
-            fatal('.env.example から .env へのコピーに失敗しました');
+            fatal('Failed to copy .env.example to .env');
         }
 
         info('.env file created');
@@ -1515,7 +1515,7 @@ function show_complete(string $dir, string $assetsStatus = 'built'): void
         fwrite(STDOUT, PHP_EOL);
         $step++;
     } elseif ($assetsStatus === 'skipped') {
-        fwrite(STDOUT, '  ' . $step . '. フロントエンドアセットをビルド:' . PHP_EOL);
+        fwrite(STDOUT, '  ' . $step . '. Build the frontend assets:' . PHP_EOL);
         fwrite(STDOUT, '     ' . cyan('cd ' . $dir . ' && npm install && npm run build') . PHP_EOL);
         fwrite(STDOUT, PHP_EOL);
         $step++;

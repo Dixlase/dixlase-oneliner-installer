@@ -171,7 +171,7 @@ Could not fetch release v	リリース v
  from the GitHub API.	 を GitHub API から取得できませんでした。
 Release v	リリース v
  does not have an asset named '	 にアセット '
-'.	' が含まれていません。
+' attached.	' が含まれていません。
 Failed to download 	ダウンロード失敗:
  via the GitHub API.	 (GitHub API 経由)
 curl error (	curl エラー (
