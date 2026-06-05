@@ -217,6 +217,7 @@ function parse_args(array $argv): array
         'version'         => null,    // null = latest
         'method'          => 'auto',  // auto|composer|zip
         'no_composer'     => false,   // applies to zip path
+        'no_build'        => false,   // skip npm ci + npm run build
         'non_interactive' => false,
         'assume_yes'      => false,
         'help'            => false,
@@ -227,6 +228,8 @@ function parse_args(array $argv): array
             $options['help'] = true;
         } elseif ($arg === '--no-composer') {
             $options['no_composer'] = true;
+        } elseif ($arg === '--no-build') {
+            $options['no_build'] = true;
         } elseif ($arg === '--non-interactive') {
             $options['non_interactive'] = true;
         } elseif ($arg === '--yes' || $arg === '-y') {
@@ -278,6 +281,7 @@ Options:
   --version=X.X.X     Install a specific version (default: latest)
   --method=MODE       Delivery method: auto, composer, or zip (default: auto)
   --no-composer       Skip "composer install" in the zip fallback path
+  --no-build          Skip "npm ci && npm run build" (frontend asset build)
   --non-interactive   Disable prompts even when STDIN is a terminal
   -y, --yes           Auto-confirm every prompt
   -h, --help          Show this help message
@@ -622,13 +626,16 @@ function should_show_composer_line(string $line): bool
 }
 
 /**
- * Stream a Composer subprocess to STDOUT, filtering noise, and capture the
- * full output to a temporary log file so failures can be debugged.
+ * Stream a subprocess to STDOUT, filtering noise via the given callable, and
+ * capture the full unfiltered output to a temporary log file so failures can
+ * be debugged afterwards.
  *
- * Returns the subprocess exit code. $logFile is set to the path of the log
- * for the caller to display on failure (it lives under sys_get_temp_dir()).
+ * $shouldShow is the per-line filter (e.g. should_show_composer_line(...) or
+ * should_show_npm_line(...)). Returns the subprocess exit code; $logFile is
+ * set to the path of the log for the caller to display on failure (it lives
+ * under sys_get_temp_dir() with mode 0600 thanks to tempnam()).
  */
-function run_filtered_composer(string $command, ?string &$logFile = null): int
+function run_filtered_tool(string $command, callable $shouldShow, ?string &$logFile = null): int
 {
     $logFile   = tempnam(sys_get_temp_dir(), 'dixlase-install-');
     $logHandle = $logFile !== false ? @fopen($logFile, 'w') : false;
@@ -653,7 +660,7 @@ function run_filtered_composer(string $command, ?string &$logFile = null): int
             fwrite($logHandle, $line);
         }
 
-        if (should_show_composer_line($line)) {
+        if ($shouldShow($line)) {
             $trimmed = rtrim($line);
 
             if ($trimmed !== '') {
@@ -836,7 +843,7 @@ function composer_create_project(string $dir, ?string $version): bool
     $command .= ' 2>&1';
 
     $logFile  = null;
-    $exitCode = run_filtered_composer($command, $logFile);
+    $exitCode = run_filtered_tool($command, should_show_composer_line(...), $logFile);
 
     if ($exitCode === 127) {
         error('Failed to launch Composer.');
@@ -871,7 +878,7 @@ function run_composer(string $dir): void
     $command = "{$bin} install --no-dev --optimize-autoloader --no-interaction --no-progress --working-dir={$escDir} 2>&1";
 
     $logFile  = null;
-    $exitCode = run_filtered_composer($command, $logFile);
+    $exitCode = run_filtered_tool($command, should_show_composer_line(...), $logFile);
 
     if ($exitCode === 127) {
         fatal('Failed to run Composer. Please run it manually: composer install --no-dev --optimize-autoloader');
@@ -889,6 +896,251 @@ function run_composer(string $dir): void
     }
 
     info('Dependencies installed');
+}
+
+// ---------------------------------------------------------------------------
+// Frontend asset build (npm install / npm ci + npm run build via Vite)
+// ---------------------------------------------------------------------------
+
+/**
+ * Decide whether an npm subprocess line should be surfaced to the user.
+ * Mirrors should_show_composer_line(): the noise list drops deprecation
+ * notices, funding nags, and audit reminders while keeping useful lines such
+ * as `added N packages in Ts` and Vite's `✓ built in Ts`.
+ */
+function should_show_npm_line(string $line): bool
+{
+    static $noise = [
+        // Drop deprecation chatter ONLY — preserve EBADENGINE, ETIMEDOUT,
+        // EACCES, and other actionable `npm warn` codes so the user can
+        // diagnose real failures from the visible output.
+        '/^\s*npm\s+(warn|WARN)\s+deprecated/i',
+        '/^\s*npm\s+notice/',                       // npm self-update notices etc.
+        '/packages? are looking for funding/',
+        '/run `npm fund` for details/',
+        '/found \d+ vulnerabilit(y|ies)/',
+        '/run `npm audit` for details/',
+        '/^\s*transforming \(\d+\)/',               // vite progress dots
+        '/^\s*\d+ modules transformed\.\s*$/',      // vite mid-build status
+    ];
+
+    foreach ($noise as $pattern) {
+        if (preg_match($pattern, $line)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Detect whether `npm` is callable from the current PATH.
+ */
+function npm_available(): bool
+{
+    exec('command -v npm 2>/dev/null', $output, $code);
+    return $code === 0 && ! empty($output[0]);
+}
+
+/**
+ * Load and validate package.json. Returns the parsed array when it looks like
+ * a Dixlase frontend manifest (package name starts with "dixlase" OR vite is
+ * a declared dependency), null otherwise.
+ *
+ * The Dixlase-shape check protects against the `--dir=.` case where the user
+ * happens to have an unrelated Laravel project's package.json sitting in the
+ * target directory — we must not clobber it with our `npm ci`.
+ */
+function read_dixlase_package_json(string $dir): ?array
+{
+    $path = $dir . '/package.json';
+
+    if (! is_file($path)) {
+        return null;
+    }
+
+    $raw = @file_get_contents($path);
+
+    if ($raw === false) {
+        return null;
+    }
+
+    $pkg = json_decode($raw, true);
+
+    if (! is_array($pkg)) {
+        return null;
+    }
+
+    $name    = $pkg['name'] ?? '';
+    $hasVite = isset($pkg['devDependencies']['vite']) || isset($pkg['dependencies']['vite']);
+
+    if (! $hasVite && ! str_starts_with((string) $name, 'dixlase')) {
+        return null;
+    }
+
+    return $pkg;
+}
+
+/**
+ * Verify the active Node.js major version satisfies package.json's
+ * engines.node. Returns true when no requirement is declared, when node is
+ * missing (caller surfaces the better error), or when the version matches.
+ */
+function node_version_satisfies(array $pkg): bool
+{
+    $required = $pkg['engines']['node'] ?? '';
+
+    if (! is_string($required) || $required === '') {
+        return true;
+    }
+
+    exec('node -p "process.versions.node" 2>/dev/null', $output, $code);
+
+    if ($code !== 0 || empty($output[0])) {
+        return true; // let npm/vite report it; we don't gate on missing node here
+    }
+
+    if (! preg_match('/(\d+)/', $required, $reqMatch)) {
+        return true;
+    }
+
+    $needMajor   = (int) $reqMatch[1];
+    $actualMajor = (int) explode('.', trim($output[0]))[0];
+
+    // Defensive bounds: reject implausible major versions parsed from a
+    // hostile / malformed package.json (e.g. >99 or <=0). Treat as "no
+    // constraint" rather than crash or block on garbage input.
+    if ($needMajor < 1 || $needMajor > 99) {
+        return true;
+    }
+
+    return $actualMajor >= $needMajor;
+}
+
+/**
+ * Build the frontend assets (Vite manifest + bundled JS/CSS).
+ *
+ * Returns one of:
+ *   'built'   — assets are ready, no further user action required
+ *   'skipped' — nothing to build for this project (no package.json / not a
+ *               Vite project / --no-build flag set); silent skip is correct
+ *   'failed'  — should have been built but the build did not complete; the
+ *               caller's show_complete() will surface a recovery hint
+ */
+function build_assets(string $dir, bool $skip): string
+{
+    if ($skip) {
+        return 'skipped';
+    }
+
+    $pkg = read_dixlase_package_json($dir);
+
+    if ($pkg === null) {
+        return 'skipped';
+    }
+
+    step('Building frontend assets');
+
+    if (! npm_available()) {
+        warn('npm not found — install Node.js (>=18) and re-run the asset build manually.');
+        warn('(If you use nvm/fnm/asdf/volta, source it first or run from an interactive shell.)');
+        return 'failed';
+    }
+
+    if (! node_version_satisfies($pkg)) {
+        $required = $pkg['engines']['node'] ?? '';
+        warn('Node version does not satisfy package.json engines (' . $required . ') — skipping build.');
+        return 'failed';
+    }
+
+    // Soft disk-space precheck: a typical Dixlase asset build needs ~500 MB
+    // (node_modules + npm cache + build output). Warn but do not abort.
+    $free = @disk_free_space($dir);
+    if ($free !== false && $free < 500 * 1024 * 1024) {
+        $freeMb = (int) ($free / 1024 / 1024);
+        warn('Only ' . $freeMb . ' MB free on the install volume — npm install may fail.');
+    }
+
+    // SECURITY: clear the GitHub token from the process environment before
+    // invoking npm. composer_create_project() set COMPOSER_AUTH via putenv()
+    // so a malicious npm postinstall script could otherwise read the token
+    // out of process env. Also unset the plain token vars for defence in depth.
+    putenv('COMPOSER_AUTH');
+    putenv('GITHUB_TOKEN');
+    putenv('DIXLASE_GITHUB_TOKEN');
+
+    // Quieten npm and signal non-interactive mode without per-call flags.
+    putenv('CI=true');
+    putenv('NPM_CONFIG_FUND=false');
+    putenv('NPM_CONFIG_AUDIT=false');
+    putenv('NPM_CONFIG_UPDATE_NOTIFIER=false');
+
+    $escDir = escapeshellarg($dir);
+
+    // Prefer `npm ci` (lockfile-enforced, reproducible) on a clean install;
+    // fall back to `npm install` if no lockfile, OR if node_modules already
+    // exists (re-install over an active checkout would let `ci` destructively
+    // rmdir a tree that another process may be reading — EBUSY on WSL etc.).
+    $hasLock    = is_file($dir . '/package-lock.json');
+    $hasModules = is_dir($dir . '/node_modules');
+    $subcmd     = ($hasLock && ! $hasModules) ? 'ci' : 'install';
+
+    // When the installer runs as root (typical on shared hosting / VPS provision),
+    // route the npm cache inside the project so root doesn't end up owning ~/.npm.
+    // Pre-create the cache directory with restrictive mode 0700 and refuse to
+    // use any pre-existing entry that is a symlink or non-directory — defends
+    // against an unprivileged user pre-seeding $dir/.npm-cache as a symlink to
+    // /root/.ssh or /etc to capture root-owned writes.
+    $cacheArg = '';
+    if (function_exists('posix_geteuid') && posix_geteuid() === 0) {
+        $cachePath = $dir . '/.npm-cache';
+
+        if (is_link($cachePath) || (file_exists($cachePath) && ! is_dir($cachePath))) {
+            warn('Refusing to use existing ' . $cachePath . ' as npm cache (not a directory).');
+        } else {
+            if (! is_dir($cachePath)) {
+                @mkdir($cachePath, 0700, true);
+            }
+            $cacheArg = ' --cache=' . escapeshellarg($cachePath);
+        }
+    }
+
+    $installCmd = "npm {$subcmd} --prefix={$escDir}{$cacheArg} 2>&1";
+
+    $logFile  = null;
+    $exitCode = run_filtered_tool($installCmd, should_show_npm_line(...), $logFile);
+
+    if ($exitCode !== 0) {
+        if ($logFile !== null) {
+            warn('Full log saved to ' . $logFile);
+        }
+        warn('npm ' . $subcmd . ' failed (exit code ' . $exitCode . ').');
+        return 'failed';
+    }
+
+    if ($logFile !== null) {
+        @unlink($logFile);
+    }
+
+    $buildCmd = "npm run build --prefix={$escDir} 2>&1";
+
+    $logFile  = null;
+    $exitCode = run_filtered_tool($buildCmd, should_show_npm_line(...), $logFile);
+
+    if ($exitCode !== 0) {
+        if ($logFile !== null) {
+            warn('Full log saved to ' . $logFile);
+        }
+        warn('npm run build failed (exit code ' . $exitCode . ').');
+        return 'failed';
+    }
+
+    if ($logFile !== null) {
+        @unlink($logFile);
+    }
+
+    info('Frontend assets built');
+    return 'built';
 }
 
 function setup_environment(string $dir): void
@@ -1000,7 +1252,7 @@ function create_storage_link(string $dir): void
 // Completion message
 // ---------------------------------------------------------------------------
 
-function show_complete(string $dir): void
+function show_complete(string $dir, string $assetsStatus = 'built'): void
 {
     fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, bold(green('  ╔══════════════════════════════════════════╗')) . PHP_EOL);
@@ -1012,10 +1264,30 @@ function show_complete(string $dir): void
     fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, bold('  Next steps:') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
-    fwrite(STDOUT, '  1. Point your web server document root to:' . PHP_EOL);
+
+    // When the asset build did not complete, prepend a "build the frontend"
+    // step so the user knows to run npm before opening the URL — otherwise
+    // Vite's manifest is missing and the wizard 500s before it can render.
+    // Differentiate 'failed' (we tried and broke; surface the failure clearly)
+    // from 'skipped' (intentional via --no-build or no Vite project detected).
+    $step = 1;
+    if ($assetsStatus === 'failed') {
+        fwrite(STDOUT, '  ' . $step . '. ' . yellow('Frontend asset build did not complete. Re-run:') . PHP_EOL);
+        fwrite(STDOUT, '     ' . cyan('cd ' . $dir . ' && npm install && npm run build') . PHP_EOL);
+        fwrite(STDOUT, PHP_EOL);
+        $step++;
+    } elseif ($assetsStatus === 'skipped') {
+        fwrite(STDOUT, '  ' . $step . '. Build the frontend assets:' . PHP_EOL);
+        fwrite(STDOUT, '     ' . cyan('cd ' . $dir . ' && npm install && npm run build') . PHP_EOL);
+        fwrite(STDOUT, PHP_EOL);
+        $step++;
+    }
+
+    fwrite(STDOUT, '  ' . $step . '. Point your web server document root to:' . PHP_EOL);
     fwrite(STDOUT, '     ' . cyan($dir . '/public') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
-    fwrite(STDOUT, '  2. Open your browser and visit your site URL.' . PHP_EOL);
+    $step++;
+    fwrite(STDOUT, '  ' . $step . '. Open your browser and visit your site URL.' . PHP_EOL);
     fwrite(STDOUT, '     The ' . bold('Installation Wizard') . ' will guide you through:' . PHP_EOL);
     fwrite(STDOUT, '     • Database configuration' . PHP_EOL);
     fwrite(STDOUT, '     • Admin account creation' . PHP_EOL);
@@ -1148,13 +1420,30 @@ function main(array $argv): int
         }
     }
 
+    // SECURITY: composer_create_project() set COMPOSER_AUTH (containing the
+    // GitHub token) via putenv() for its own subprocess. Scrub it from the
+    // process env now that composer has finished and *before* any other
+    // subprocess (artisan key:generate via setup_environment, chmod via
+    // set_permissions, npm via build_assets, artisan storage:link via
+    // create_storage_link) inherits it. build_assets() repeats this defence
+    // in depth in case a future caller invokes it without going through main.
+    putenv('COMPOSER_AUTH');
+    putenv('GITHUB_TOKEN');
+    putenv('DIXLASE_GITHUB_TOKEN');
+
     // --- Common post-install steps ---
+    //
+    // Order matters: setup_environment runs first because Vite reads .env at
+    // build time (VITE_*). build_assets must run BEFORE set_permissions so
+    // chmod_recursive() does not walk the freshly-created node_modules tree
+    // (slow + unnecessary).
 
     setup_environment($dir);
+    $assetsStatus = build_assets($dir, $options['no_build']);
     set_permissions($dir);
     create_storage_link($dir);
 
-    show_complete($dir);
+    show_complete($dir, $assetsStatus);
 
     return 0;
 }

@@ -150,3 +150,20 @@ Environment:	Environment:
 Full log saved to 	Full log saved to 
 Check the log above for errors.	Check the log above for errors.
 No GITHUB_TOKEN detected — needed if installing from a private repository.	No GITHUB_TOKEN detected — needed if installing from a private repository.
+// Frontend asset build (npm install / npm ci + npm run build via Vite)	// Frontend asset build (npm install / npm ci + npm run build via Vite)
+Building frontend assets	Building frontend assets
+Frontend assets built	Frontend assets built
+npm not found — install Node.js (>=18) and re-run the asset build manually.	npm not found — install Node.js (>=18) and re-run the asset build manually.
+(If you use nvm/fnm/asdf/volta, source it first or run from an interactive shell.)	(If you use nvm/fnm/asdf/volta, source it first or run from an interactive shell.)
+Node version does not satisfy package.json engines (	Node version does not satisfy package.json engines (
+) — skipping build.	) — skipping build.
+Only 	Only 
+ MB free on the install volume — npm install may fail.	 MB free on the install volume — npm install may fail.
+npm install failed (exit code 	npm install failed (exit code 
+npm ci failed (exit code 	npm ci failed (exit code 
+npm run build failed (exit code 	npm run build failed (exit code 
+  --no-build          Skip "npm ci && npm run build" (frontend asset build)	  --no-build          Skip "npm ci && npm run build" (frontend asset build)
+. Build the frontend assets:	. Build the frontend assets:
+Frontend asset build did not complete. Re-run:	Frontend asset build did not complete. Re-run:
+Refusing to use existing 	Refusing to use existing 
+ as npm cache (not a directory).	 as npm cache (not a directory).

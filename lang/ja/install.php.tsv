@@ -150,3 +150,20 @@ Environment:	環境変数:
 Full log saved to 	フルログ保存先:
 Check the log above for errors.	エラーは上記ログを確認してください。
 No GITHUB_TOKEN detected — needed if installing from a private repository.	GITHUB_TOKEN が検出されませんでした — プライベートリポジトリからインストールする場合は必須です。
+// Frontend asset build (npm install / npm ci + npm run build via Vite)	// フロントエンドアセットビルド (Vite による npm install / npm ci + npm run build)
+Building frontend assets	フロントエンドアセットをビルド中
+Frontend assets built	フロントエンドアセットをビルド完了
+npm not found — install Node.js (>=18) and re-run the asset build manually.	npm が見つかりません — Node.js (>=18) をインストールしてアセットビルドを手動再実行してください。
+(If you use nvm/fnm/asdf/volta, source it first or run from an interactive shell.)	(nvm/fnm/asdf/volta を使う場合は先に source するか対話シェルから実行してください)
+Node version does not satisfy package.json engines (	Node のバージョンが package.json の engines を満たしません (
+) — skipping build.	) — ビルドをスキップします。
+Only 	空き容量
+ MB free on the install volume — npm install may fail.	 MB しかありません — npm install が失敗する可能性があります。
+npm install failed (exit code 	npm install が失敗しました (exit code
+npm ci failed (exit code 	npm ci が失敗しました (exit code
+npm run build failed (exit code 	npm run build が失敗しました (exit code
+  --no-build          Skip "npm ci && npm run build" (frontend asset build)	  --no-build          "npm ci && npm run build" をスキップ (フロントエンドアセットビルド)
+. Build the frontend assets:	. フロントエンドアセットをビルド:
+Frontend asset build did not complete. Re-run:	フロントエンドアセットのビルドが完了しませんでした。再実行:
+Refusing to use existing 	既存の
+ as npm cache (not a directory).	 を npm キャッシュとして使用するのを拒否します (ディレクトリではありません)。
