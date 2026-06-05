@@ -45,7 +45,6 @@ All required extensions are installed (	必要な拡張モジュールはすべ�
 Checking Composer	Composer を確認中
 Found local composer.phar	ローカルの composer.phar を検出
 Fetching latest release information	最新リリース情報を取得中
-Could not fetch release information from GitHub. Check your network connection.	GitHub からリリース情報を取得できませんでした。ネットワーク接続を確認してください。
 Unexpected API response from GitHub.	GitHub から想定外の API 応答を受信しました。
 Latest version: 	最新バージョン:
     Downloaded: 	    ダウンロード:
@@ -167,3 +166,24 @@ npm run build failed (exit code 	npm run build が失敗しました (exit code
 Frontend asset build did not complete. Re-run:	フロントエンドアセットのビルドが完了しませんでした。再実行:
 Refusing to use existing 	既存の
  as npm cache (not a directory).	 を npm キャッシュとして使用するのを拒否します (ディレクトリではありません)。
+// GitHub Release API (private-repo-safe asset download)	// GitHub リリース API (private リポジトリ対応のアセットダウンロード)
+Could not fetch release v	リリース v
+ from the GitHub API.	 を GitHub API から取得できませんでした。
+Release v	リリース v
+ does not have an asset named '	 にアセット '
+'.	' が含まれていません。
+Failed to download 	ダウンロード失敗:
+ via the GitHub API.	 (GitHub API 経由)
+curl error (	curl エラー (
+): 	):
+Could not fetch release info for checksum — skipping verification.	チェックサム検証用のリリース情報を取得できなかったため検証をスキップします。
+Checksum file not in release assets — skipping verification.	チェックサムファイルがリリースアセットに含まれないため検証をスキップします。
+Failed to download checksum file — skipping verification.	チェックサムファイルのダウンロードに失敗したため検証をスキップします。
+Could not read checksum file — skipping verification.	チェックサムファイルを読み取れなかったため検証をスキップします。
+Could not fetch release information from GitHub.	GitHub からリリース情報を取得できませんでした。
+ZIP delivery path failed — falling back to composer create-project.	ZIP 配布経路が失敗しました — composer create-project にフォールバックします。
+Failed to download the release ZIP.	リリース ZIP のダウンロードに失敗しました。
+composer create-project failed.	composer create-project が失敗しました。
+Both delivery paths failed.	両方の配布経路が失敗しました。
+vendor/ is not in the ZIP and Composer is not available.	vendor/ が ZIP に含まれず Composer も利用できません。
+Install Composer and run: composer install --no-dev --optimize-autoloader	Composer をインストールして実行: composer install --no-dev --optimize-autoloader
