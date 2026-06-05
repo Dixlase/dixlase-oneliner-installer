@@ -171,7 +171,7 @@ Could not fetch release v	Could not fetch release v
  from the GitHub API.	 from the GitHub API.
 Release v	Release v
  does not have an asset named '	 does not have an asset named '
-'.	'.
+' attached.	' attached.
 Failed to download 	Failed to download 
  via the GitHub API.	 via the GitHub API.
 curl error (	curl error (
