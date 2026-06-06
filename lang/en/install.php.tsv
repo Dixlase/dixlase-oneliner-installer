@@ -111,12 +111,12 @@ Options:	Options:
       Installation Complete!              	      Installation Complete!              
   Dixlase has been installed to:	  Dixlase has been installed to:
   Next steps:	  Next steps:
-  1. Point your web server document root to:	  1. Point your web server document root to:
-  2. Open your browser and visit your site URL.	  2. Open your browser and visit your site URL.
-'     The ' . bold('Installation Wizard') . ' will guide you through:'	'     The ' . bold('Installation Wizard') . ' will guide you through:'
-     • Database configuration	     • Database configuration
-     • Admin account creation	     • Admin account creation
-     • Mail server settings	     • Mail server settings
+. Start the local server:	. Start the local server:
+     Then open 	     Then open 
+ in your browser.	 in your browser.
+'     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'	'     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'
+'     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.'	'     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.'
+. For other deployment options (Docker, VPS, shared hosting), see:	. For other deployment options (Docker, VPS, shared hosting), see:
   Documentation: https://docs.dixlase.com	  Documentation: https://docs.dixlase.com
   Support:       https://github.com/	  Support:       https://github.com/
 /issues	/issues
