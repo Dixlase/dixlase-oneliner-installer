@@ -100,9 +100,14 @@ Invalid --method value: 	--method の値が不正:
  (expected auto, composer, or zip)	 (期待値: auto, composer, zip)
 Usage:	使い方:
 Options:	オプション:
-  --dir=PATH          Installation directory. Default: cwd if empty,	  --dir=PATH          インストール先ディレクトリ。既定: cwd が空ならそこに、
-                      otherwise <cwd>/dixlase. Use --dir=. to force	                      そうでなければ <cwd>/dixlase。--dir=. で cwd
-                      in-place install even when cwd is not empty.	                      が空でなくても直下に強制インストール。
+  --dir=PATH          Installation directory (default: <cwd>/dixlase).	  --dir=PATH          インストール先ディレクトリ (既定: <cwd>/dixlase)。
+                      Pass --dir=. to install into the current directory	                      --dir=. を渡すとサブディレクトリではなく
+                      in place instead of creating a subdirectory.	                      カレントディレクトリ直下にインストールする。
+Target directory already exists and is not empty: 	インストール先ディレクトリが既に存在し空ではありません:
+  Choose one of:	  以下のいずれかを選んでください:
+    • Remove the directory and re-run the installer	    • ディレクトリを削除して再実行
+'    • Pass ' . bold('--dir=PATH') . ' to install into a different location'	'    • ' . bold('--dir=PATH') . ' を渡して別の場所にインストール'
+'    • Pass ' . bold('--dir=.') . ' to install into the current directory in place'	'    • ' . bold('--dir=.') . ' を渡してカレントディレクトリ直下にインストール'
   --version=X.X.X     Install a specific version (default: latest)	  --version=X.X.X     特定のバージョンをインストール (デフォルト: 最新)
   --method=MODE       Delivery method: auto, composer, or zip (default: auto)	  --method=MODE       配布方式: auto, composer, または zip (デフォルト: auto)
   --no-composer       Skip "composer install" in the zip fallback path	  --no-composer       zip フォールバックパスで "composer install" をスキップ
