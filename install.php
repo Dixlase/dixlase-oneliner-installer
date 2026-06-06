@@ -597,7 +597,8 @@ function download_asset_via_api(string $apiUrl, string $dest): bool
     $errno = curl_errno($ch);
     $err   = $errno !== 0 ? curl_error($ch) : '';
 
-    curl_close($ch);
+    // curl_close() is a no-op on PHP 8.0+ and deprecated in 8.5 — handle via unset.
+    unset($ch);
     fclose($fh);
     fwrite(STDOUT, PHP_EOL);
 
