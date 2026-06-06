@@ -9,8 +9,6 @@ setup() {
     start_mock_github "$REL_DIR" "$VERSION"
     FAKE_HOME="$BATS_TEST_TMPDIR/home"
     mkdir -p "$FAKE_HOME"
-    # Real homes always have unrelated files; simulate that so HOME doesn't
-    # get misclassified as "empty cwd → install in place".
     : > "$FAKE_HOME/.zshrc"
 }
 
@@ -18,68 +16,72 @@ teardown() {
     stop_mock_github
 }
 
-@test "default dir: piped run from HOME installs into <HOME>/dixlase, not HOME itself" {
-    run env HOME="$FAKE_HOME" bash -c "cd \"$FAKE_HOME\" && \
+run_in() {
+    local cwd="$1"
+    shift
+    env HOME="$FAKE_HOME" bash -c "cd \"$cwd\" && \
         DIXLASE_API_LATEST_URL=\"$MOCK_BASE_URL/api/latest.json\" \
         DIXLASE_RELEASE_URL_BASE=\"$MOCK_BASE_URL/releases/download\" \
-        php \"$INSTALL_PHP\" --method=zip --no-composer --non-interactive --yes --version=\"$VERSION\""
-    [ "$status" -eq 0 ]
-    [[ "$output" == *"Installation Complete!"* ]]
-    [ -f "$FAKE_HOME/dixlase/artisan" ]
-    [ -f "$FAKE_HOME/dixlase/.env" ]
-    [ ! -f "$FAKE_HOME/artisan" ]
+        php \"$INSTALL_PHP\" --method=zip --no-composer --non-interactive --yes --version=\"$VERSION\" $*"
 }
 
-@test "default dir: piped run from an empty non-HOME cwd installs in place" {
+@test "default dir: empty cwd still installs into <cwd>/dixlase (unified rule)" {
     local CWD="$BATS_TEST_TMPDIR/site"
     mkdir -p "$CWD"
-    run env HOME="$FAKE_HOME" bash -c "cd \"$CWD\" && \
-        DIXLASE_API_LATEST_URL=\"$MOCK_BASE_URL/api/latest.json\" \
-        DIXLASE_RELEASE_URL_BASE=\"$MOCK_BASE_URL/releases/download\" \
-        php \"$INSTALL_PHP\" --method=zip --no-composer --non-interactive --yes --version=\"$VERSION\""
-    [ "$status" -eq 0 ]
-    [[ "$output" == *"Installation Complete!"* ]]
-    [ -f "$CWD/artisan" ]
-    [ ! -d "$CWD/dixlase" ]
-}
-
-@test "default dir: piped run from a non-empty non-HOME cwd installs into <cwd>/dixlase" {
-    local CWD="$BATS_TEST_TMPDIR/site"
-    mkdir -p "$CWD"
-    : > "$CWD/note.txt"
-    run env HOME="$FAKE_HOME" bash -c "cd \"$CWD\" && \
-        DIXLASE_API_LATEST_URL=\"$MOCK_BASE_URL/api/latest.json\" \
-        DIXLASE_RELEASE_URL_BASE=\"$MOCK_BASE_URL/releases/download\" \
-        php \"$INSTALL_PHP\" --method=zip --no-composer --non-interactive --yes --version=\"$VERSION\""
+    run run_in "$CWD"
     [ "$status" -eq 0 ]
     [[ "$output" == *"Installation Complete!"* ]]
     [ -f "$CWD/dixlase/artisan" ]
-    [ -f "$CWD/note.txt" ]
     [ ! -f "$CWD/artisan" ]
 }
 
-@test "default dir: macOS .DS_Store alone is still treated as empty (in-place install)" {
+@test "default dir: non-empty cwd installs into <cwd>/dixlase" {
     local CWD="$BATS_TEST_TMPDIR/site"
     mkdir -p "$CWD"
-    : > "$CWD/.DS_Store"
-    run env HOME="$FAKE_HOME" bash -c "cd \"$CWD\" && \
-        DIXLASE_API_LATEST_URL=\"$MOCK_BASE_URL/api/latest.json\" \
-        DIXLASE_RELEASE_URL_BASE=\"$MOCK_BASE_URL/releases/download\" \
-        php \"$INSTALL_PHP\" --method=zip --no-composer --non-interactive --yes --version=\"$VERSION\""
+    : > "$CWD/note.txt"
+    run run_in "$CWD"
+    [ "$status" -eq 0 ]
+    [ -f "$CWD/dixlase/artisan" ]
+    [ -f "$CWD/note.txt" ]
+}
+
+@test "default dir: HOME installs into <HOME>/dixlase, not HOME itself" {
+    run run_in "$FAKE_HOME"
+    [ "$status" -eq 0 ]
+    [ -f "$FAKE_HOME/dixlase/artisan" ]
+    [ ! -f "$FAKE_HOME/artisan" ]
+}
+
+@test "default dir: pre-existing non-empty <cwd>/dixlase aborts with guidance" {
+    local CWD="$BATS_TEST_TMPDIR/site"
+    mkdir -p "$CWD/dixlase"
+    : > "$CWD/dixlase/leftover.txt"
+    run run_in "$CWD"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"already exists and is not empty"* ]]
+    [[ "$output" == *"--dir=PATH"* ]]
+    [[ "$output" == *"--dir=."* ]]
+    [ ! -f "$CWD/dixlase/artisan" ]
+    [ -f "$CWD/dixlase/leftover.txt" ]
+}
+
+@test "default dir: --dir=. forces in-place install even when cwd has files" {
+    local CWD="$BATS_TEST_TMPDIR/site"
+    mkdir -p "$CWD"
+    : > "$CWD/note.txt"
+    run run_in "$CWD" --dir=.
     [ "$status" -eq 0 ]
     [ -f "$CWD/artisan" ]
+    [ -f "$CWD/note.txt" ]
     [ ! -d "$CWD/dixlase" ]
 }
 
-@test "post-install: next-steps include 'cd <dir> && php artisan serve' and docs index URL" {
+@test "post-install: next-steps include 'cd <cwd>/dixlase && php artisan serve' and docs index URL" {
     local CWD="$BATS_TEST_TMPDIR/site"
     mkdir -p "$CWD"
-    run env HOME="$FAKE_HOME" bash -c "cd \"$CWD\" && \
-        DIXLASE_API_LATEST_URL=\"$MOCK_BASE_URL/api/latest.json\" \
-        DIXLASE_RELEASE_URL_BASE=\"$MOCK_BASE_URL/releases/download\" \
-        php \"$INSTALL_PHP\" --method=zip --no-composer --non-interactive --yes --version=\"$VERSION\""
+    run run_in "$CWD"
     [ "$status" -eq 0 ]
-    [[ "$output" == *"cd $CWD && php artisan serve"* ]]
+    [[ "$output" == *"cd $CWD/dixlase && php artisan serve"* ]]
     [[ "$output" == *"http://127.0.0.1:8000"* ]]
     [[ "$output" == *"https://github.com/Dixlase/dixlase-oneliner-installer/blob/main/docs/index.md"* ]]
 }

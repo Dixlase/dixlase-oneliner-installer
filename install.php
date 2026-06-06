@@ -271,25 +271,22 @@ function resolve_path(string $path): string
 /**
  * Pick the default installation directory when --dir is not given.
  *
- * Use cwd as-is only when it is effectively empty (typical of the
- * mkdir-cd-curl pattern). Otherwise — cwd is the operator's $HOME, or
- * cwd already holds unrelated files — route the install into a
- * "<cwd>/dixlase" subdirectory so the Laravel skeleton does not
- * scatter across the operator's working directory. The escape hatch
- * is "--dir=." for callers who really do want in-place overlay.
+ * Always carve a "<cwd>/dixlase" subdirectory. Predictable in every
+ * shell context (HOME, an existing project folder, a fresh mkdir),
+ * mirrors the convention used by scaffolders like "laravel new" and
+ * "create-react-app", and never scatters the Laravel skeleton into
+ * a directory the operator did not create for it. Callers who do
+ * want an in-place install pass --dir=. explicitly.
  */
 function default_install_dir(): string
 {
-    $cwd = getcwd() ?: '.';
-
-    return is_dir_effectively_empty($cwd) ? $cwd : rtrim($cwd, '/') . '/dixlase';
+    return rtrim(getcwd() ?: '.', '/') . '/dixlase';
 }
 
 /**
  * True when $dir holds no entries beyond a small allow-list of
  * harmless metadata files (macOS .DS_Store, Git's bookkeeping, an
- * empty-dir placeholder). Used to decide whether the installer can
- * safely lay the project down in place.
+ * empty-dir placeholder).
  */
 function is_dir_effectively_empty(string $dir): bool
 {
@@ -329,9 +326,9 @@ Usage:
   php install.php [options]
 
 Options:
-  --dir=PATH          Installation directory. Default: cwd if empty,
-                      otherwise <cwd>/dixlase. Use --dir=. to force
-                      in-place install even when cwd is not empty.
+  --dir=PATH          Installation directory (default: <cwd>/dixlase).
+                      Pass --dir=. to install into the current directory
+                      in place instead of creating a subdirectory.
   --version=X.X.X     Install a specific version (default: latest)
   --method=MODE       Delivery method: auto, composer, or zip (default: auto)
   --no-composer       Skip "composer install" in the zip fallback path
@@ -1661,6 +1658,21 @@ function main(array $argv): int
         $dir    = resolve_path($answer);
     } else {
         $dir = resolve_path(default_install_dir());
+    }
+
+    // When the default <cwd>/dixlase target already holds files, refuse
+    // upfront rather than letting composer / unzip emit a confusing
+    // "directory not empty" error mid-install. Only fires for the auto
+    // path — explicit --dir= lets the caller take responsibility.
+    if (! $options['dir_specified'] && is_dir($dir) && ! is_dir_effectively_empty($dir)) {
+        error("Target directory already exists and is not empty: {$dir}");
+        fwrite(STDERR, PHP_EOL);
+        fwrite(STDERR, '  Choose one of:' . PHP_EOL);
+        fwrite(STDERR, '    • Remove the directory and re-run the installer' . PHP_EOL);
+        fwrite(STDERR, '    • Pass ' . bold('--dir=PATH') . ' to install into a different location' . PHP_EOL);
+        fwrite(STDERR, '    • Pass ' . bold('--dir=.') . ' to install into the current directory in place' . PHP_EOL);
+        fwrite(STDERR, PHP_EOL);
+        return 1;
     }
 
     // --- Confirm before proceeding (interactive only) ---
