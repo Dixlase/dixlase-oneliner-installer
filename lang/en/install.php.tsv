@@ -100,7 +100,9 @@ Invalid --method value: 	Invalid --method value:
  (expected auto, composer, or zip)	 (expected auto, composer, or zip)
 Usage:	Usage:
 Options:	Options:
-  --dir=PATH          Installation directory (default: current directory)	  --dir=PATH          Installation directory (default: current directory)
+  --dir=PATH          Installation directory. Default: cwd if empty,	  --dir=PATH          Installation directory. Default: cwd if empty,
+                      otherwise <cwd>/dixlase. Use --dir=. to force	                      otherwise <cwd>/dixlase. Use --dir=. to force
+                      in-place install even when cwd is not empty.	                      in-place install even when cwd is not empty.
   --version=X.X.X     Install a specific version (default: latest)	  --version=X.X.X     Install a specific version (default: latest)
   --method=MODE       Delivery method: auto, composer, or zip (default: auto)	  --method=MODE       Delivery method: auto, composer, or zip (default: auto)
   --no-composer       Skip "composer install" in the zip fallback path	  --no-composer       Skip "composer install" in the zip fallback path

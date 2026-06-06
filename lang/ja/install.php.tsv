@@ -100,7 +100,9 @@ Invalid --method value: 	--method の値が不正:
  (expected auto, composer, or zip)	 (期待値: auto, composer, zip)
 Usage:	使い方:
 Options:	オプション:
-  --dir=PATH          Installation directory (default: current directory)	  --dir=PATH          インストール先ディレクトリ (デフォルト: カレントディレクトリ)
+  --dir=PATH          Installation directory. Default: cwd if empty,	  --dir=PATH          インストール先ディレクトリ。既定: cwd が空ならそこに、
+                      otherwise <cwd>/dixlase. Use --dir=. to force	                      そうでなければ <cwd>/dixlase。--dir=. で cwd
+                      in-place install even when cwd is not empty.	                      が空でなくても直下に強制インストール。
   --version=X.X.X     Install a specific version (default: latest)	  --version=X.X.X     特定のバージョンをインストール (デフォルト: 最新)
   --method=MODE       Delivery method: auto, composer, or zip (default: auto)	  --method=MODE       配布方式: auto, composer, または zip (デフォルト: auto)
   --no-composer       Skip "composer install" in the zip fallback path	  --no-composer       zip フォールバックパスで "composer install" をスキップ
