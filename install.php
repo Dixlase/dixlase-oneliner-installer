@@ -271,21 +271,42 @@ function resolve_path(string $path): string
 /**
  * Pick the default installation directory when --dir is not given.
  *
- * Use cwd as-is, except when cwd is the operator's home directory:
- * piping the installer from $HOME would otherwise scatter the full
- * Laravel skeleton across the home directory, so route those runs
- * into a "$HOME/dixlase" subdirectory instead.
+ * Use cwd as-is only when it is effectively empty (typical of the
+ * mkdir-cd-curl pattern). Otherwise — cwd is the operator's $HOME, or
+ * cwd already holds unrelated files — route the install into a
+ * "<cwd>/dixlase" subdirectory so the Laravel skeleton does not
+ * scatter across the operator's working directory. The escape hatch
+ * is "--dir=." for callers who really do want in-place overlay.
  */
 function default_install_dir(): string
 {
-    $cwd  = getcwd() ?: '.';
-    $home = getenv('HOME') ?: '';
+    $cwd = getcwd() ?: '.';
 
-    if ($home !== '' && @realpath($home) !== false && @realpath($cwd) === @realpath($home)) {
-        return rtrim($cwd, '/') . '/dixlase';
+    return is_dir_effectively_empty($cwd) ? $cwd : rtrim($cwd, '/') . '/dixlase';
+}
+
+/**
+ * True when $dir holds no entries beyond a small allow-list of
+ * harmless metadata files (macOS .DS_Store, Git's bookkeeping, an
+ * empty-dir placeholder). Used to decide whether the installer can
+ * safely lay the project down in place.
+ */
+function is_dir_effectively_empty(string $dir): bool
+{
+    $ignore  = ['.', '..', '.DS_Store', '.gitkeep', '.git', '.localized'];
+    $entries = @scandir($dir);
+
+    if ($entries === false) {
+        return true;
     }
 
-    return $cwd;
+    foreach ($entries as $entry) {
+        if (! in_array($entry, $ignore, true)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /**
@@ -308,7 +329,9 @@ Usage:
   php install.php [options]
 
 Options:
-  --dir=PATH          Installation directory (default: current directory)
+  --dir=PATH          Installation directory. Default: cwd if empty,
+                      otherwise <cwd>/dixlase. Use --dir=. to force
+                      in-place install even when cwd is not empty.
   --version=X.X.X     Install a specific version (default: latest)
   --method=MODE       Delivery method: auto, composer, or zip (default: auto)
   --no-composer       Skip "composer install" in the zip fallback path
