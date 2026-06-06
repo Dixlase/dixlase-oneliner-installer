@@ -111,12 +111,12 @@ Options:	オプション:
       Installation Complete!              	        インストール完了!                 
   Dixlase has been installed to:	  Dixlase のインストール先:
   Next steps:	  次のステップ:
-  1. Point your web server document root to:	  1. Web サーバのドキュメントルートを以下に向ける:
-  2. Open your browser and visit your site URL.	  2. ブラウザでサイト URL を開く。
-'     The ' . bold('Installation Wizard') . ' will guide you through:'	'     ' . bold('インストールウィザード') . ' が以下を案内します:'
-     • Database configuration	     • データベース設定
-     • Admin account creation	     • 管理者アカウント作成
-     • Mail server settings	     • メールサーバ設定
+. Start the local server:	. ローカルサーバを起動:
+     Then open 	     ブラウザで
+ in your browser.	 を開く。
+'     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'	'     ' . bold('インストールウィザード') . ' がデータベース・管理者・メール設定を案内します。'
+'     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.'	'     ' . yellow('MySQL が見つかりません。') . ' データベース選択画面で ' . bold('SQLite') . ' を選べば、別途 DB サーバ無しで開始できます。'
+. For other deployment options (Docker, VPS, shared hosting), see:	. その他のデプロイ方法 (Docker / VPS / 共有ホスティング) は以下を参照:
   Documentation: https://docs.dixlase.com	  ドキュメント:  https://docs.dixlase.com
   Support:       https://github.com/	  サポート:      https://github.com/
 /issues	/issues

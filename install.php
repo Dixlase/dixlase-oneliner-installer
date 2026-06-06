@@ -29,6 +29,7 @@
 define('DIXLASE_MIN_PHP', '8.2.0');
 define('DIXLASE_REPO', 'Dixlase/dixlase-core');
 define('DIXLASE_PACKAGE', 'dixlase/dixlase-core');
+define('DIXLASE_INSTALLER_REPO', 'Dixlase/dixlase-oneliner-installer');
 // URLs are overridable via env vars so tests, mirrors, and air-gapped installs
 // can point the script at a local server without touching the source.
 define('DIXLASE_API_LATEST', getenv('DIXLASE_API_LATEST_URL') ?: 'https://api.github.com/repos/' . DIXLASE_REPO . '/releases/latest');
@@ -265,6 +266,36 @@ function resolve_path(string $path): string
     }
 
     return rtrim($path, '/');
+}
+
+/**
+ * Pick the default installation directory when --dir is not given.
+ *
+ * Use cwd as-is, except when cwd is the operator's home directory:
+ * piping the installer from $HOME would otherwise scatter the full
+ * Laravel skeleton across the home directory, so route those runs
+ * into a "$HOME/dixlase" subdirectory instead.
+ */
+function default_install_dir(): string
+{
+    $cwd  = getcwd() ?: '.';
+    $home = getenv('HOME') ?: '';
+
+    if ($home !== '' && @realpath($home) !== false && @realpath($cwd) === @realpath($home)) {
+        return rtrim($cwd, '/') . '/dixlase';
+    }
+
+    return $cwd;
+}
+
+/**
+ * Detect whether a MySQL client is available on PATH. Used to decide
+ * whether to surface a SQLite hint in the post-install message.
+ */
+function mysql_available(): bool
+{
+    @exec('mysql --version 2>/dev/null', $output, $code);
+    return $code === 0;
 }
 
 function show_help(): void
@@ -1491,7 +1522,7 @@ function create_storage_link(string $dir): void
 // Completion message
 // ---------------------------------------------------------------------------
 
-function show_complete(string $dir, string $assetsStatus = 'built'): void
+function show_complete(string $dir, string $assetsStatus = 'built', bool $mysqlAvailable = true): void
 {
     fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, bold(green('  ╔══════════════════════════════════════════╗')) . PHP_EOL);
@@ -1522,15 +1553,19 @@ function show_complete(string $dir, string $assetsStatus = 'built'): void
         $step++;
     }
 
-    fwrite(STDOUT, '  ' . $step . '. Point your web server document root to:' . PHP_EOL);
-    fwrite(STDOUT, '     ' . cyan($dir . '/public') . PHP_EOL);
+    fwrite(STDOUT, '  ' . $step . '. Start the local server:' . PHP_EOL);
+    fwrite(STDOUT, '     ' . cyan('cd ' . $dir . ' && php artisan serve') . PHP_EOL);
+    fwrite(STDOUT, PHP_EOL);
+    fwrite(STDOUT, '     Then open ' . cyan('http://127.0.0.1:8000') . ' in your browser.' . PHP_EOL);
+    fwrite(STDOUT, '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.' . PHP_EOL);
+    if (! $mysqlAvailable) {
+        fwrite(STDOUT, PHP_EOL);
+        fwrite(STDOUT, '     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.' . PHP_EOL);
+    }
     fwrite(STDOUT, PHP_EOL);
     $step++;
-    fwrite(STDOUT, '  ' . $step . '. Open your browser and visit your site URL.' . PHP_EOL);
-    fwrite(STDOUT, '     The ' . bold('Installation Wizard') . ' will guide you through:' . PHP_EOL);
-    fwrite(STDOUT, '     • Database configuration' . PHP_EOL);
-    fwrite(STDOUT, '     • Admin account creation' . PHP_EOL);
-    fwrite(STDOUT, '     • Mail server settings' . PHP_EOL);
+    fwrite(STDOUT, '  ' . $step . '. For other deployment options (Docker, VPS, shared hosting), see:' . PHP_EOL);
+    fwrite(STDOUT, '     ' . cyan('https://github.com/' . DIXLASE_INSTALLER_REPO . '/blob/main/docs/index.md') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, dim('  Documentation: https://docs.dixlase.com') . PHP_EOL);
     fwrite(STDOUT, dim('  Support:       https://github.com/' . DIXLASE_REPO . '/issues') . PHP_EOL);
@@ -1599,10 +1634,10 @@ function main(array $argv): int
     if ($options['dir_specified']) {
         $dir = resolve_path((string) $options['dir']);
     } elseif ($interactive) {
-        $answer = ask('Installation directory', getcwd());
+        $answer = ask('Installation directory', default_install_dir());
         $dir    = resolve_path($answer);
     } else {
-        $dir = resolve_path(getcwd());
+        $dir = resolve_path(default_install_dir());
     }
 
     // --- Confirm before proceeding (interactive only) ---
@@ -1706,7 +1741,7 @@ function main(array $argv): int
     set_permissions($dir);
     create_storage_link($dir);
 
-    show_complete($dir, $assetsStatus);
+    show_complete($dir, $assetsStatus, mysql_available());
 
     return 0;
 }
