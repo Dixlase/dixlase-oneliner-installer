@@ -109,15 +109,6 @@ bats tests/
 
 CI は PHP 8.2 / 8.3 / 8.4 のマトリクスで同じスイートを実行 ([.github/workflows/ci.yml](./.github/workflows/ci.yml))。
 
-### URL の上書き
-
-`install.php` は 2 つのオプション環境変数を読み、テスト / 内部ミラー / エアギャップ環境で配信元を切り替えられます:
-
-| 環境変数 | デフォルト | 用途 |
-| --- | --- | --- |
-| `DIXLASE_API_LATEST_URL` | `https://api.github.com/repos/Dixlase/dixlase-core/releases/latest` | `{"tag_name": "vX.Y.Z"}` を返すエンドポイント |
-| `DIXLASE_RELEASE_URL_BASE` | `https://github.com/Dixlase/dixlase-core/releases/download` | `/v<ver>/dixlase-v<ver>.zip` 等を取得するベース URL |
-
 ## ライセンス
 
 本インストーラー (`install.php` と関連スクリプト / 辞書) は [MIT ライセンス](./LICENSE)。Dixlase 本体は AGPL v3 (詳細は [Dixlase Core](https://github.com/Dixlase/dixlase-core))。
