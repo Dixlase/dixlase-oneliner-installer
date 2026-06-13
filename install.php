@@ -17,8 +17,9 @@
  *   php install.php --non-interactive --yes          # CI mode
  *   curl -sS https://install.dixlase.net | GITHUB_TOKEN=... php   # private repo
  *
- * SPDX-License-Identifier: MIT
+ * SPDX-License-Identifier: LicenseRef-Proprietary
  * Copyright (c) 2026 exc-D inc.
+ * All rights reserved. See LICENSE for terms.
  * https://exc-d.com
  */
 
