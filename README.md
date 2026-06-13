@@ -116,7 +116,7 @@ Japanese mirror under [`docs/ja/`](./docs/ja/).
 ├── tests/                  # bats integration suite + fixtures + helpers
 ├── .github/workflows/      # GitHub Actions CI
 ├── CLAUDE.md / CLAUDE.ja.md # Coding rules for contributors and AI tools
-├── LICENSE                 # MIT
+├── LICENSE                 # Proprietary (exc-D inc.)
 └── README.md / README.ja.md
 ```
 
@@ -144,6 +144,6 @@ CI runs the same suite on PHP 8.2 / 8.3 / 8.4 — see [.github/workflows/ci.yml]
 
 ## License
 
-This installer (`install.php` and supporting scripts / dictionaries) is released under the [MIT License](./LICENSE) so it can be freely forked, modified, and redistributed.
+This installer (`install.php` and supporting scripts / dictionaries) is **proprietary software of exc-D inc.** Copying, modifying, distributing, or using it without prior written permission is prohibited. See [LICENSE](./LICENSE) for terms.
 
 The Dixlase application itself is licensed separately under AGPL v3 — see [Dixlase Core](https://github.com/Dixlase/dixlase-core).
