@@ -95,6 +95,8 @@ server {
         include fastcgi_params;
         fastcgi_pass unix:/run/php/php8.2-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        # Core updates can exceed nginx's default 60s; allow PHP's 300s.
+        fastcgi_read_timeout 300s;
     }
 
     location ~ /\.(?!well-known) {
@@ -142,11 +144,18 @@ Open `https://dixlase.example.com` — the Dixlase install wizard takes over:
 The one-liner is for *initial* install. For updates, deal with composer + git directly:
 
 ```bash
+# 1) As the app user: enter maintenance, update code, migrate.
 sudo -iu dixlase bash -lc '
     cd /var/www/dixlase
     php artisan down
     GITHUB_TOKEN=github_pat_xxx composer update --no-dev --optimize-autoloader
     php artisan migrate --force
-    php artisan up
 '
+
+# 2) As root: reload PHP-FPM so opcache and the realpath cache drop the old
+#    code instead of serving stale/half-swapped files after the swap.
+sudo systemctl reload php8.2-fpm
+
+# 3) As the app user: lift maintenance.
+sudo -iu dixlase bash -lc 'cd /var/www/dixlase && php artisan up'
 ```
