@@ -95,6 +95,8 @@ server {
         include fastcgi_params;
         fastcgi_pass unix:/run/php/php8.2-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        # コア更新は nginx 既定の 60s を超え得るため PHP の 300s まで許可
+        fastcgi_read_timeout 300s;
     }
 
     location ~ /\.(?!well-known) {
@@ -141,11 +143,18 @@ sudo certbot --nginx -d dixlase.example.com
 ワンライナーは**初回インストール用**です。アップデートは Composer / Git を直接使ってください:
 
 ```bash
+# 1) アプリユーザーで: メンテナンス開始 → コード更新 → マイグレーション
 sudo -iu dixlase bash -lc '
     cd /var/www/dixlase
     php artisan down
     GITHUB_TOKEN=github_pat_xxx composer update --no-dev --optimize-autoloader
     php artisan migrate --force
-    php artisan up
 '
+
+# 2) root で: PHP-FPM を reload し、opcache と realpath キャッシュに古いコードを
+#    破棄させる (swap 後に古い/半置換のファイルを配信しないため)
+sudo systemctl reload php8.2-fpm
+
+# 3) アプリユーザーで: メンテナンス解除
+sudo -iu dixlase bash -lc 'cd /var/www/dixlase && php artisan up'
 ```
