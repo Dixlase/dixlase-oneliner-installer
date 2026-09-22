@@ -4,6 +4,6 @@
     "type": "project",
     "license": "AGPL-3.0-or-later",
     "require": {
-        "php": "^8.2"
+        "php": "^8.3"
     }
 }

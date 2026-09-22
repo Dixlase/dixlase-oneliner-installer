@@ -11,10 +11,10 @@ The one-liner handles the application bootstrap (download, dependencies, key gen
 sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update
 
-# PHP 8.2 + the extensions install.php requires
+# PHP 8.3 + the extensions install.php requires
 sudo apt install -y \
-    php8.2 php8.2-{cli,fpm,common,mbstring,xml,curl,gd,bcmath,sqlite3,zip} \
-    php8.2-pdo php8.2-mysql
+    php8.3 php8.3-{cli,fpm,common,mbstring,xml,curl,gd,bcmath,sqlite3,zip} \
+    php8.3-pdo php8.3-mysql
 
 # Composer
 curl -sS https://getcomposer.org/installer | php
@@ -25,7 +25,7 @@ sudo apt install -y nginx mariadb-server unzip
 sudo mysql_secure_installation
 ```
 
-CentOS / RHEL / Alma: use `remi-php82` plus `dnf install php php-{cli,fpm,mbstring,...}`. Arch: `pacman -S php php-fpm composer nginx mariadb`.
+CentOS / RHEL / Alma: use `remi-php83` plus `dnf install php php-{cli,fpm,mbstring,...}`. Arch: `pacman -S php php-fpm composer nginx mariadb`.
 
 ## 2. Create the application user and target directory
 
@@ -93,7 +93,7 @@ server {
 
     location ~ \.php$ {
         include fastcgi_params;
-        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         # Core updates can exceed nginx's default 60s; allow PHP's 300s.
         fastcgi_read_timeout 300s;
@@ -131,7 +131,7 @@ Open `https://dixlase.example.com` — the Dixlase install wizard takes over:
 ## Hardening checklist (post-install)
 
 - File permissions: keep ownership at `dixlase:dixlase`, `storage/` and `bootstrap/cache/` writable, everything else read-only for the webserver user
-- `sudo systemctl enable --now php8.2-fpm nginx mariadb`
+- `sudo systemctl enable --now php8.3-fpm nginx mariadb`
 - `ufw allow 'Nginx Full' && ufw enable` (or your distribution's firewall)
 - Fail2ban or CrowdSec for SSH + HTTP brute-force protection
 - Set up backups: `mysqldump` of the DB + `storage/app/` tree
@@ -154,7 +154,7 @@ sudo -iu dixlase bash -lc '
 
 # 2) As root: reload PHP-FPM so opcache and the realpath cache drop the old
 #    code instead of serving stale/half-swapped files after the swap.
-sudo systemctl reload php8.2-fpm
+sudo systemctl reload php8.3-fpm
 
 # 3) As the app user: lift maintenance.
 sudo -iu dixlase bash -lc 'cd /var/www/dixlase && php artisan up'

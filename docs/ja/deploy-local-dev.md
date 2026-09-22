@@ -44,7 +44,7 @@ ln -s /path/to/dixlase-install ~/Sites/dixlase
 open http://dixlase.test
 ```
 
-GUI から PHP バージョンを 8.2+ に切替、必要なら `*.test` の HTTPS を有効化できます。
+GUI から PHP バージョンを 8.3+ に切替、必要なら `*.test` の HTTPS を有効化できます。
 
 ### Laravel Valet — macOS のみ
 

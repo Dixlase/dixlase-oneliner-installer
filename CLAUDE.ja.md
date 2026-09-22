@@ -7,7 +7,7 @@ For English, see [CLAUDE.md](./CLAUDE.md).
 ## プロジェクト概要
 
 - ワンライナーインストーラ: `curl -sS https://install.dixlase.net | php`
-- 単一ファイルの PHP スクリプト (`install.php`)。PHP 8.2+ 以外の実行時依存はなし
+- 単一ファイルの PHP スクリプト (`install.php`)。PHP 8.3+ 以外の実行時依存はなし
 - 2 つの配布経路をサポート:
   - `composer create-project dixlase/dixlase-core` (Composer が PATH にあるとき優先)
   - GitHub Releases ZIP フォールバック (Composer がないとき)
@@ -51,7 +51,7 @@ feat: add user profile page
 
 ## ファイル編集の方針
 
-- `install.php` は PHP 8.2 と stdlib 拡張のみで動作させる (`DIXLASE_REQUIRED_EXTENSIONS` に列挙されたもの)。
+- `install.php` は PHP 8.3 と stdlib 拡張のみで動作させる (`DIXLASE_REQUIRED_EXTENSIONS` に列挙されたもの)。
 - 補助シェルスクリプト (例: `convert-comments.sh`) は POSIX 準拠の `bash` で書き、macOS / Linux 両方で動作させる。
 - `sed -i` などの BSD/GNU 差異が出るコマンドは、両環境で動く形 (例: `sed -i.bak ... && rm *.bak`) を選ぶ。
 - ハードコードされたパス・個人マシン依存の値は禁止する (公開配布物のため)。

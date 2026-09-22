@@ -16,7 +16,7 @@ curl -sS https://install.dixlase.net | php
 
 ## 動作要件
 
-- **PHP 8.2 以上** と標準拡張 (`openssl`、`pdo`、`mbstring`、`tokenizer`、`xml`、`ctype`、`json`、`bcmath`、`curl`、`fileinfo`、`gd`)
+- **PHP 8.3 以上** と標準拡張 (`openssl`、`pdo`、`mbstring`、`tokenizer`、`xml`、`ctype`、`json`、`bcmath`、`curl`、`fileinfo`、`gd`)
 - **Composer** (推奨)
 - **ネットワーク接続** (GitHub Releases / Packagist)
 
@@ -107,7 +107,7 @@ sudo apt-get install -y bats        # Debian / Ubuntu
 bats tests/
 ```
 
-CI は PHP 8.2 / 8.3 / 8.4 のマトリクスで同じスイートを実行 ([.github/workflows/ci.yml](./.github/workflows/ci.yml))。
+CI は PHP 8.3 / 8.4 / 8.5 のマトリクスで同じスイートを実行 ([.github/workflows/ci.yml](./.github/workflows/ci.yml))。
 
 ### URL の上書き
 
