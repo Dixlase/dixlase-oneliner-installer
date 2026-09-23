@@ -44,7 +44,7 @@ ln -s /path/to/dixlase-install ~/Sites/dixlase
 open http://dixlase.test
 ```
 
-Use the Herd GUI to flip the PHP version to 8.2+ and (optionally) enable HTTPS for `*.test`.
+Use the Herd GUI to flip the PHP version to 8.3+ and (optionally) enable HTTPS for `*.test`.
 
 ### Laravel Valet — macOS only
 

@@ -11,10 +11,10 @@
 sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update
 
-# PHP 8.2 と install.php が要求する拡張
+# PHP 8.3 と install.php が要求する拡張
 sudo apt install -y \
-    php8.2 php8.2-{cli,fpm,common,mbstring,xml,curl,gd,bcmath,sqlite3,zip} \
-    php8.2-pdo php8.2-mysql
+    php8.3 php8.3-{cli,fpm,common,mbstring,xml,curl,gd,bcmath,sqlite3,zip} \
+    php8.3-pdo php8.3-mysql
 
 # Composer
 curl -sS https://getcomposer.org/installer | php
@@ -25,7 +25,7 @@ sudo apt install -y nginx mariadb-server unzip
 sudo mysql_secure_installation
 ```
 
-CentOS / RHEL / Alma: `remi-php82` リポ + `dnf install php php-{cli,fpm,mbstring,...}`。Arch: `pacman -S php php-fpm composer nginx mariadb`。
+CentOS / RHEL / Alma: `remi-php83` リポ + `dnf install php php-{cli,fpm,mbstring,...}`。Arch: `pacman -S php php-fpm composer nginx mariadb`。
 
 ## 2. 実行ユーザーと配置ディレクトリの作成
 
@@ -93,7 +93,7 @@ server {
 
     location ~ \.php$ {
         include fastcgi_params;
-        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         # コア更新は nginx 既定の 60s を超え得るため PHP の 300s まで許可
         fastcgi_read_timeout 300s;
@@ -131,7 +131,7 @@ sudo certbot --nginx -d dixlase.example.com
 ## ハードニングチェックリスト (インストール後)
 
 - パーミッション: 所有者を `dixlase:dixlase` に、`storage/` と `bootstrap/cache/` を書込可、それ以外は Web サーバユーザから read-only
-- `sudo systemctl enable --now php8.2-fpm nginx mariadb`
+- `sudo systemctl enable --now php8.3-fpm nginx mariadb`
 - `ufw allow 'Nginx Full' && ufw enable` (またはディストリ標準のファイアウォール)
 - Fail2ban もしくは CrowdSec で SSH / HTTP ブルートフォース対策
 - バックアップ: DB の `mysqldump` と `storage/app/` ツリー
@@ -153,7 +153,7 @@ sudo -iu dixlase bash -lc '
 
 # 2) root で: PHP-FPM を reload し、opcache と realpath キャッシュに古いコードを
 #    破棄させる (swap 後に古い/半置換のファイルを配信しないため)
-sudo systemctl reload php8.2-fpm
+sudo systemctl reload php8.3-fpm
 
 # 3) アプリユーザーで: メンテナンス解除
 sudo -iu dixlase bash -lc 'cd /var/www/dixlase && php artisan up'

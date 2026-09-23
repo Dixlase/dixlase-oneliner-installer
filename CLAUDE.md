@@ -7,7 +7,7 @@ Rules every contributor (human or AI) must follow when working in this repositor
 ## Project overview
 
 - Pipe-friendly installer: `curl -sS https://install.dixlase.net | php`
-- Single-file PHP script (`install.php`); no runtime dependencies beyond a PHP 8.2+ interpreter
+- Single-file PHP script (`install.php`); no runtime dependencies beyond a PHP 8.3+ interpreter
 - Two delivery paths:
   - `composer create-project dixlase/dixlase-core` (preferred when Composer is on PATH)
   - GitHub Releases ZIP fallback (when Composer is missing)
@@ -51,7 +51,7 @@ feat: add user profile page
 
 ## File editing policy
 
-- `install.php` must run on PHP 8.2 with only stdlib extensions (the same set listed in `DIXLASE_REQUIRED_EXTENSIONS`).
+- `install.php` must run on PHP 8.3 with only stdlib extensions (the same set listed in `DIXLASE_REQUIRED_EXTENSIONS`).
 - Helper shell scripts (e.g. `convert-comments.sh`) are POSIX-compliant `bash` so they run on both macOS and Linux.
 - For commands that differ between BSD and GNU (e.g. `sed -i`), pick a form that works in both environments (e.g. `sed -i.bak ... && rm *.bak`).
 - Hardcoded paths and machine-specific values are forbidden (this is a public installer).
