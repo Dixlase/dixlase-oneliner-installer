@@ -159,9 +159,9 @@ No GITHUB_TOKEN detected — needed if installing from a private repository.	GIT
 // Frontend asset build (npm install / npm ci + npm run build via Vite)	// フロントエンドアセットビルド (Vite による npm install / npm ci + npm run build)
 Building frontend assets	フロントエンドアセットをビルド中
 Frontend assets built	フロントエンドアセットをビルド完了
-npm not found — install Node.js (>=18) and re-run the asset build manually.	npm が見つかりません — Node.js (>=18) をインストールしてアセットビルドを手動再実行してください。
+npm not found — install Node.js 24 (or any >=20.19) and re-run the asset build manually.	npm が見つかりません — Node.js 24 (または >=20.19) をインストールしてアセットビルドを手動再実行してください。
 (If you use nvm/fnm/asdf/volta, source it first or run from an interactive shell.)	(nvm/fnm/asdf/volta を使う場合は先に source するか対話シェルから実行してください)
-Node version does not satisfy package.json engines (	Node のバージョンが package.json の engines を満たしません (
+Node version is too old for the asset build (need 	アセットビルドには Node のバージョンが古すぎます (必要: 
 ) — skipping build.	) — ビルドをスキップします。
 Only 	空き容量
  MB free on the install volume — npm install may fail.	 MB しかありません — npm install が失敗する可能性があります。

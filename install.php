@@ -28,6 +28,10 @@
 // ---------------------------------------------------------------------------
 
 define('DIXLASE_MIN_PHP', '8.3.0');
+// Node floor for the Vite asset build, used when core's package.json declares
+// no engines.node. Vite 8 supports 20.19+ within 20.x and 22.12+ from there on
+// (21.x and 22.0-22.11 are out); core builds on Node 24.
+define('DIXLASE_NODE_REQUIREMENT', '^20.19 || >=22.12');
 define('DIXLASE_REPO', 'Dixlase/dixlase-core');
 define('DIXLASE_PACKAGE', 'dixlase/dixlase-core');
 define('DIXLASE_INSTALLER_REPO', 'Dixlase/dixlase-oneliner-installer');
@@ -1266,17 +1270,16 @@ function read_dixlase_package_json(string $dir): ?array
 }
 
 /**
- * Verify the active Node.js major version satisfies package.json's
- * engines.node. Returns true when no requirement is declared, when node is
- * missing (caller surfaces the better error), or when the version matches.
+ * Verify the active Node.js version can run the frontend build.
+ *
+ * Honours package.json's engines.node when the project declares one; core
+ * currently does not, so the fallback is DIXLASE_NODE_REQUIREMENT (Vite 8's
+ * own floor) rather than "no constraint". Returns true when node is missing
+ * (caller surfaces the better error) or when the version matches.
  */
 function node_version_satisfies(array $pkg): bool
 {
     $required = $pkg['engines']['node'] ?? '';
-
-    if (! is_string($required) || $required === '') {
-        return true;
-    }
 
     exec('node -p "process.versions.node" 2>/dev/null', $output, $code);
 
@@ -1284,21 +1287,32 @@ function node_version_satisfies(array $pkg): bool
         return true; // let npm/vite report it; we don't gate on missing node here
     }
 
-    if (! preg_match('/(\d+)/', $required, $reqMatch)) {
-        return true;
+    $actual      = explode('.', trim($output[0]));
+    $actualMajor = (int) $actual[0];
+    $actualMinor = (int) ($actual[1] ?? 0);
+
+    if (is_string($required) && $required !== '' && preg_match('/(\d+)/', $required, $reqMatch)) {
+        $needMajor = (int) $reqMatch[1];
+
+        // Defensive bounds: reject implausible major versions parsed from a
+        // hostile / malformed package.json (e.g. >99 or <=0). Fall through to
+        // the built-in floor rather than crash or block on garbage input.
+        if ($needMajor >= 1 && $needMajor <= 99) {
+            return $actualMajor >= $needMajor;
+        }
     }
 
-    $needMajor   = (int) $reqMatch[1];
-    $actualMajor = (int) explode('.', trim($output[0]))[0];
-
-    // Defensive bounds: reject implausible major versions parsed from a
-    // hostile / malformed package.json (e.g. >99 or <=0). Treat as "no
-    // constraint" rather than crash or block on garbage input.
-    if ($needMajor < 1 || $needMajor > 99) {
-        return true;
+    // Vite 8's supported range: 20.19+ inside 20.x, then everything from
+    // 22.12 up. 21.x and 22.0-22.11 cannot build the assets.
+    if ($actualMajor === 20) {
+        return $actualMinor >= 19;
     }
 
-    return $actualMajor >= $needMajor;
+    if ($actualMajor === 22) {
+        return $actualMinor >= 12;
+    }
+
+    return $actualMajor >= 23;
 }
 
 /**
@@ -1333,14 +1347,14 @@ function build_assets(string $dir, bool $skip): string
     step('Building frontend assets');
 
     if (! npm_available()) {
-        warn('npm not found — install Node.js (>=18) and re-run the asset build manually.');
+        warn('npm not found — install Node.js 24 (or any >=20.19) and re-run the asset build manually.');
         warn('(If you use nvm/fnm/asdf/volta, source it first or run from an interactive shell.)');
         return 'failed';
     }
 
     if (! node_version_satisfies($pkg)) {
-        $required = $pkg['engines']['node'] ?? '';
-        warn('Node version does not satisfy package.json engines (' . $required . ') — skipping build.');
+        $required = $pkg['engines']['node'] ?? DIXLASE_NODE_REQUIREMENT;
+        warn('Node version is too old for the asset build (need ' . $required . ') — skipping build.');
         return 'failed';
     }
 

@@ -20,6 +20,7 @@ The installer always needs:
 
 - **PHP 8.3+** with the standard extensions (`openssl`, `pdo`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`, `fileinfo`, `gd`)
 - **Composer** (recommended — used by the primary delivery path)
+- **Node.js 24** (or any `^20.19 || >=22.12`) — only when the frontend assets have to be built; pass `--no-build` to skip the build entirely
 - **Outbound HTTPS** to `github.com`, `api.github.com`, `packagist.org`, and `install.dixlase.net`
 - A shell where you can run `curl ... | php` (so plain SFTP-only hosts can't use it directly — see [deploy-shared-hosting.md](./deploy-shared-hosting.md) for the workaround)
 

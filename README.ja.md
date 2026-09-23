@@ -18,6 +18,7 @@ curl -sS https://install.dixlase.net | php
 
 - **PHP 8.3 以上** と標準拡張 (`openssl`、`pdo`、`mbstring`、`tokenizer`、`xml`、`ctype`、`json`、`bcmath`、`curl`、`fileinfo`、`gd`)
 - **Composer** (推奨)
+- **Node.js 24** (または Vite 8 が対応する `^20.19 || >=22.12` の範囲) — フロントエンドアセットのビルドが必要な場合のみ。リリース ZIP はビルド済みアセットを同梱
 - **ネットワーク接続** (GitHub Releases / Packagist)
 
 不足はインストーラーが事前チェックして対処手順を表示します。
