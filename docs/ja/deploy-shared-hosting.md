@@ -7,7 +7,7 @@
 着手前にコントロールパネルで以下を確認してください:
 
 - [ ] **SSH** が使える (ワンライナーはシェルコマンドなので、シェルが無いと動きません)
-- [ ] **PHP 8.2 以降**がアカウントで選択できる
+- [ ] **PHP 8.3 以降**がアカウントで選択できる
 - [ ] **PHP 拡張**: `openssl pdo mbstring tokenizer xml ctype json bcmath curl fileinfo gd` がすべて有効
 - [ ] **Composer** が PATH 上にある (上位プランは大抵同梱。SSH で `composer --version` で確認)
 - [ ] **MySQL / MariaDB** データベースをパネルから作成できる
@@ -16,7 +16,7 @@
 
 全部が "はい" のプラン → [パターン A](#パターン-a--ssh--composer--php-82-のプラン)。SSH が無い場合 → [パターン B](#パターン-b--sftp-のみのプラン)。
 
-## パターン A — SSH + Composer + PHP 8.2+ のプラン
+## パターン A — SSH + Composer + PHP 8.3+ のプラン
 
 該当しやすい例: さくらのレンタルサーバ (スタンダード以上)、エックスサーバー (Business 含む)、mixhost、ConoHa WING、KAGOYA。最新のプラン仕様は契約前に必ず再確認してください。
 
@@ -29,10 +29,10 @@ mkdir dixlase && cd dixlase
 curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
 ```
 
-デフォルト PATH の `php` が古い場合 (パネルでは PHP 8.2+ を選んでいても SSH の既定が古いケースは多い)、ホストが用意している `/usr/local/php/8.2/bin/php` 等のパスを明示してください:
+デフォルト PATH の `php` が古い場合 (パネルでは PHP 8.3+ を選んでいても SSH の既定が古いケースは多い)、ホストが用意している `/usr/local/php/8.3/bin/php` 等のパスを明示してください:
 
 ```bash
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx /usr/local/php/8.2/bin/php
+curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx /usr/local/php/8.3/bin/php
 ```
 
 ### 2. ドキュメントルートを `dixlase/public` に向ける

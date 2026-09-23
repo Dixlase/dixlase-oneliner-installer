@@ -27,7 +27,7 @@
 // Constants
 // ---------------------------------------------------------------------------
 
-define('DIXLASE_MIN_PHP', '8.2.0');
+define('DIXLASE_MIN_PHP', '8.3.0');
 define('DIXLASE_REPO', 'Dixlase/dixlase-core');
 define('DIXLASE_PACKAGE', 'dixlase/dixlase-core');
 define('DIXLASE_INSTALLER_REPO', 'Dixlase/dixlase-oneliner-installer');

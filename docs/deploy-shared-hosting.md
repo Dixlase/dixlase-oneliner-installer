@@ -7,7 +7,7 @@
 Before anything else, confirm with your hosting control panel:
 
 - [ ] **SSH** is available (the one-liner is a shell command — without a shell, it can't run)
-- [ ] **PHP 8.2 or later** is selectable for your account
+- [ ] **PHP 8.3 or later** is selectable for your account
 - [ ] **PHP extensions**: `openssl pdo mbstring tokenizer xml ctype json bcmath curl fileinfo gd` are all enabled
 - [ ] **Composer** is on the PATH (most premium shared plans bundle it; check with `composer --version` over SSH)
 - [ ] **MySQL / MariaDB** database can be created from the panel
@@ -16,7 +16,7 @@ Before anything else, confirm with your hosting control panel:
 
 Plans where every line above is "yes" → [Path A](#path-a-ssh--composer--php-82-rental-plan). Plans without SSH → [Path B](#path-b-sftp-only-rental-plan).
 
-## Path A — SSH + Composer + PHP 8.2+ rental plan
+## Path A — SSH + Composer + PHP 8.3+ rental plan
 
 Examples that typically fit: Sakura Rental Server (Standard+), X-Server, mixhost, ConoHa WING, KAGOYA. Always double-check current plan specs before signing up.
 
@@ -29,10 +29,10 @@ mkdir dixlase && cd dixlase
 curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
 ```
 
-If `php` on the default PATH is too old (the panel says PHP 8.2+ but the SSH default is older), most hosts publish a path like `/usr/local/php/8.2/bin/php`. Invoke that explicitly:
+If `php` on the default PATH is too old (the panel says PHP 8.3+ but the SSH default is older), most hosts publish a path like `/usr/local/php/8.3/bin/php`. Invoke that explicitly:
 
 ```bash
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx /usr/local/php/8.2/bin/php
+curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx /usr/local/php/8.3/bin/php
 ```
 
 ### 2. Point the document root at `dixlase/public`

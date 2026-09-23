@@ -59,7 +59,7 @@ cd ~/dixlase-docker
 ```yaml
 services:
   app:
-    image: php:8.2-fpm-alpine
+    image: php:8.3-fpm-alpine
     volumes:
       - ./app:/var/www/html
     depends_on: [mysql]

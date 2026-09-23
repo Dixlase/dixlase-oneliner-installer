@@ -59,7 +59,7 @@ If you want to roll your own minimal `docker-compose.yml` (e.g. for production b
 ```yaml
 services:
   app:
-    image: php:8.2-fpm-alpine
+    image: php:8.3-fpm-alpine
     volumes:
       - ./app:/var/www/html
     depends_on: [mysql]

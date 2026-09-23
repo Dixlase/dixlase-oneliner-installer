@@ -16,7 +16,7 @@ That's it. The script picks the best delivery path for your environment and walk
 
 ## Prerequisites
 
-- **PHP 8.2+** with the standard extensions (`openssl`, `pdo`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`, `fileinfo`, `gd`)
+- **PHP 8.3+** with the standard extensions (`openssl`, `pdo`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`, `fileinfo`, `gd`)
 - **Composer** (recommended — used by the primary delivery path)
 - **Network access** to GitHub (for the ZIP fallback) or Packagist (for `composer create-project`)
 
@@ -131,7 +131,7 @@ sudo apt-get install -y bats        # Debian / Ubuntu
 bats tests/
 ```
 
-CI runs the same suite on PHP 8.2 / 8.3 / 8.4 — see [.github/workflows/ci.yml](./.github/workflows/ci.yml).
+CI runs the same suite on PHP 8.3 / 8.4 / 8.5 — see [.github/workflows/ci.yml](./.github/workflows/ci.yml).
 
 ### URL overrides
 
