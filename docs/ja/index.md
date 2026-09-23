@@ -20,6 +20,7 @@
 
 - **PHP 8.3 以降** と標準拡張 (`openssl`、`pdo`、`mbstring`、`tokenizer`、`xml`、`ctype`、`json`、`bcmath`、`curl`、`fileinfo`、`gd`)
 - **Composer** (推奨。主配布経路で使用)
+- **Node.js 24** (または `^20.19 || >=22.12` の範囲) — フロントエンドアセットのビルドが必要な場合のみ。`--no-build` でビルド自体を省略可能
 - **外向き HTTPS** が `github.com` / `api.github.com` / `packagist.org` / `install.dixlase.net` に対して通ること
 - `curl ... | php` を実行できる**シェル** (したがって SFTP のみのホストでは直接使えません。回避策は [deploy-shared-hosting.md](./deploy-shared-hosting.md) を参照)
 

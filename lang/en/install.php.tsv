@@ -159,9 +159,9 @@ No GITHUB_TOKEN detected — needed if installing from a private repository.	No 
 // Frontend asset build (npm install / npm ci + npm run build via Vite)	// Frontend asset build (npm install / npm ci + npm run build via Vite)
 Building frontend assets	Building frontend assets
 Frontend assets built	Frontend assets built
-npm not found — install Node.js (>=18) and re-run the asset build manually.	npm not found — install Node.js (>=18) and re-run the asset build manually.
+npm not found — install Node.js 24 (or any >=20.19) and re-run the asset build manually.	npm not found — install Node.js 24 (or any >=20.19) and re-run the asset build manually.
 (If you use nvm/fnm/asdf/volta, source it first or run from an interactive shell.)	(If you use nvm/fnm/asdf/volta, source it first or run from an interactive shell.)
-Node version does not satisfy package.json engines (	Node version does not satisfy package.json engines (
+Node version is too old for the asset build (need 	Node version is too old for the asset build (need 
 ) — skipping build.	) — skipping build.
 Only 	Only 
  MB free on the install volume — npm install may fail.	 MB free on the install volume — npm install may fail.
