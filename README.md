@@ -18,6 +18,7 @@ That's it. The script picks the best delivery path for your environment and walk
 
 - **PHP 8.3+** with the standard extensions (`openssl`, `pdo`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`, `fileinfo`, `gd`)
 - **Composer** (recommended — used by the primary delivery path)
+- **Node.js 24** (or any `^20.19 || >=22.12`, the range Vite 8 supports) — only when the frontend assets have to be built; release ZIPs ship them pre-built
 - **Network access** to GitHub (for the ZIP fallback) or Packagist (for `composer create-project`)
 
 The installer pre-checks all of the above and prints a clear remediation hint if something is missing.
