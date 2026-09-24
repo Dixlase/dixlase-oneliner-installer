@@ -1648,14 +1648,29 @@ function show_complete(string $dir, string $assetsStatus = 'built', bool $mysqlA
     }
 
     fwrite(STDOUT, '  ' . $step . '. Start the local server:' . PHP_EOL);
-    fwrite(STDOUT, '     ' . cyan('cd ' . $dir . ' && php artisan serve') . PHP_EOL);
+    fwrite(STDOUT, '     ' . cyan('cd ' . $dir . ' && php artisan serve --no-reload') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, '     Then open ' . cyan('http://127.0.0.1:8000') . ' in your browser.' . PHP_EOL);
     fwrite(STDOUT, '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.' . PHP_EOL);
+    fwrite(STDOUT, PHP_EOL);
+    // The wizard rewrites .env on every step. Without --no-reload, artisan
+    // serve's file watcher restarts the server mid-request, and a restart
+    // during the final step kills `migrate` partway through.
+    fwrite(STDOUT, '     ' . dim('Keep --no-reload: the wizard rewrites .env at every step, and the default') . PHP_EOL);
+    fwrite(STDOUT, '     ' . dim('watcher restarts the server mid-request, which can interrupt the migration.') . PHP_EOL);
     if (! $mysqlAvailable) {
         fwrite(STDOUT, PHP_EOL);
         fwrite(STDOUT, '     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.' . PHP_EOL);
     }
+    fwrite(STDOUT, PHP_EOL);
+    $step++;
+    // The admin route prefix and the active theme's view namespace are both
+    // resolved from the database once, while the framework boots. A server
+    // started before the wizard ran keeps serving that pre-install state.
+    fwrite(STDOUT, '  ' . $step . '. Restart the server once the wizard finishes:' . PHP_EOL);
+    fwrite(STDOUT, '     ' . dim('The admin path and the active theme are read from the database at boot, so') . PHP_EOL);
+    fwrite(STDOUT, '     ' . dim('a server started before the install keeps serving the pre-install state —') . PHP_EOL);
+    fwrite(STDOUT, '     ' . dim('the front page errors and the admin path 404s until you restart it.') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
     $step++;
     fwrite(STDOUT, '  ' . $step . '. For other deployment options (Docker, VPS, shared hosting), see:' . PHP_EOL);

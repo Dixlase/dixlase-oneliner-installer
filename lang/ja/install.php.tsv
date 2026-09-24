@@ -119,6 +119,12 @@ Target directory already exists and is not empty: 	インストール先ディ�
   Dixlase has been installed to:	  Dixlase のインストール先:
   Next steps:	  次のステップ:
 . Start the local server:	. ローカルサーバを起動:
+'     ' . dim('Keep --no-reload: the wizard rewrites .env at every step, and the default')	'     ' . dim('--no-reload は残してください: ウィザードは各ステップで .env を書き換えるため、既定の')
+'     ' . dim('watcher restarts the server mid-request, which can interrupt the migration.')	'     ' . dim('監視機能ではリクエスト処理中に再起動が入り、マイグレーションが中断されることがあります。')
+. Restart the server once the wizard finishes:	. ウィザード完了後にサーバを再起動:
+'     ' . dim('The admin path and the active theme are read from the database at boot, so')	'     ' . dim('管理画面のパスと有効テーマは起動時に DB から読まれるため、インストール前に起動した')
+'     ' . dim('a server started before the install keeps serving the pre-install state —')	'     ' . dim('サーバはインストール前の状態を配信し続けます —')
+'     ' . dim('the front page errors and the admin path 404s until you restart it.')	'     ' . dim('再起動するまでフロントはエラー、管理画面のパスは 404 になります。')
      Then open 	     ブラウザで
  in your browser.	 を開く。
 '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'	'     ' . bold('インストールウィザード') . ' がデータベース・管理者・メール設定を案内します。'
