@@ -56,6 +56,33 @@ define('DIXLASE_REQUIRED_EXTENSIONS', [
 ]);
 
 // ---------------------------------------------------------------------------
+// Standard stream fallbacks
+// ---------------------------------------------------------------------------
+
+/**
+ * Make sure STDIN / STDOUT / STDERR exist before anything writes to them.
+ *
+ * PHP only defines these constants when the CLI SAPI runs a script file. With
+ * the pipe form this installer is built around (`curl -sS … | php`), PHP 8.2
+ * and older leave them undefined, so the first fwrite() died with "Undefined
+ * constant STDOUT" inside banner() — on exactly the versions that should be
+ * getting the "requires PHP 8.3" message instead. PHP 8.3+ defines them even
+ * for piped input, so these fallbacks are inert there.
+ */
+foreach ([['STDIN', 'php://stdin', 'rb'], ['STDOUT', 'php://stdout', 'wb'], ['STDERR', 'php://stderr', 'wb']] as [$name, $uri, $mode]) {
+    if (defined($name)) {
+        continue;
+    }
+
+    $handle = @fopen($uri, $mode);
+
+    if ($handle !== false) {
+        define($name, $handle);
+    }
+}
+unset($name, $uri, $mode, $handle);
+
+// ---------------------------------------------------------------------------
 // Terminal helpers
 // ---------------------------------------------------------------------------
 
