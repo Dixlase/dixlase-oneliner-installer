@@ -119,8 +119,10 @@ Target directory already exists and is not empty: 	インストール先ディ�
   Dixlase has been installed to:	  Dixlase のインストール先:
   Next steps:	  次のステップ:
 . Start the local server:	. ローカルサーバを起動:
-'     ' . dim('Keep --no-reload: the wizard rewrites .env at every step, and the default')	'     ' . dim('--no-reload は残してください: ウィザードは各ステップで .env を書き換えるため、既定の')
-'     ' . dim('watcher restarts the server mid-request, which can interrupt the migration.')	'     ' . dim('監視機能ではリクエスト処理中に再起動が入り、マイグレーションが中断されることがあります。')
+'     ' . dim('Do not add --no-reload here: the wizard rewrites .env as you go, and the')	'     ' . dim('ここで --no-reload は付けないでください: ウィザードは進行中に .env を書き換えますが、')
+'     ' . dim('server only picks up the new database settings when it restarts.')	'     ' . dim('サーバは再起動して初めて新しいデータベース設定を読み込みます。')
+'     ' . dim('A page that fails right after a restart just needs a reload; if the last')	'     ' . dim('再起動直後に開けないページはリロードすれば表示されます。最終ステップが落ちた')
+'     ' . dim('step dies, run it again — it resets the database before migrating.')	'     ' . dim('場合はもう一度実行してください — マイグレーション前にデータベースをリセットします。')
 . Restart the server once the wizard finishes:	. ウィザード完了後にサーバを再起動:
 '     ' . dim('The admin path and the active theme are read from the database at boot, so')	'     ' . dim('管理画面のパスと有効テーマは起動時に DB から読まれるため、インストール前に起動した')
 '     ' . dim('a server started before the install keeps serving the pre-install state —')	'     ' . dim('サーバはインストール前の状態を配信し続けます —')

@@ -1648,16 +1648,19 @@ function show_complete(string $dir, string $assetsStatus = 'built', bool $mysqlA
     }
 
     fwrite(STDOUT, '  ' . $step . '. Start the local server:' . PHP_EOL);
-    fwrite(STDOUT, '     ' . cyan('cd ' . $dir . ' && php artisan serve --no-reload') . PHP_EOL);
+    fwrite(STDOUT, '     ' . cyan('cd ' . $dir . ' && php artisan serve') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, '     Then open ' . cyan('http://127.0.0.1:8000') . ' in your browser.' . PHP_EOL);
     fwrite(STDOUT, '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.' . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
-    // The wizard rewrites .env on every step. Without --no-reload, artisan
-    // serve's file watcher restarts the server mid-request, and a restart
-    // during the final step kills `migrate` partway through.
-    fwrite(STDOUT, '     ' . dim('Keep --no-reload: the wizard rewrites .env at every step, and the default') . PHP_EOL);
-    fwrite(STDOUT, '     ' . dim('watcher restarts the server mid-request, which can interrupt the migration.') . PHP_EOL);
+    // The wizard rewrites .env as it goes, and the built-in server keeps the
+    // values it read at boot for the life of the process (Laravel's env
+    // repository is immutable). Only the watcher's restart makes the new
+    // database settings visible, so --no-reload breaks the final step.
+    fwrite(STDOUT, '     ' . dim('Do not add --no-reload here: the wizard rewrites .env as you go, and the') . PHP_EOL);
+    fwrite(STDOUT, '     ' . dim('server only picks up the new database settings when it restarts.') . PHP_EOL);
+    fwrite(STDOUT, '     ' . dim('A page that fails right after a restart just needs a reload; if the last') . PHP_EOL);
+    fwrite(STDOUT, '     ' . dim('step dies, run it again — it resets the database before migrating.') . PHP_EOL);
     if (! $mysqlAvailable) {
         fwrite(STDOUT, PHP_EOL);
         fwrite(STDOUT, '     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.' . PHP_EOL);
