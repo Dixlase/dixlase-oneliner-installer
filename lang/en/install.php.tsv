@@ -119,6 +119,12 @@ Target directory already exists and is not empty: 	Target directory already exis
   Dixlase has been installed to:	  Dixlase has been installed to:
   Next steps:	  Next steps:
 . Start the local server:	. Start the local server:
+'     ' . dim('Keep --no-reload: the wizard rewrites .env at every step, and the default')	'     ' . dim('Keep --no-reload: the wizard rewrites .env at every step, and the default')
+'     ' . dim('watcher restarts the server mid-request, which can interrupt the migration.')	'     ' . dim('watcher restarts the server mid-request, which can interrupt the migration.')
+. Restart the server once the wizard finishes:	. Restart the server once the wizard finishes:
+'     ' . dim('The admin path and the active theme are read from the database at boot, so')	'     ' . dim('The admin path and the active theme are read from the database at boot, so')
+'     ' . dim('a server started before the install keeps serving the pre-install state —')	'     ' . dim('a server started before the install keeps serving the pre-install state —')
+'     ' . dim('the front page errors and the admin path 404s until you restart it.')	'     ' . dim('the front page errors and the admin path 404s until you restart it.')
      Then open 	     Then open 
  in your browser.	 in your browser.
 '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'	'     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'
