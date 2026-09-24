@@ -18,13 +18,15 @@ sed -i.bak \
     .env && rm -f .env.bak
 
 php artisan migrate --graceful
-php artisan serve
+php artisan serve --no-reload
 # → http://127.0.0.1:8000
 ```
 
 Windows users without `sed`: open `.env` in an editor and make the same three changes by hand.
 
 The built-in server is single-threaded and meant for development only — fine for clicking through the install wizard, not for production traffic.
+
+**Two things about `artisan serve` and the wizard.** `--no-reload` is not optional here: the wizard rewrites `.env` at every step, and the default file watcher restarts the server mid-request — a restart during the final step interrupts `migrate` and leaves the database half-built. Then, once the wizard finishes, **restart the server yourself**. The admin route prefix and the active theme's view namespace are read from the database while the framework boots, so a server started before the install keeps serving the pre-install state: the front page errors and the admin path returns 404 until you restart.
 
 ## Native Mac / Windows stacks (Laravel-friendly)
 
