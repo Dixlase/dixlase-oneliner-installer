@@ -124,8 +124,7 @@ Target directory already exists and is not empty: 	Target directory already exis
 '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'	'     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'
 '     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.'	'     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.'
 . For other deployment options (Docker, VPS, shared hosting), see:	. For other deployment options (Docker, VPS, shared hosting), see:
-  Documentation: https://docs.dixlase.com	  Documentation: https://docs.dixlase.com
-  Support:       https://github.com/	  Support:       https://github.com/
+  Support: https://github.com/	  Support: https://github.com/
 /issues	/issues
 // GitHub authentication	// GitHub authentication
  * Read the GitHub token from the environment (used for private-repo installs).	 * Read the GitHub token from the environment (used for private-repo installs).
