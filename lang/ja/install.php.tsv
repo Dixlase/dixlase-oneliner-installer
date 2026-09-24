@@ -124,8 +124,7 @@ Target directory already exists and is not empty: 	インストール先ディ�
 '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'	'     ' . bold('インストールウィザード') . ' がデータベース・管理者・メール設定を案内します。'
 '     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.'	'     ' . yellow('MySQL が見つかりません。') . ' データベース選択画面で ' . bold('SQLite') . ' を選べば、別途 DB サーバ無しで開始できます。'
 . For other deployment options (Docker, VPS, shared hosting), see:	. その他のデプロイ方法 (Docker / VPS / 共有ホスティング) は以下を参照:
-  Documentation: https://docs.dixlase.com	  ドキュメント:  https://docs.dixlase.com
-  Support:       https://github.com/	  サポート:      https://github.com/
+  Support: https://github.com/	  サポート: https://github.com/
 /issues	/issues
 // GitHub authentication	// GitHub 認証
  * Read the GitHub token from the environment (used for private-repo installs).	 * 環境変数から GitHub トークンを読み取る (プライベートリポジトリからのインストール用)。

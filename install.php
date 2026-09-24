@@ -1297,12 +1297,57 @@ function read_dixlase_package_json(string $dir): ?array
 }
 
 /**
+ * Evaluate a package.json-style Node range against a major/minor pair.
+ *
+ * Covers the comparator forms Dixlase and Vite actually publish — the
+ * disjunction "^20.19.0 || >=22.12.0", plain ">=22.12", "22.x" — because a
+ * major-only reading of that disjunction would admit 21.x and 22.0-22.11,
+ * which Vite 8 refuses to build on. Returns null when no alternative parses,
+ * so the caller can apply its own floor instead of treating an unreadable
+ * constraint as "anything goes".
+ */
+function node_range_allows(string $range, int $major, int $minor): ?bool
+{
+    $parsed  = false;
+    $allowed = false;
+
+    foreach (explode('||', $range) as $alternative) {
+        if (! preg_match('/^\s*(\^|~|>=|>)?\s*v?(\d+)(?:\.(\d+))?/', $alternative, $match)) {
+            continue;
+        }
+
+        $needMajor = (int) $match[2];
+
+        // Defensive bounds: ignore implausible majors from a hostile or
+        // malformed manifest (e.g. >99 or <=0) rather than gate on garbage.
+        if ($needMajor < 1 || $needMajor > 99) {
+            continue;
+        }
+
+        $needMinor = isset($match[3]) && $match[3] !== '' ? (int) $match[3] : 0;
+        $operator  = $match[1];
+
+        $parsed = true;
+
+        $allowed = $allowed || match ($operator) {
+            '>=' => $major > $needMajor || ($major === $needMajor && $minor >= $needMinor),
+            '>'  => $major > $needMajor || ($major === $needMajor && $minor > $needMinor),
+            // ^ and ~ both pin the major and require at least the minor; a
+            // bare "20" / "20.19" is treated the same way here.
+            default => $major === $needMajor && $minor >= $needMinor,
+        };
+    }
+
+    return $parsed ? $allowed : null;
+}
+
+/**
  * Verify the active Node.js version can run the frontend build.
  *
- * Honours package.json's engines.node when the project declares one; core
- * currently does not, so the fallback is DIXLASE_NODE_REQUIREMENT (Vite 8's
- * own floor) rather than "no constraint". Returns true when node is missing
- * (caller surfaces the better error) or when the version matches.
+ * Honours package.json's engines.node when the project declares a range this
+ * understands, and otherwise applies DIXLASE_NODE_REQUIREMENT (Vite 8's own
+ * floor) rather than "no constraint". Returns true when node is missing —
+ * the caller surfaces the better error.
  */
 function node_version_satisfies(array $pkg): bool
 {
@@ -1318,28 +1363,15 @@ function node_version_satisfies(array $pkg): bool
     $actualMajor = (int) $actual[0];
     $actualMinor = (int) ($actual[1] ?? 0);
 
-    if (is_string($required) && $required !== '' && preg_match('/(\d+)/', $required, $reqMatch)) {
-        $needMajor = (int) $reqMatch[1];
+    if (is_string($required) && $required !== '') {
+        $allowed = node_range_allows($required, $actualMajor, $actualMinor);
 
-        // Defensive bounds: reject implausible major versions parsed from a
-        // hostile / malformed package.json (e.g. >99 or <=0). Fall through to
-        // the built-in floor rather than crash or block on garbage input.
-        if ($needMajor >= 1 && $needMajor <= 99) {
-            return $actualMajor >= $needMajor;
+        if ($allowed !== null) {
+            return $allowed;
         }
     }
 
-    // Vite 8's supported range: 20.19+ inside 20.x, then everything from
-    // 22.12 up. 21.x and 22.0-22.11 cannot build the assets.
-    if ($actualMajor === 20) {
-        return $actualMinor >= 19;
-    }
-
-    if ($actualMajor === 22) {
-        return $actualMinor >= 12;
-    }
-
-    return $actualMajor >= 23;
+    return (bool) node_range_allows(DIXLASE_NODE_REQUIREMENT, $actualMajor, $actualMinor);
 }
 
 /**
@@ -1629,8 +1661,9 @@ function show_complete(string $dir, string $assetsStatus = 'built', bool $mysqlA
     fwrite(STDOUT, '  ' . $step . '. For other deployment options (Docker, VPS, shared hosting), see:' . PHP_EOL);
     fwrite(STDOUT, '     ' . cyan('https://github.com/' . DIXLASE_INSTALLER_REPO . '/blob/main/docs/index.md') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
-    fwrite(STDOUT, dim('  Documentation: https://docs.dixlase.com') . PHP_EOL);
-    fwrite(STDOUT, dim('  Support:       https://github.com/' . DIXLASE_REPO . '/issues') . PHP_EOL);
+    // No documentation site is published yet for the first release, so the
+    // only link here is one that actually resolves.
+    fwrite(STDOUT, dim('  Support: https://github.com/' . DIXLASE_REPO . '/issues') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
 }
 
