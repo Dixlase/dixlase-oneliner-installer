@@ -18,7 +18,7 @@ sed -i.bak \
     .env && rm -f .env.bak
 
 php artisan migrate --graceful
-php artisan serve --no-reload
+php artisan serve
 # → http://127.0.0.1:8000
 ```
 
@@ -26,7 +26,7 @@ Windows users without `sed`: open `.env` in an editor and make the same three ch
 
 The built-in server is single-threaded and meant for development only — fine for clicking through the install wizard, not for production traffic.
 
-**Two things about `artisan serve` and the wizard.** `--no-reload` is not optional here: the wizard rewrites `.env` at every step, and the default file watcher restarts the server mid-request — a restart during the final step interrupts `migrate` and leaves the database half-built. Then, once the wizard finishes, **restart the server yourself**. The admin route prefix and the active theme's view namespace are read from the database while the framework boots, so a server started before the install keeps serving the pre-install state: the front page errors and the admin path returns 404 until you restart.
+**Two things about `artisan serve` and the wizard.** Leave the default watcher on — do **not** pass `--no-reload`. The wizard rewrites `.env` as you go, and the built-in server keeps the values it read at boot for the life of the process (Laravel's env repository is immutable), so only the watcher's restart makes the new database settings visible. With `--no-reload`, the final step still talks to the database configured before you started, and the install fails with a connection error. A page that fails right after a restart just needs a reload; if the last step dies, run it again — it resets the database before migrating. Then, once the wizard finishes, **restart the server yourself**. The admin route prefix and the active theme's view namespace are read from the database while the framework boots, so a server started before the install keeps serving the pre-install state: the front page errors and the admin path returns 404 until you restart.
 
 ## Native Mac / Windows stacks (Laravel-friendly)
 

@@ -119,8 +119,10 @@ Target directory already exists and is not empty: 	Target directory already exis
   Dixlase has been installed to:	  Dixlase has been installed to:
   Next steps:	  Next steps:
 . Start the local server:	. Start the local server:
-'     ' . dim('Keep --no-reload: the wizard rewrites .env at every step, and the default')	'     ' . dim('Keep --no-reload: the wizard rewrites .env at every step, and the default')
-'     ' . dim('watcher restarts the server mid-request, which can interrupt the migration.')	'     ' . dim('watcher restarts the server mid-request, which can interrupt the migration.')
+'     ' . dim('Do not add --no-reload here: the wizard rewrites .env as you go, and the')	'     ' . dim('Do not add --no-reload here: the wizard rewrites .env as you go, and the')
+'     ' . dim('server only picks up the new database settings when it restarts.')	'     ' . dim('server only picks up the new database settings when it restarts.')
+'     ' . dim('A page that fails right after a restart just needs a reload; if the last')	'     ' . dim('A page that fails right after a restart just needs a reload; if the last')
+'     ' . dim('step dies, run it again — it resets the database before migrating.')	'     ' . dim('step dies, run it again — it resets the database before migrating.')
 . Restart the server once the wizard finishes:	. Restart the server once the wizard finishes:
 '     ' . dim('The admin path and the active theme are read from the database at boot, so')	'     ' . dim('The admin path and the active theme are read from the database at boot, so')
 '     ' . dim('a server started before the install keeps serving the pre-install state —')	'     ' . dim('a server started before the install keeps serving the pre-install state —')
