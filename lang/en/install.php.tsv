@@ -119,14 +119,9 @@ Target directory already exists and is not empty: 	Target directory already exis
   Dixlase has been installed to:	  Dixlase has been installed to:
   Next steps:	  Next steps:
 . Start the local server:	. Start the local server:
-'     ' . dim('Do not add --no-reload here: the wizard rewrites .env as you go, and the')	'     ' . dim('Do not add --no-reload here: the wizard rewrites .env as you go, and the')
-'     ' . dim('server only picks up the new database settings when it restarts.')	'     ' . dim('server only picks up the new database settings when it restarts.')
-'     ' . dim('A page that fails right after a restart just needs a reload; if the last')	'     ' . dim('A page that fails right after a restart just needs a reload; if the last')
-'     ' . dim('step dies, run it again — it resets the database before migrating.')	'     ' . dim('step dies, run it again — it resets the database before migrating.')
-. Restart the server once the wizard finishes:	. Restart the server once the wizard finishes:
-'     ' . dim('The admin path and the active theme are read from the database at boot, so')	'     ' . dim('The admin path and the active theme are read from the database at boot, so')
-'     ' . dim('a server started before the install keeps serving the pre-install state —')	'     ' . dim('a server started before the install keeps serving the pre-install state —')
-'     ' . dim('the front page errors and the admin path 404s until you restart it.')	'     ' . dim('the front page errors and the admin path 404s until you restart it.')
+'     ' . dim('Use this instead of php artisan serve: the wizard rewrites .env as it goes,')	'     ' . dim('Use this instead of php artisan serve: the wizard rewrites .env as it goes,')
+'     ' . dim('and artisan serve either restarts mid-request (the final step dies) or, with')	'     ' . dim('and artisan serve either restarts mid-request (the final step dies) or, with')
+'     ' . dim('--no-reload, keeps the old values. Start it from public/ as shown.')	'     ' . dim('--no-reload, keeps the old values. Start it from public/ as shown.')
      Then open 	     Then open 
  in your browser.	 in your browser.
 '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'	'     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'

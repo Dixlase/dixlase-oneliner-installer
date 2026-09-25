@@ -119,14 +119,9 @@ Target directory already exists and is not empty: 	インストール先ディ�
   Dixlase has been installed to:	  Dixlase のインストール先:
   Next steps:	  次のステップ:
 . Start the local server:	. ローカルサーバを起動:
-'     ' . dim('Do not add --no-reload here: the wizard rewrites .env as you go, and the')	'     ' . dim('ここで --no-reload は付けないでください: ウィザードは進行中に .env を書き換えますが、')
-'     ' . dim('server only picks up the new database settings when it restarts.')	'     ' . dim('サーバは再起動して初めて新しいデータベース設定を読み込みます。')
-'     ' . dim('A page that fails right after a restart just needs a reload; if the last')	'     ' . dim('再起動直後に開けないページはリロードすれば表示されます。最終ステップが落ちた')
-'     ' . dim('step dies, run it again — it resets the database before migrating.')	'     ' . dim('場合はもう一度実行してください — マイグレーション前にデータベースをリセットします。')
-. Restart the server once the wizard finishes:	. ウィザード完了後にサーバを再起動:
-'     ' . dim('The admin path and the active theme are read from the database at boot, so')	'     ' . dim('管理画面のパスと有効テーマは起動時に DB から読まれるため、インストール前に起動した')
-'     ' . dim('a server started before the install keeps serving the pre-install state —')	'     ' . dim('サーバはインストール前の状態を配信し続けます —')
-'     ' . dim('the front page errors and the admin path 404s until you restart it.')	'     ' . dim('再起動するまでフロントはエラー、管理画面のパスは 404 になります。')
+'     ' . dim('Use this instead of php artisan serve: the wizard rewrites .env as it goes,')	'     ' . dim('php artisan serve の代わりにこちらを使ってください: ウィザードは進行中に .env を書き換えますが、')
+'     ' . dim('and artisan serve either restarts mid-request (the final step dies) or, with')	'     ' . dim('artisan serve はリクエスト処理中に再起動して最終ステップが落ちるか、')
+'     ' . dim('--no-reload, keeps the old values. Start it from public/ as shown.')	'     ' . dim('--no-reload では古い値のままになります。上のとおり public/ から起動してください。')
      Then open 	     ブラウザで
  in your browser.	 を開く。
 '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'	'     ' . bold('インストールウィザード') . ' がデータベース・管理者・メール設定を案内します。'

@@ -18,7 +18,7 @@ sed -i.bak \
     .env && rm -f .env.bak
 
 php artisan migrate --graceful
-php artisan serve
+cd public && php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
 # → http://127.0.0.1:8000
 ```
 
@@ -26,7 +26,7 @@ Windows users without `sed`: open `.env` in an editor and make the same three ch
 
 The built-in server is single-threaded and meant for development only — fine for clicking through the install wizard, not for production traffic.
 
-**Two things about `artisan serve` and the wizard.** Leave the default watcher on — do **not** pass `--no-reload`. The wizard rewrites `.env` as you go, and the built-in server keeps the values it read at boot for the life of the process (Laravel's env repository is immutable), so only the watcher's restart makes the new database settings visible. With `--no-reload`, the final step still talks to the database configured before you started, and the install fails with a connection error. A page that fails right after a restart just needs a reload; if the last step dies, run it again — it resets the database before migrating. Then, once the wizard finishes, **restart the server yourself**. The admin route prefix and the active theme's view namespace are read from the database while the framework boots, so a server started before the install keeps serving the pre-install state: the front page errors and the admin path returns 404 until you restart.
+**Start the built-in server directly, not with `artisan serve`.** The command above runs PHP's built-in server with the same router script `php artisan serve` uses, but without the two behaviours that break the install wizard. The wizard rewrites `.env` as it goes (the final step writes it three times around `migrate`). `artisan serve`'s default watcher restarts the server on every `.env` change and kills the request in flight — the final step dies partway through `migrate`, leaving a half-built database. With `--no-reload` it instead injects the boot-time `.env` as real environment variables, which win over every later `.env` write, so the final step talks to the database configured before you started and the finished site keeps `INSTALLED=false`. `-d variables_order=EGPCS` puts the real environment (including `PATH`) into `$_ENV`; without it the core's `composer dump-autoload` subprocess cannot find `php` once Laravel has loaded `.env`. `-d max_execution_time=300` lifts the common 30-second default. Run it from `public/`: the router treats the current directory as the web root. No restart is needed after the wizard finishes.
 
 ## Native Mac / Windows stacks (Laravel-friendly)
 

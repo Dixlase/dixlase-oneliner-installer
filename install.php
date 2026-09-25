@@ -1648,32 +1648,29 @@ function show_complete(string $dir, string $assetsStatus = 'built', bool $mysqlA
     }
 
     fwrite(STDOUT, '  ' . $step . '. Start the local server:' . PHP_EOL);
-    fwrite(STDOUT, '     ' . cyan('cd ' . $dir . ' && php artisan serve') . PHP_EOL);
+    // PHP's built-in server started directly, with the same router script
+    // `php artisan serve` uses. artisan serve cannot run this wizard: its
+    // .env watcher restarts the server mid-request (the final step writes
+    // .env three times around `migrate`, so it dies there), and with
+    // --no-reload it injects the boot-time .env as real environment
+    // variables, which then win over every later .env write.
+    // variables_order=EGPCS puts the real environment (PATH included) into
+    // $_ENV; without it, Symfony Process drops PATH once Laravel has loaded
+    // .env into $_SERVER, and the core's `composer dump-autoload` subprocess
+    // fails with "env: php: No such file or directory".
+    // The router uses the current directory as the web root, hence public/.
+    fwrite(STDOUT, '     ' . cyan('cd ' . $dir . '/public && php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, '     Then open ' . cyan('http://127.0.0.1:8000') . ' in your browser.' . PHP_EOL);
     fwrite(STDOUT, '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.' . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
-    // The wizard rewrites .env as it goes, and the built-in server keeps the
-    // values it read at boot for the life of the process (Laravel's env
-    // repository is immutable). Only the watcher's restart makes the new
-    // database settings visible, so --no-reload breaks the final step.
-    fwrite(STDOUT, '     ' . dim('Do not add --no-reload here: the wizard rewrites .env as you go, and the') . PHP_EOL);
-    fwrite(STDOUT, '     ' . dim('server only picks up the new database settings when it restarts.') . PHP_EOL);
-    fwrite(STDOUT, '     ' . dim('A page that fails right after a restart just needs a reload; if the last') . PHP_EOL);
-    fwrite(STDOUT, '     ' . dim('step dies, run it again — it resets the database before migrating.') . PHP_EOL);
+    fwrite(STDOUT, '     ' . dim('Use this instead of php artisan serve: the wizard rewrites .env as it goes,') . PHP_EOL);
+    fwrite(STDOUT, '     ' . dim('and artisan serve either restarts mid-request (the final step dies) or, with') . PHP_EOL);
+    fwrite(STDOUT, '     ' . dim('--no-reload, keeps the old values. Start it from public/ as shown.') . PHP_EOL);
     if (! $mysqlAvailable) {
         fwrite(STDOUT, PHP_EOL);
         fwrite(STDOUT, '     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.' . PHP_EOL);
     }
-    fwrite(STDOUT, PHP_EOL);
-    $step++;
-    // The admin route prefix and the active theme's view namespace are both
-    // resolved from the database once, while the framework boots. A server
-    // started before the wizard ran keeps serving that pre-install state.
-    fwrite(STDOUT, '  ' . $step . '. Restart the server once the wizard finishes:' . PHP_EOL);
-    fwrite(STDOUT, '     ' . dim('The admin path and the active theme are read from the database at boot, so') . PHP_EOL);
-    fwrite(STDOUT, '     ' . dim('a server started before the install keeps serving the pre-install state —') . PHP_EOL);
-    fwrite(STDOUT, '     ' . dim('the front page errors and the admin path 404s until you restart it.') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
     $step++;
     fwrite(STDOUT, '  ' . $step . '. For other deployment options (Docker, VPS, shared hosting), see:' . PHP_EOL);
