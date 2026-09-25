@@ -81,7 +81,7 @@ run_in() {
     mkdir -p "$CWD"
     run run_in "$CWD"
     [ "$status" -eq 0 ]
-    [[ "$output" == *"cd $CWD/dixlase/public && php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000"* ]]
+    [[ "$output" == *"cd $CWD/dixlase/public && PHP_CLI_SERVER_WORKERS=4 php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000"* ]]
     [[ "$output" == *"http://127.0.0.1:8000"* ]]
     [[ "$output" == *"https://github.com/Dixlase/dixlase-oneliner-installer/blob/main/docs/index.md"* ]]
 }
