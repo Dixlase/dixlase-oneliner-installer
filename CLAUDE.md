@@ -61,7 +61,7 @@ feat: add user profile page
 - Always use braces for control structures, even on single-line bodies.
 - Always declare explicit return types on methods and functions.
 - Prefer PHPDoc blocks over inline comments for non-trivial helpers.
-- Insert the proprietary license header (SPDX-style, `LicenseRef-Proprietary`) at the top of every PHP source file inside a PHPDoc block. The full license text lives in `LICENSE`.
+- Insert the MIT license header (`SPDX-License-Identifier: MIT` plus the copyright line) at the top of every PHP source file inside a PHPDoc block. The full license text lives in `LICENSE`.
 
 ## Language of in-source comments and strings
 

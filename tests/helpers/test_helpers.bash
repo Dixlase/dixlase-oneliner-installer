@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-Proprietary
-# Copyright (c) 2026 exc-D inc. All rights reserved. See LICENSE for terms.
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 exc-D inc. Licensed under the MIT License. See LICENSE.
 # Common helpers for the bats test suite.
 
 # Resolve project paths relative to this helper file (tests/helpers/test_helpers.bash).

@@ -45,7 +45,7 @@ The Dixlase install wizard takes over on the first browser visit.
 
 Sometimes you've already run `install.dixlase.net | php` somewhere and you'd like to wrap *that* tree with the Docker installer's services. This is **not the supported path** (the Docker installer expects to clone the core itself), but it is achievable:
 
-1. Note the absolute path of your existing install (e.g. `/Volumes/Data/Works/Dixlase/Oneliner`).
+1. Note the absolute path of your existing install (e.g. `/var/www/dixlase`).
 2. Clone `dixlase-installer-docker` into a sibling directory.
 3. Edit `docker-compose.apps.yml` to replace the `html/` volume mount with a bind mount to your existing install path.
 4. Skip the `setup.sh` step that clones the core (`./setup.sh` re-runs are otherwise idempotent).

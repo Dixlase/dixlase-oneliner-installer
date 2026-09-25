@@ -45,7 +45,7 @@ cd ~/dixlase-docker
 
 `install.dixlase.net | php` で既に作成したインストールを Docker インストーラのサービス層でラップしたい、というケースは**サポート対象外の使い方**ですが (Docker インストーラは内部で core をクローンする前提) 、可能です:
 
-1. 既存のインストール先絶対パスを控える (例: `/Volumes/Data/Works/Dixlase/Oneliner`)
+1. 既存のインストール先絶対パスを控える (例: `/var/www/dixlase`)
 2. `dixlase-installer-docker` を隣接ディレクトリにクローン
 3. `docker-compose.apps.yml` の `html/` ボリュームマウントを、既存インストール先への bind マウントに置換
 4. core クローンを行う `setup.sh` のステップをスキップ (それ以外は冪等)
