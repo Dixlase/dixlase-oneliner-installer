@@ -76,12 +76,12 @@ run_in() {
     [ ! -d "$CWD/dixlase" ]
 }
 
-@test "post-install: next-steps include 'cd <cwd>/dixlase && php artisan serve' and docs index URL" {
+@test "post-install: next-steps include 'cd <cwd>/dixlase/public && php ... -S' and docs index URL" {
     local CWD="$BATS_TEST_TMPDIR/site"
     mkdir -p "$CWD"
     run run_in "$CWD"
     [ "$status" -eq 0 ]
-    [[ "$output" == *"cd $CWD/dixlase && php artisan serve"* ]]
+    [[ "$output" == *"cd $CWD/dixlase/public && php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000"* ]]
     [[ "$output" == *"http://127.0.0.1:8000"* ]]
     [[ "$output" == *"https://github.com/Dixlase/dixlase-oneliner-installer/blob/main/docs/index.md"* ]]
 }
