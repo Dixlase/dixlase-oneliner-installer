@@ -1,6 +1,6 @@
 #!/bin/bash
-# SPDX-License-Identifier: LicenseRef-Proprietary
-# Copyright (c) 2026 exc-D inc. All rights reserved. See LICENSE for terms.
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 exc-D inc. Licensed under the MIT License. See LICENSE.
 
 set -e
 

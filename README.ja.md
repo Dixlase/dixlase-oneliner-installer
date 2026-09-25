@@ -94,7 +94,7 @@ php install.php --non-interactive --yes --dir=/srv/dixlase
 ├── tests/                  # bats テスト一式
 ├── .github/workflows/      # GitHub Actions CI
 ├── CLAUDE.md, CLAUDE.ja.md # コーディングルール
-└── LICENSE                 # プロプライエタリ (exc-D inc.)
+└── LICENSE                 # MIT
 ```
 
 ## テスト
@@ -121,4 +121,4 @@ CI は PHP 8.3 / 8.4 / 8.5 のマトリクスで同じスイートを実行 ([.g
 
 ## ライセンス
 
-本インストーラー (`install.php` と関連スクリプト / 辞書) は **exc-D inc. のプロプライエタリソフトウェア**で、書面による許諾なしに複製・改変・再配布・利用はできません。詳細は [LICENSE](./LICENSE) を参照。Dixlase 本体は AGPL v3 ([Dixlase Core](https://github.com/Dixlase/dixlase-core))。
+本インストーラー (`install.php` と関連スクリプト / 辞書) は **MIT ライセンス**で公開しています。詳細は [LICENSE](./LICENSE) を参照。コントリビューションに CLA への同意は不要です。Dixlase 本体は AGPL v3 ([Dixlase Core](https://github.com/Dixlase/dixlase-core))。
