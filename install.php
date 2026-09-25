@@ -1659,7 +1659,13 @@ function show_complete(string $dir, string $assetsStatus = 'built', bool $mysqlA
     // .env into $_SERVER, and the core's `composer dump-autoload` subprocess
     // fails with "env: php: No such file or directory".
     // The router uses the current directory as the web root, hence public/.
-    fwrite(STDOUT, '     ' . cyan('cd ' . $dir . '/public && php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php') . PHP_EOL);
+    // PHP_CLI_SERVER_WORKERS lets the server answer several requests at
+    // once; with the default single worker, one slow request (the admin's
+    // plugin list fetches every thumbnail from GitHub server-side) stalls
+    // every other page. Windows has neither the variable nor the
+    // `VAR=value command` syntax, so it keeps the single worker.
+    $workers = PHP_OS_FAMILY === 'Windows' ? '' : 'PHP_CLI_SERVER_WORKERS=4 ';
+    fwrite(STDOUT, '     ' . cyan('cd ' . $dir . '/public && ' . $workers . 'php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, '     Then open ' . cyan('http://127.0.0.1:8000') . ' in your browser.' . PHP_EOL);
     fwrite(STDOUT, '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.' . PHP_EOL);

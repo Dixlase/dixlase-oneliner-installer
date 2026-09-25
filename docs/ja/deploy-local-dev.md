@@ -18,13 +18,13 @@ sed -i.bak \
     .env && rm -f .env.bak
 
 php artisan migrate --graceful
-cd public && php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
+cd public && PHP_CLI_SERVER_WORKERS=4 php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
 # → http://127.0.0.1:8000
 ```
 
 Windows で `sed` が無い場合は `.env` をエディタで開き、上記 3 行を手動編集してください。
 
-ビルトインサーバはシングルスレッドで開発用途専用です。インストールウィザードのクリック確認には十分ですが、本番トラフィックを捌くものではありません。
+ビルトインサーバは開発用途専用です。インストールウィザードのクリック確認には十分ですが、本番トラフィックを捌くものではありません。`PHP_CLI_SERVER_WORKERS=4` を付けると 4 件のリクエストを同時に処理します。既定の 1 ワーカーでは、遅いリクエストが 1 件あるだけで(管理画面のプラグイン一覧はサムネイルをサーバ側で GitHub から 1 枚ずつ取得します)他の画面がすべて止まります。Windows ではこの変数が使えないので、先頭の `PHP_CLI_SERVER_WORKERS=4` を外して実行してください。
 
 **組み込みサーバは `artisan serve` ではなく直接起動してください。** 上のコマンドは `php artisan serve` と同じルータスクリプトで PHP の組み込みサーバを起動しますが、インストールウィザードを壊す 2 つの挙動がありません。ウィザードは進行中に `.env` を書き換えます(最終ステップは `migrate` の前後で 3 回)。`artisan serve` の既定のファイル監視は `.env` が変わるたびにサーバを再起動して処理中のリクエストを殺すため、最終ステップが `migrate` の途中で落ち、DB が半分だけできた状態になります。`--no-reload` を付けると、今度は起動時の `.env` を本物の環境変数として注入し、それが後からの `.env` の書き換えにすべて勝つため、最終ステップが起動前のデータベース設定のまま動き、完了後も `INSTALLED=false` のままになります。`-d variables_order=EGPCS` は実際の環境変数(`PATH` を含む)を `$_ENV` に入れるためのもので、これが無いと Laravel が `.env` を読み込んだ後にコアの `composer dump-autoload` が `php` を見つけられません。`-d max_execution_time=300` はよくある 30 秒制限を引き上げます。ルータは現在のディレクトリを Web ルートとして扱うので `public/` から実行してください。ウィザード完了後の再起動は不要です。
 
