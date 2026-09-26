@@ -125,7 +125,6 @@ Target directory already exists and is not empty: 	Target directory already exis
      Then open 	     Then open 
  in your browser.	 in your browser.
 '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'	'     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'
-'     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.'	'     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.'
 . For other deployment options (Docker, VPS, shared hosting), see:	. For other deployment options (Docker, VPS, shared hosting), see:
   Support: https://github.com/	  Support: https://github.com/
 /issues	/issues
@@ -207,3 +206,7 @@ Cannot create a private work directory under 	Cannot create a private work direc
 Failed to create the extraction directory.	Failed to create the extraction directory.
 Could not extract the ZIP archive.	Could not extract the ZIP archive.
 Failed to move files into 	Failed to move files into 
+'     ' . green('Database:') . ' choose ' . bold('SQLite') . ' in the Database step. It needs no database server,'	'     ' . green('Database:') . ' choose ' . bold('SQLite') . ' in the Database step. It needs no database server,'
+'     which suits a trial or a small site. For production, use MySQL / MariaDB.'	'     which suits a trial or a small site. For production, use MySQL / MariaDB.'
+'     ' . yellow('Database:') . ' SQLite is the easiest choice, but the pdo_sqlite extension is not loaded.'	'     ' . yellow('Database:') . ' SQLite is the easiest choice, but the pdo_sqlite extension is not loaded.'
+'     Install it (e.g. php8.3-sqlite3) and restart, or use MySQL / MariaDB.'	'     Install it (e.g. php8.3-sqlite3) and restart, or use MySQL / MariaDB.'

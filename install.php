@@ -387,16 +387,6 @@ function create_work_dir(): string
     fatal("Cannot create a private work directory under {$base}");
 }
 
-/**
- * Detect whether a MySQL client is available on PATH. Used to decide
- * whether to surface a SQLite hint in the post-install message.
- */
-function mysql_available(): bool
-{
-    @exec('mysql --version 2>/dev/null', $output, $code);
-    return $code === 0;
-}
-
 function show_help(): void
 {
     fwrite(STDOUT, <<<'HELP'
@@ -1699,7 +1689,7 @@ function create_storage_link(string $dir): void
 // Completion message
 // ---------------------------------------------------------------------------
 
-function show_complete(string $dir, string $assetsStatus = 'built', bool $mysqlAvailable = true): void
+function show_complete(string $dir, string $assetsStatus = 'built'): void
 {
     fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, bold(green('  ╔══════════════════════════════════════════╗')) . PHP_EOL);
@@ -1753,13 +1743,21 @@ function show_complete(string $dir, string $assetsStatus = 'built', bool $mysqlA
     fwrite(STDOUT, '     Then open ' . cyan('http://127.0.0.1:8000') . ' in your browser.' . PHP_EOL);
     fwrite(STDOUT, '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.' . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
+    // Recommend SQLite for the one-liner's typical use (a trial or a small
+    // site on the built-in server): it needs no database server, and the
+    // wizard sets it up in one step. pdo_sqlite is not in the required
+    // extension list, so say how to get it when it is missing.
+    if (extension_loaded('pdo_sqlite')) {
+        fwrite(STDOUT, '     ' . green('Database:') . ' choose ' . bold('SQLite') . ' in the Database step. It needs no database server,' . PHP_EOL);
+        fwrite(STDOUT, '     which suits a trial or a small site. For production, use MySQL / MariaDB.' . PHP_EOL);
+    } else {
+        fwrite(STDOUT, '     ' . yellow('Database:') . ' SQLite is the easiest choice, but the pdo_sqlite extension is not loaded.' . PHP_EOL);
+        fwrite(STDOUT, '     Install it (e.g. php8.3-sqlite3) and restart, or use MySQL / MariaDB.' . PHP_EOL);
+    }
+    fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, '     ' . dim('Use this instead of php artisan serve: the wizard rewrites .env as it goes,') . PHP_EOL);
     fwrite(STDOUT, '     ' . dim('and artisan serve either restarts mid-request (the final step dies) or, with') . PHP_EOL);
     fwrite(STDOUT, '     ' . dim('--no-reload, keeps the old values. Start it from public/ as shown.') . PHP_EOL);
-    if (! $mysqlAvailable) {
-        fwrite(STDOUT, PHP_EOL);
-        fwrite(STDOUT, '     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.' . PHP_EOL);
-    }
     fwrite(STDOUT, PHP_EOL);
     $step++;
     fwrite(STDOUT, '  ' . $step . '. For other deployment options (Docker, VPS, shared hosting), see:' . PHP_EOL);
@@ -1972,7 +1970,7 @@ function main(array $argv): int
     set_permissions($dir);
     create_storage_link($dir);
 
-    show_complete($dir, $assetsStatus, mysql_available());
+    show_complete($dir, $assetsStatus);
 
     return 0;
 }

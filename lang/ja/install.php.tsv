@@ -125,7 +125,6 @@ Target directory already exists and is not empty: 	インストール先ディ�
      Then open 	     ブラウザで
  in your browser.	 を開く。
 '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'	'     ' . bold('インストールウィザード') . ' がデータベース・管理者・メール設定を案内します。'
-'     ' . yellow('MySQL was not detected.') . ' Choose ' . bold('SQLite') . ' in the Database step to start without a separate DB server.'	'     ' . yellow('MySQL が見つかりません。') . ' データベース選択画面で ' . bold('SQLite') . ' を選べば、別途 DB サーバ無しで開始できます。'
 . For other deployment options (Docker, VPS, shared hosting), see:	. その他のデプロイ方法 (Docker / VPS / 共有ホスティング) は以下を参照:
   Support: https://github.com/	  サポート: https://github.com/
 /issues	/issues
@@ -207,3 +206,7 @@ Cannot create a private work directory under 	専用の作業ディレクトリ�
 Failed to create the extraction directory.	展開用ディレクトリを作成できませんでした。
 Could not extract the ZIP archive.	ZIP アーカイブを展開できませんでした。
 Failed to move files into 	ファイルの移動に失敗しました。移動先: 
+'     ' . green('Database:') . ' choose ' . bold('SQLite') . ' in the Database step. It needs no database server,'	'     ' . green('データベース:') . ' ウィザードの Database で ' . bold('SQLite') . ' を選んでください。DB サーバが不要で、'
+'     which suits a trial or a small site. For production, use MySQL / MariaDB.'	'     お試しや小規模なサイトに向いています。本番運用では MySQL / MariaDB を使ってください。'
+'     ' . yellow('Database:') . ' SQLite is the easiest choice, but the pdo_sqlite extension is not loaded.'	'     ' . yellow('データベース:') . ' いちばん手軽なのは SQLite ですが、pdo_sqlite 拡張が読み込まれていません。'
+'     Install it (e.g. php8.3-sqlite3) and restart, or use MySQL / MariaDB.'	'     インストールして (例: php8.3-sqlite3) 起動し直すか、MySQL / MariaDB を使ってください。'
