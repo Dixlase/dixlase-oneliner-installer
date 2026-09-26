@@ -11,6 +11,11 @@ $cmd = $argv[1] ?? '';
 
 switch ($cmd) {
     case 'key:generate':
+        // Like Laravel, overwrite APP_KEY in .env so tests can tell whether
+        // the installer rotated an existing key.
+        $env = __DIR__ . '/.env';
+        $key = 'base64:' . base64_encode(random_bytes(32));
+        file_put_contents($env, preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=' . $key, (string) file_get_contents($env)));
         echo "Application key set successfully.\n";
         exit(0);
     case 'storage:link':

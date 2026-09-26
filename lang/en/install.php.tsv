@@ -196,3 +196,14 @@ composer create-project failed.	composer create-project failed.
 Both delivery paths failed.	Both delivery paths failed.
 vendor/ is not in the ZIP and Composer is not available.	vendor/ is not in the ZIP and Composer is not available.
 Install Composer and run: composer install --no-dev --optimize-autoloader	Install Composer and run: composer install --no-dev --optimize-autoloader
+  --force-reinstall   Install over an existing site (keeps its APP_KEY)	  --force-reinstall   Install over an existing site (keeps its APP_KEY)
+An existing installation was found in: 	An existing installation was found in: 
+    (found: 	    (found: 
+  The installer does not update an existing site. Choose one of:	  The installer does not update an existing site. Choose one of:
+'    • To update Dixlase, run ' . bold('php artisan dls:core:update') . ' in that directory'	'    • To update Dixlase, run ' . bold('php artisan dls:core:update') . ' in that directory'
+'    • Pass ' . bold('--force-reinstall') . ' to overwrite the files (the existing .env and APP_KEY are kept)'	'    • Pass ' . bold('--force-reinstall') . ' to overwrite the files (the existing .env and APP_KEY are kept)'
+Existing application key kept	Existing application key kept
+Cannot create a private work directory under 	Cannot create a private work directory under 
+Failed to create the extraction directory.	Failed to create the extraction directory.
+Could not extract the ZIP archive.	Could not extract the ZIP archive.
+Failed to move files into 	Failed to move files into 

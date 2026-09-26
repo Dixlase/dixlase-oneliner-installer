@@ -253,6 +253,7 @@ function parse_args(array $argv): array
         'no_build'        => false,   // skip npm ci + npm run build
         'non_interactive' => false,
         'assume_yes'      => false,
+        'force_reinstall' => false,   // allow installing over an existing site
         'help'            => false,
     ];
 
@@ -267,6 +268,8 @@ function parse_args(array $argv): array
             $options['non_interactive'] = true;
         } elseif ($arg === '--yes' || $arg === '-y') {
             $options['assume_yes'] = true;
+        } elseif ($arg === '--force-reinstall') {
+            $options['force_reinstall'] = true;
         } elseif (str_starts_with($arg, '--dir=')) {
             $options['dir']           = substr($arg, 6);
             $options['dir_specified'] = true;
@@ -339,6 +342,52 @@ function is_dir_effectively_empty(string $dir): bool
 }
 
 /**
+ * List the files in $dir that show an application is already installed there.
+ *
+ * Installing over them would replace a live site's code and, before this
+ * guard existed, its APP_KEY. An empty result means the directory is safe
+ * to install into.
+ *
+ * @return list<string>
+ */
+function existing_install_markers(string $dir): array
+{
+    $markers = [];
+
+    foreach (['.env', 'artisan', 'bootstrap/app.php', 'vendor'] as $path) {
+        if (file_exists($dir . '/' . $path)) {
+            $markers[] = $path;
+        }
+    }
+
+    return $markers;
+}
+
+/**
+ * Create a private work directory for downloads and extraction.
+ *
+ * The name is random and mkdir() fails if it already exists, so another
+ * local user cannot pre-create it in a shared temp directory; mode 0700
+ * keeps them from reading or swapping files inside it.
+ */
+function create_work_dir(): string
+{
+    $base = rtrim(sys_get_temp_dir(), '/');
+
+    for ($i = 0; $i < 5; $i++) {
+        $path = $base . '/dixlase-install-' . bin2hex(random_bytes(8));
+
+        if (@mkdir($path, 0700)) {
+            // mkdir() applies the umask; make sure the mode is exactly 0700.
+            chmod($path, 0700);
+            return $path;
+        }
+    }
+
+    fatal("Cannot create a private work directory under {$base}");
+}
+
+/**
  * Detect whether a MySQL client is available on PATH. Used to decide
  * whether to surface a SQLite hint in the post-install message.
  */
@@ -367,6 +416,7 @@ Options:
   --no-build          Skip "npm ci && npm run build" (frontend asset build)
   --non-interactive   Disable prompts even when STDIN is a terminal
   -y, --yes           Auto-confirm every prompt
+  --force-reinstall   Install over an existing site (keeps its APP_KEY)
   -h, --help          Show this help message
 
 Environment:
@@ -789,7 +839,7 @@ function verify_checksum_data(string $file, string $checksumData): bool
  * A missing checksums.sha256 (typical for early releases) skips verification
  * with a warn — same behaviour as before.
  */
-function verify_checksum(string $file, string $version): bool
+function verify_checksum(string $file, string $version, string $workDir): bool
 {
     if (use_github_api_for_releases()) {
         $release = fetch_release_by_tag("v{$version}");
@@ -806,7 +856,7 @@ function verify_checksum(string $file, string $version): bool
             return true;
         }
 
-        $tmpSum = sys_get_temp_dir() . '/' . DIXLASE_CHECKSUM_FILE;
+        $tmpSum = $workDir . '/' . DIXLASE_CHECKSUM_FILE;
 
         if (! download_asset_via_api($asset['url'], $tmpSum)) {
             @unlink($tmpSum);
@@ -971,10 +1021,25 @@ function run_filtered_tool(string $command, callable $shouldShow, ?string &$logF
  */
 function download_dixlase(string $dir, string $version): bool
 {
+    $workDir = create_work_dir();
+
+    try {
+        return download_dixlase_into($dir, $version, $workDir);
+    } finally {
+        remove_directory($workDir);
+    }
+}
+
+/**
+ * Download, verify and extract the release inside $workDir, then move the
+ * files into $dir. Everything under $workDir is removed by the caller.
+ */
+function download_dixlase_into(string $dir, string $version, string $workDir): bool
+{
     step("Downloading Dixlase v{$version}");
 
     $zipName = "dixlase-v{$version}.zip";
-    $tmpZip  = sys_get_temp_dir() . "/{$zipName}";
+    $tmpZip  = $workDir . "/{$zipName}";
 
     if (use_github_api_for_releases()) {
         $release = fetch_release_by_tag("v{$version}");
@@ -992,7 +1057,6 @@ function download_dixlase(string $dir, string $version): bool
         }
 
         if (! download_asset_via_api($asset['url'], $tmpZip)) {
-            @unlink($tmpZip);
             error("Failed to download {$zipName} via the GitHub API.");
             return false;
         }
@@ -1000,28 +1064,32 @@ function download_dixlase(string $dir, string $version): bool
         $url = DIXLASE_RELEASE_URL . "/v{$version}/{$zipName}";
 
         if (! download_file($url, $tmpZip)) {
-            @unlink($tmpZip);
             error("Failed to download {$url}");
             return false;
         }
     }
 
-    if (! verify_checksum($tmpZip, $version)) {
-        @unlink($tmpZip);
+    if (! verify_checksum($tmpZip, $version, $workDir)) {
         error('Download verification failed. The file may have been tampered with.');
         return false;
     }
 
     step('Extracting files');
 
+    $extractDir = $workDir . '/extract';
+
+    if (! @mkdir($extractDir, 0700)) {
+        error('Failed to create the extraction directory.');
+        return false;
+    }
+
     if (! class_exists('ZipArchive')) {
         // Fallback to unzip command
         $escaped = escapeshellarg($tmpZip);
-        $escDir  = escapeshellarg($dir);
-        exec("unzip -o {$escaped} -d {$escDir} 2>&1", $output, $code);
+        $escDir  = escapeshellarg($extractDir);
+        exec("unzip -o -q {$escaped} -d {$escDir} 2>&1", $output, $code);
 
         if ($code !== 0) {
-            @unlink($tmpZip);
             error('Failed to extract ZIP archive. Install the php-zip extension or the unzip command.');
             return false;
         }
@@ -1029,64 +1097,58 @@ function download_dixlase(string $dir, string $version): bool
         $zip = new ZipArchive();
 
         if ($zip->open($tmpZip) !== true) {
-            @unlink($tmpZip);
             error('Failed to open ZIP archive.');
             return false;
         }
 
-        // Detect if the archive has a top-level directory
-        $topDir = null;
-        if ($zip->numFiles > 0) {
-            $firstName = $zip->getNameIndex(0);
-            if (str_contains($firstName, '/')) {
-                $topDir = explode('/', $firstName)[0];
-            }
-        }
-
-        $zip->extractTo(sys_get_temp_dir());
+        $extracted = $zip->extractTo($extractDir);
         $zip->close();
 
-        // Move files from nested directory to target
-        $extractedPath = $topDir
-            ? sys_get_temp_dir() . '/' . $topDir
-            : sys_get_temp_dir();
-
-        if ($topDir && is_dir($extractedPath)) {
-            // Ensure target directory exists
-            if (! is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-
-            // Move all files
-            $iterator = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($extractedPath, RecursiveDirectoryIterator::SKIP_DOTS),
-                RecursiveIteratorIterator::SELF_FIRST
-            );
-
-            foreach ($iterator as $item) {
-                $target = $dir . '/' . $iterator->getSubPathname();
-
-                if ($item->isDir()) {
-                    if (! is_dir($target)) {
-                        mkdir($target, 0755, true);
-                    }
-                } else {
-                    $targetDir = dirname($target);
-
-                    if (! is_dir($targetDir)) {
-                        mkdir($targetDir, 0755, true);
-                    }
-
-                    rename($item->getPathname(), $target);
-                }
-            }
-
-            // Clean up extracted directory
-            remove_directory($extractedPath);
+        if (! $extracted) {
+            error('Could not extract the ZIP archive.');
+            return false;
         }
     }
 
-    @unlink($tmpZip);
+    // Release archives wrap everything in one top-level directory
+    // (dixlase-vX.Y.Z/). Strip it when present; otherwise move the
+    // archive root as is. Both extraction paths share this step.
+    $sourceDir = $extractDir;
+    $entries   = array_values(array_diff(scandir($extractDir) ?: [], ['.', '..', '__MACOSX']));
+
+    if (count($entries) === 1 && is_dir($extractDir . '/' . $entries[0])) {
+        $sourceDir = $extractDir . '/' . $entries[0];
+    }
+
+    if (! is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($sourceDir, RecursiveDirectoryIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::SELF_FIRST
+    );
+
+    foreach ($iterator as $item) {
+        $target = $dir . '/' . $iterator->getSubPathname();
+
+        if ($item->isDir()) {
+            if (! is_dir($target)) {
+                mkdir($target, 0755, true);
+            }
+        } else {
+            $targetDir = dirname($target);
+
+            if (! is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+
+            if (! rename($item->getPathname(), $target)) {
+                error('Failed to move files into ' . $dir . ': ' . $iterator->getSubPathname());
+                return false;
+            }
+        }
+    }
 
     info('Files extracted to ' . $dir);
     return true;
@@ -1529,7 +1591,14 @@ function setup_environment(string $dir): void
         info('.env file created');
     }
 
-    // Generate APP_KEY
+    // Generate APP_KEY only when it is empty. Replacing an existing key
+    // makes every encrypted value unreadable and breaks the audit log
+    // seals, so a re-install must never rotate it.
+    if (env_file_has_app_key($envFile)) {
+        info('Existing application key kept');
+        return;
+    }
+
     $artisan = $dir . '/artisan';
 
     if (file_exists($artisan)) {
@@ -1544,6 +1613,20 @@ function setup_environment(string $dir): void
     } else {
         warn('artisan not found — skipping key generation.');
     }
+}
+
+/**
+ * True when the .env file at $envFile has a non-empty APP_KEY value.
+ */
+function env_file_has_app_key(string $envFile): bool
+{
+    $contents = @file_get_contents($envFile);
+
+    if ($contents === false || ! preg_match('/^APP_KEY[ \t]*=(.*)$/m', $contents, $m)) {
+        return false;
+    }
+
+    return trim(trim($m[1]), '"\'') !== '';
 }
 
 function set_permissions(string $dir): void
@@ -1756,11 +1839,28 @@ function main(array $argv): int
         $dir = resolve_path(default_install_dir());
     }
 
+    // Refuse to install over an existing site, with or without --dir=.
+    // Re-running the one-liner is not an update: it would overwrite the
+    // live code in place. --force-reinstall is the explicit way through.
+    $markers = is_dir($dir) ? existing_install_markers($dir) : [];
+
+    if ($markers !== [] && ! $options['force_reinstall']) {
+        error("An existing installation was found in: {$dir}");
+        fwrite(STDERR, '    (found: ' . implode(', ', $markers) . ')' . PHP_EOL);
+        fwrite(STDERR, PHP_EOL);
+        fwrite(STDERR, '  The installer does not update an existing site. Choose one of:' . PHP_EOL);
+        fwrite(STDERR, '    • To update Dixlase, run ' . bold('php artisan dls:core:update') . ' in that directory' . PHP_EOL);
+        fwrite(STDERR, '    • Pass ' . bold('--dir=PATH') . ' to install into a different location' . PHP_EOL);
+        fwrite(STDERR, '    • Pass ' . bold('--force-reinstall') . ' to overwrite the files (the existing .env and APP_KEY are kept)' . PHP_EOL);
+        fwrite(STDERR, PHP_EOL);
+        return 1;
+    }
+
     // When the default <cwd>/dixlase target already holds files, refuse
     // upfront rather than letting composer / unzip emit a confusing
     // "directory not empty" error mid-install. Only fires for the auto
     // path — explicit --dir= lets the caller take responsibility.
-    if (! $options['dir_specified'] && is_dir($dir) && ! is_dir_effectively_empty($dir)) {
+    if (! $options['dir_specified'] && ! $options['force_reinstall'] && is_dir($dir) && ! is_dir_effectively_empty($dir)) {
         error("Target directory already exists and is not empty: {$dir}");
         fwrite(STDERR, PHP_EOL);
         fwrite(STDERR, '  Choose one of:' . PHP_EOL);
