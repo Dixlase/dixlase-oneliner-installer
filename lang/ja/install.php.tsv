@@ -210,3 +210,4 @@ Failed to move files into 	ファイルの移動に失敗しました。移動�
 '     which suits a trial or a small site. For production, use MySQL / MariaDB.'	'     お試しや小規模なサイトに向いています。本番運用では MySQL / MariaDB を使ってください。'
 '     ' . yellow('Database:') . ' SQLite is the easiest choice, but the pdo_sqlite extension is not loaded.'	'     ' . yellow('データベース:') . ' いちばん手軽なのは SQLite ですが、pdo_sqlite 拡張が読み込まれていません。'
 '     Install it (e.g. php8.3-sqlite3) and restart, or use MySQL / MariaDB.'	'     インストールして (例: php8.3-sqlite3) 起動し直すか、MySQL / MariaDB を使ってください。'
+'     ' . dim('After a core update or rollback, restart this server (Ctrl+C, then run it again).')	'     ' . dim('コアの更新・ロールバックの後は、このサーバを再起動してください (Ctrl+C で止めて、もう一度実行)。')

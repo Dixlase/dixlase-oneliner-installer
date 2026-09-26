@@ -95,3 +95,11 @@ run_in() {
     [[ "$output" == *"SQLite"* ]]
     [[ "$output" == *"MySQL / MariaDB"* ]]
 }
+
+@test "post-install: next-steps say to restart the server after a core update or rollback" {
+    local CWD="$BATS_TEST_TMPDIR/site"
+    mkdir -p "$CWD"
+    run run_in "$CWD"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"After a core update or rollback, restart this server"* ]]
+}
