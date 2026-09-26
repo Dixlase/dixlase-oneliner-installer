@@ -210,3 +210,4 @@ Failed to move files into 	Failed to move files into
 '     which suits a trial or a small site. For production, use MySQL / MariaDB.'	'     which suits a trial or a small site. For production, use MySQL / MariaDB.'
 '     ' . yellow('Database:') . ' SQLite is the easiest choice, but the pdo_sqlite extension is not loaded.'	'     ' . yellow('Database:') . ' SQLite is the easiest choice, but the pdo_sqlite extension is not loaded.'
 '     Install it (e.g. php8.3-sqlite3) and restart, or use MySQL / MariaDB.'	'     Install it (e.g. php8.3-sqlite3) and restart, or use MySQL / MariaDB.'
+'     ' . dim('After a core update or rollback, restart this server (Ctrl+C, then run it again).')	'     ' . dim('After a core update or rollback, restart this server (Ctrl+C, then run it again).')

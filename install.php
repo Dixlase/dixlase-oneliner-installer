@@ -1758,6 +1758,10 @@ function show_complete(string $dir, string $assetsStatus = 'built'): void
     fwrite(STDOUT, '     ' . dim('Use this instead of php artisan serve: the wizard rewrites .env as it goes,') . PHP_EOL);
     fwrite(STDOUT, '     ' . dim('and artisan serve either restarts mid-request (the final step dies) or, with') . PHP_EOL);
     fwrite(STDOUT, '     ' . dim('--no-reload, keeps the old values. Start it from public/ as shown.') . PHP_EOL);
+    // A core update or rollback recreates public/, so the running server's
+    // working directory no longer exists and every request fails with
+    // "Failed opening required '/index.php'" until it is restarted.
+    fwrite(STDOUT, '     ' . dim('After a core update or rollback, restart this server (Ctrl+C, then run it again).') . PHP_EOL);
     fwrite(STDOUT, PHP_EOL);
     $step++;
     fwrite(STDOUT, '  ' . $step . '. For other deployment options (Docker, VPS, shared hosting), see:' . PHP_EOL);
