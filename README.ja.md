@@ -14,6 +14,8 @@ curl -sS https://install.dixlase.net | php
 
 配布経路を自動選択し、`<cwd>/dixlase` に展開してセットアップまで完了します。`php install.php` で直接実行した場合は、インストール先と続行確認を尋ねる対話モードになります。
 
+**データベース:** お試しや小規模なサイトなら、インストールウィザードの Database で **SQLite** を選んでください。DB サーバは不要です (PHP の `pdo_sqlite` 拡張だけ必要)。本番運用では MySQL / MariaDB を使ってください ([docs/ja/deploy-vps.md](docs/ja/deploy-vps.md) を参照)。
+
 ## 動作要件
 
 - **PHP 8.3 以上** と標準拡張 (`openssl`、`pdo`、`mbstring`、`tokenizer`、`xml`、`ctype`、`json`、`bcmath`、`curl`、`fileinfo`、`gd`)

@@ -14,6 +14,8 @@ curl -sS https://install.dixlase.net | php
 
 That's it. The script picks the best delivery path for your environment and walks through the rest. When run interactively (`php install.php`), it asks for the install directory and confirms before proceeding.
 
+**Database:** to try Dixlase or run a small site, choose **SQLite** in the install wizard's Database step — it needs no database server (only PHP's `pdo_sqlite` extension). For production, use MySQL / MariaDB (see [docs/deploy-vps.md](docs/deploy-vps.md)).
+
 ## Prerequisites
 
 - **PHP 8.3+** with the standard extensions (`openssl`, `pdo`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`, `fileinfo`, `gd`)

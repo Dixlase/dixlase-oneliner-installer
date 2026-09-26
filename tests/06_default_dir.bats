@@ -85,3 +85,13 @@ run_in() {
     [[ "$output" == *"http://127.0.0.1:8000"* ]]
     [[ "$output" == *"https://github.com/Dixlase/dixlase-oneliner-installer/blob/main/docs/index.md"* ]]
 }
+
+@test "post-install: next-steps recommend SQLite for the wizard's Database step" {
+    local CWD="$BATS_TEST_TMPDIR/site"
+    mkdir -p "$CWD"
+    run run_in "$CWD"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Database:"* ]]
+    [[ "$output" == *"SQLite"* ]]
+    [[ "$output" == *"MySQL / MariaDB"* ]]
+}
