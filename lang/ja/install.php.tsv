@@ -196,3 +196,14 @@ composer create-project failed.	composer create-project が失敗しました。
 Both delivery paths failed.	両方の配布経路が失敗しました。
 vendor/ is not in the ZIP and Composer is not available.	vendor/ が ZIP に含まれず Composer も利用できません。
 Install Composer and run: composer install --no-dev --optimize-autoloader	Composer をインストールして実行: composer install --no-dev --optimize-autoloader
+  --force-reinstall   Install over an existing site (keeps its APP_KEY)	  --force-reinstall   既存サイトの上に再インストール (APP_KEY は保持)
+An existing installation was found in: 	既存のインストールが見つかりました: 
+    (found: 	    (検出: 
+  The installer does not update an existing site. Choose one of:	  インストーラは既存サイトを更新しません。次のいずれかを選んでください:
+'    • To update Dixlase, run ' . bold('php artisan dls:core:update') . ' in that directory'	'    • Dixlase を更新するには、そのディレクトリで ' . bold('php artisan dls:core:update') . ' を実行'
+'    • Pass ' . bold('--force-reinstall') . ' to overwrite the files (the existing .env and APP_KEY are kept)'	'    • ' . bold('--force-reinstall') . ' を渡してファイルを上書き (既存の .env と APP_KEY は保持)'
+Existing application key kept	既存のアプリケーションキーを保持
+Cannot create a private work directory under 	専用の作業ディレクトリを作成できません: 
+Failed to create the extraction directory.	展開用ディレクトリを作成できませんでした。
+Could not extract the ZIP archive.	ZIP アーカイブを展開できませんでした。
+Failed to move files into 	ファイルの移動に失敗しました。移動先: 

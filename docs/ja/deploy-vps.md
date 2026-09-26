@@ -41,12 +41,13 @@ sudo chown dixlase:dixlase /var/www/dixlase
 
 ```bash
 sudo -iu dixlase bash -lc '
-    cd /var/www/dixlase
-    curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
+    curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php -- --dir=/var/www/dixlase
 '
 ```
 
 トークンは Dixlase Core が private リポジトリの間のみ必要です。public 化されたら `GITHUB_TOKEN=` 接頭辞は不要になります。
+
+`--dir` を付けないと、カレントディレクトリに `dixlase/` サブディレクトリを作ってその中に入れるため、パスを明示してください。ワンライナーは初回インストール専用です。既存のサイトに対して再実行すると、何も変更せずに停止します ([アップデート運用](#アップデート運用) を参照)。
 
 ## 4. データベース作成
 
@@ -71,7 +72,7 @@ sudo -iu dixlase php /var/www/dixlase/artisan migrate --force
 
 ## 5. Nginx + PHP-FPM 設定
 
-`/etc/nginx/sites-available/dixlase.conf` を作成:
+`/etc/nginx/sites-available/dixlase.conf` を作成します。手順 7 のインストールウィザードが終わるまでは、最初にサイトを開いた人が管理者アカウントを作れてしまうため、当面は自分の IP アドレスだけを通します (`203.0.113.10` を置き換えてください。自分の端末で `curl -s https://ifconfig.me` を実行すると確認できます):
 
 ```nginx
 server {
@@ -88,10 +89,18 @@ server {
     add_header Referrer-Policy strict-origin-when-cross-origin always;
 
     location / {
+        # インストールウィザードが終わったら削除 (手順 7)
+        allow 203.0.113.10;
+        deny all;
+
         try_files $uri $uri/ /index.php?$query_string;
     }
 
     location ~ \.php$ {
+        # インストールウィザードが終わったら削除 (手順 7)
+        allow 203.0.113.10;
+        deny all;
+
         include fastcgi_params;
         fastcgi_pass unix:/run/php/php8.3-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
@@ -128,6 +137,15 @@ sudo certbot --nginx -d dixlase.example.com
 2. 管理者アカウントを作成
 3. メールサーバ設定 (後回し可)
 
+ウィザードが終わったら、両方の location から `allow` / `deny` の行を削除して nginx を reload します:
+
+```bash
+sudo nano /etc/nginx/sites-available/dixlase.conf   # allow/deny の行を削除
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+ブラウザの代わりに、手順 5 の前にシェルから `php artisan dls:install` でセットアップを済ませることもできます (`php artisan dls:install --help` を参照)。その場合、vhost に IP 制限は要りません。
+
 ## ハードニングチェックリスト (インストール後)
 
 - パーミッション: 所有者を `dixlase:dixlase` に、`storage/` と `bootstrap/cache/` を書込可、それ以外は Web サーバユーザから read-only
@@ -140,7 +158,7 @@ sudo certbot --nginx -d dixlase.example.com
 
 ## アップデート運用
 
-ワンライナーは**初回インストール用**です。アップデートは Composer / Git を直接使ってください:
+ワンライナーは**初回インストール用**で、既存のサイトに対しては停止します。コアの更新は (アプリユーザーで) `php artisan dls:core:update` を使うか、Composer / Git を直接使ってください:
 
 ```bash
 # 1) アプリユーザーで: メンテナンス開始 → コード更新 → マイグレーション

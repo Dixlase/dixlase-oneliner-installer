@@ -30,7 +30,7 @@ curl -sS https://install.dixlase.net | php
 1. **`composer create-project`** (優先) — `PATH` に Composer がある場合に使用、Packagist 経由で依存解決。
 2. **GitHub Releases ZIP** (フォールバック) — `dixlase-v<version>.zip` をダウンロード → SHA-256 検証 → 展開 → Composer があれば `composer install`。
 
-どちらの経路でも `.env` 生成、`APP_KEY` 生成、`storage/` 等の権限設定、`storage:link` の共通後処理が走ります。DB・管理者・メールの設定は初回ブラウザアクセス時のウィザードで案内されます。
+どちらの経路でも `.env` 生成、`APP_KEY` 生成 (空の場合のみ)、`storage/` 等の権限設定、`storage:link` の共通後処理が走ります。DB・管理者・メールの設定は初回ブラウザアクセス時のウィザードで案内されます。
 
 ## オプション
 
@@ -44,8 +44,11 @@ curl -sS https://install.dixlase.net | php
   --no-build          "npm ci && npm run build" をスキップ
   --non-interactive   STDIN がターミナルでもプロンプトを無効化
   -y, --yes           全プロンプトを自動承認
+  --force-reinstall   既存サイトの上に再インストール (APP_KEY は保持)
   -h, --help          ヘルプを表示
 ```
+
+インストーラは新規インストール専用です。インストール先に既存のサイト (`.env`・`artisan`・`bootstrap/app.php`・`vendor/` のいずれか) があると、何も変更せずに停止します。既存サイトの更新は `php artisan dls:core:update` で行ってください。`--force-reinstall` を付けるとファイルを上書きしますが、既存の `.env` と `APP_KEY` は保持するため、暗号化されたデータは読めるままです。
 
 例:
 

@@ -30,7 +30,7 @@ The installer chooses one of two delivery paths automatically:
 1. **`composer create-project`** (preferred) — used when Composer is on `PATH`. Runs `composer create-project dixlase/dixlase-core <dir>` so dependencies are resolved from Packagist.
 2. **GitHub Releases ZIP** (fallback) — downloads `dixlase-v<version>.zip` from `github.com/Dixlase/dixlase-core/releases`, verifies the SHA-256 checksum, extracts it, and runs `composer install` if Composer is available.
 
-After either path, common post-install steps run: copy `.env.example` → `.env`, generate `APP_KEY`, set permissions on `storage/` and `bootstrap/cache/`, and create the `storage:link`. Database / admin / mail configuration is then handled by the Dixlase install wizard on first browser visit.
+After either path, common post-install steps run: copy `.env.example` → `.env`, generate `APP_KEY` (only when it is empty), set permissions on `storage/` and `bootstrap/cache/`, and create the `storage:link`. Database / admin / mail configuration is then handled by the Dixlase install wizard on first browser visit.
 
 ## Options
 
@@ -41,14 +41,20 @@ Usage:
   php install.php [options]
 
 Options:
-  --dir=PATH          Installation directory (default: current directory)
+  --dir=PATH          Installation directory (default: <cwd>/dixlase).
+                      Pass --dir=. to install into the current directory
+                      in place instead of creating a subdirectory.
   --version=X.X.X     Install a specific version (default: latest)
   --method=MODE       Delivery method: auto, composer, or zip (default: auto)
   --no-composer       Skip "composer install" in the zip fallback path
+  --no-build          Skip "npm ci && npm run build" (frontend asset build)
   --non-interactive   Disable prompts even when STDIN is a terminal
   -y, --yes           Auto-confirm every prompt
+  --force-reinstall   Install over an existing site (keeps its APP_KEY)
   -h, --help          Show this help message
 ```
+
+The installer is for new installs only. If the target directory already holds a site (`.env`, `artisan`, `bootstrap/app.php` or `vendor/`), it stops without changing anything; update an existing site with `php artisan dls:core:update`. `--force-reinstall` overwrites the files but keeps the existing `.env` and `APP_KEY`, so encrypted data stays readable.
 
 Examples:
 

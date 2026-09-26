@@ -41,12 +41,13 @@ sudo chown dixlase:dixlase /var/www/dixlase
 
 ```bash
 sudo -iu dixlase bash -lc '
-    cd /var/www/dixlase
-    curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
+    curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php -- --dir=/var/www/dixlase
 '
 ```
 
 The token is only needed while Dixlase Core is in a private repository. Once it goes public the `GITHUB_TOKEN=` prefix can be dropped.
+
+Without `--dir`, the installer creates a `dixlase/` subdirectory in the current directory, so pass the path explicitly. The one-liner is for the first install only: run again over an existing site, it stops without changing anything (see [Updating Dixlase later](#updating-dixlase-later)).
 
 ## 4. Create the database
 
@@ -71,7 +72,7 @@ sudo -iu dixlase php /var/www/dixlase/artisan migrate --force
 
 ## 5. Configure Nginx + PHP-FPM
 
-Add `/etc/nginx/sites-available/dixlase.conf`:
+Add `/etc/nginx/sites-available/dixlase.conf`. Until the install wizard in step 7 is finished, whoever opens the site first can create the admin account, so the vhost only lets your own IP address through for now (replace `203.0.113.10`; check it with `curl -s https://ifconfig.me` from your own machine):
 
 ```nginx
 server {
@@ -88,10 +89,18 @@ server {
     add_header Referrer-Policy strict-origin-when-cross-origin always;
 
     location / {
+        # Remove after the install wizard is finished (step 7)
+        allow 203.0.113.10;
+        deny all;
+
         try_files $uri $uri/ /index.php?$query_string;
     }
 
     location ~ \.php$ {
+        # Remove after the install wizard is finished (step 7)
+        allow 203.0.113.10;
+        deny all;
+
         include fastcgi_params;
         fastcgi_pass unix:/run/php/php8.3-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
@@ -128,6 +137,15 @@ Open `https://dixlase.example.com` — the Dixlase install wizard takes over:
 2. Create the initial admin account
 3. Set the mail server (or leave it for later)
 
+When the wizard is finished, remove the `allow` / `deny` lines from both locations and reload nginx:
+
+```bash
+sudo nano /etc/nginx/sites-available/dixlase.conf   # delete the allow/deny lines
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Instead of the browser, you can also finish setup from the shell with `php artisan dls:install` (see `php artisan dls:install --help`) before step 5; then the vhost needs no IP restriction.
+
 ## Hardening checklist (post-install)
 
 - File permissions: keep ownership at `dixlase:dixlase`, `storage/` and `bootstrap/cache/` writable, everything else read-only for the webserver user
@@ -141,7 +159,7 @@ Open `https://dixlase.example.com` — the Dixlase install wizard takes over:
 
 ## Updating Dixlase later
 
-The one-liner is for *initial* install. For updates, deal with composer + git directly:
+The one-liner is for *initial* install; run over an existing site, it refuses. Update the core with `php artisan dls:core:update` (as the app user), or deal with composer + git directly:
 
 ```bash
 # 1) As the app user: enter maintenance, update code, migrate.
