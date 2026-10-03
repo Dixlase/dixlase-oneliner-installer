@@ -211,3 +211,7 @@ Failed to move files into 	ファイルの移動に失敗しました。移動�
 '     ' . yellow('Database:') . ' SQLite is the easiest choice, but the pdo_sqlite extension is not loaded.'	'     ' . yellow('データベース:') . ' いちばん手軽なのは SQLite ですが、pdo_sqlite 拡張が読み込まれていません。'
 '     Install it (e.g. php8.3-sqlite3) and restart, or use MySQL / MariaDB.'	'     インストールして (例: php8.3-sqlite3) 起動し直すか、MySQL / MariaDB を使ってください。'
 '     ' . dim('After a core update or rollback, restart this server (Ctrl+C, then run it again).')	'     ' . dim('コアの更新・ロールバックの後は、このサーバを再起動してください (Ctrl+C で止めて、もう一度実行)。')
+  Installer v	  インストーラー v
+// Version of this installer script, independent of the Dixlase core version	// このインストーラのスクリプトの版。--version で選ぶ Dixlase コアの版とは別
+// that --version selects. Keep it in step with the newest CHANGELOG entry	// のもの。CHANGELOG のいちばん新しい項目と揃えること
+// (tests/08_version.bats checks this).	// (tests/08_version.bats で確かめる)。

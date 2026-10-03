@@ -77,6 +77,16 @@ php install.php
 php install.php --non-interactive --yes --dir=/srv/dixlase
 ```
 
+## Installer version
+
+The installer has its own version, shown under the banner (`Installer v0.1.1`) and listed in [CHANGELOG.md](./CHANGELOG.md). It is independent of Dixlase core: `--version` above selects the **core** version to install.
+
+`install.dixlase.net` serves the latest installer release. To run a fixed installer version, fetch it from its tag:
+
+```bash
+curl -sS https://raw.githubusercontent.com/Dixlase/dixlase-oneliner-installer/v0.1.1/install.php | php
+```
+
 ## Private repositories
 
 While Dixlase is hosted in a private repository (or before it is published to Packagist), pass a GitHub token through the `GITHUB_TOKEN` environment variable:
