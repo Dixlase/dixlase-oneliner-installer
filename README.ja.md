@@ -65,6 +65,16 @@ curl -sS https://install.dixlase.net | php -- --version=1.0.0
 php install.php --non-interactive --yes --dir=/srv/dixlase
 ```
 
+## インストーラの版
+
+インストーラには独自の版があり、バナーの下(`Installer v0.1.1`)と [CHANGELOG.ja.md](./CHANGELOG.ja.md) に載っています。Dixlase コアの版とは別で、上の `--version` が選ぶのは、インストールする**コア**の版です。
+
+`install.dixlase.net` は最新のインストーラのリリースを配っています。決まった版のインストーラを使う場合は、タグから取得してください:
+
+```bash
+curl -sS https://raw.githubusercontent.com/Dixlase/dixlase-oneliner-installer/v0.1.1/install.php | php
+```
+
 ## ローカライゼーション
 
 `install.php` のコメントと UI メッセージは英語が既定。日本語への切り替え / 復元は付属スクリプトで:
