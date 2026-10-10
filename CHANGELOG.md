@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 A release is cut when the script's behaviour changes, and `install.dixlase.net` is updated to serve the latest release at the same time.
 
-## [Unreleased]
+## [0.1.2] — 2026-10-10
 
 ### Fixed
 
@@ -17,6 +17,10 @@ A release is cut when the script's behaviour changes, and `install.dixlase.net` 
 ### Changed
 
 - The README and docs describe the GitHub token as optional: it only raises the GitHub API rate limit or reaches a private fork (#19).
+
+### Upgrade notes
+
+Nothing to do: every run downloads the script afresh. A GitHub token is no longer needed for any delivery path.
 
 ## [0.1.1] — 2026-10-03
 

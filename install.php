@@ -30,7 +30,7 @@
 // Version of this installer script, independent of the Dixlase core version
 // that --version selects. Keep it in step with the newest CHANGELOG entry
 // (tests/08_version.bats checks this).
-define('DIXLASE_INSTALLER_VERSION', '0.1.1');
+define('DIXLASE_INSTALLER_VERSION', '0.1.2');
 define('DIXLASE_MIN_PHP', '8.3.0');
 // Node floor for the Vite asset build, used when core's package.json declares
 // no engines.node. Vite 8 supports 20.19+ within 20.x and 22.12+ from there on
