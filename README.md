@@ -19,18 +19,19 @@ That's it. The script picks the best delivery path for your environment and walk
 ## Prerequisites
 
 - **PHP 8.3+** with the standard extensions (`openssl`, `pdo`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`, `fileinfo`, `gd`)
-- **Composer** (recommended — used by the primary delivery path)
+- **Composer** (recommended — runs `composer install` when a ZIP lacks `vendor/`, and powers the `--method=composer` path)
 - **Node.js 24** (or any `^20.19 || >=22.12`, the range Vite 8 supports) — only when the frontend assets have to be built; release ZIPs ship them pre-built
-- **Network access** to GitHub (for the ZIP fallback) or Packagist (for `composer create-project`)
+- **Network access** to GitHub (both delivery paths download from it)
+- **No GitHub token** — every Dixlase repository is public; see [Optional GitHub token](#optional-github-token)
 
 The installer pre-checks all of the above and prints a clear remediation hint if something is missing.
 
 ## How it works
 
-The installer chooses one of two delivery paths automatically:
+There are two delivery paths. The default `--method=auto` tries the ZIP first and falls back to Composer:
 
-1. **`composer create-project`** (preferred) — used when Composer is on `PATH`. Runs `composer create-project dixlase/dixlase-core <dir>` so dependencies are resolved from Packagist.
-2. **GitHub Releases ZIP** (fallback) — downloads `dixlase-v<version>.zip` from `github.com/Dixlase/dixlase-core/releases`, verifies the SHA-256 checksum, extracts it, and runs `composer install` if Composer is available.
+1. **GitHub Releases ZIP** (default) — downloads `dixlase-v<version>.zip` from `github.com/Dixlase/dixlase-core/releases`, verifies the SHA-256 checksum when the release has one, and extracts it. The ZIP ships `vendor/` and the built assets, so nothing has to be resolved; `composer install` runs only if `vendor/` is missing.
+2. **`composer create-project`** (fallback, or `--method=composer`) — needs Composer on `PATH`. `dixlase/dixlase-core` is not on Packagist, so the installer points Composer at the package's GitHub repository (`--repository` with a VCS entry) and installs the latest tagged release, or the one `--version` names. Without a token, Composer reads that repository with `git` instead of the GitHub API, so the anonymous API rate limit does not get in the way.
 
 After either path, common post-install steps run: copy `.env.example` → `.env`, generate `APP_KEY` (only when it is empty), set permissions on `storage/` and `bootstrap/cache/`, and create the `storage:link`. Database / admin / mail configuration is then handled by the Dixlase install wizard on first browser visit.
 
@@ -87,18 +88,23 @@ The installer has its own version, shown under the banner (`Installer v0.1.1`) a
 curl -sS https://raw.githubusercontent.com/Dixlase/dixlase-oneliner-installer/v0.1.1/install.php | php
 ```
 
-## Private repositories
+## Optional GitHub token
 
-While Dixlase is hosted in a private repository (or before it is published to Packagist), pass a GitHub token through the `GITHUB_TOKEN` environment variable:
+**You do not need a token.** Every Dixlase repository is public, and both delivery paths work anonymously.
+
+A token helps in two cases:
+
+- **GitHub API rate limit** — anonymous requests share a limit of 60 per hour per IP address. If you install repeatedly, or share an IP with others (CI, an office, shared hosting), a token raises the limit.
+- **Your own private fork** — if you point the installer at a private copy of the repository.
 
 ```bash
 curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
 ```
 
-- Use a **fine-grained personal access token** scoped to **`Dixlase/dixlase-core`** with **Contents: Read-only** — nothing more is needed.
+- A **fine-grained personal access token** with **Contents: Read-only** on the repository is enough (for the rate limit alone, read-only access to public repositories is enough).
 - The token is read from `DIXLASE_GITHUB_TOKEN` (preferred) or `GITHUB_TOKEN`. Provide the token via the environment, never as a CLI argument, so it stays out of the shell history and process list.
 - It is sent **only** to GitHub hosts (and to any host you explicitly set via the URL override env vars below); it is never forwarded to a third-party mirror.
-- The Composer path uses it automatically: `install.php` resolves `dixlase/dixlase-core` straight from its Git VCS and hands Composer the same token via `COMPOSER_AUTH`. You only ever set `GITHUB_TOKEN`.
+- The Composer path always resolves `dixlase/dixlase-core` from its GitHub repository; the token only authenticates those requests. `install.php` hands it to Composer via `COMPOSER_AUTH` and removes it from the environment once Composer has finished. You only ever set `GITHUB_TOKEN`.
 
 ## Localization
 

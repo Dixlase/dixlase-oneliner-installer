@@ -6,6 +6,18 @@ Dixlase のワンライナーのインストーラ(`install.php`、`install.dixl
 
 リリースは、スクリプトの動きが変わるときに出し、同時に `install.dixlase.net` で配るファイルを最新のリリースに更新します。
 
+## [Unreleased]
+
+### 修正
+
+- GitHub トークンが無くても `--method=composer` が通るようにした。コアは Packagist に無いので、インストーラが常に GitHub のリポジトリを Composer に渡し、トークンが無いときはレート制限のある GitHub API ではなく `git` で読ませる(#19)。
+- Composer の経路で `--stability=dev` を渡さないようにした。トークンありで `--version` を指定しないと、最新のタグ付きリリースではなく未リリースの `dev-main` が入っていた(#19)。
+- `composer create-project` が失敗したときの案内を、「private リポジトリならトークンが必要」から、実際の原因と `--method=zip` の案内に変えた(#19)。
+
+### 変更
+
+- README と docs で、GitHub トークンを任意のものとして説明するようにした。トークンが効くのは GitHub API のレート制限と、private なフォークを使う場合だけ(#19)。
+
 ## [0.1.1] — 2026-10-03
 
 ### 追加

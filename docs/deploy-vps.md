@@ -41,11 +41,11 @@ sudo chown dixlase:dixlase /var/www/dixlase
 
 ```bash
 sudo -iu dixlase bash -lc '
-    curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php -- --dir=/var/www/dixlase
+    curl -sS https://install.dixlase.net | php -- --dir=/var/www/dixlase
 '
 ```
 
-The token is only needed while Dixlase Core is in a private repository. Once it goes public the `GITHUB_TOKEN=` prefix can be dropped.
+No GitHub token is needed. If the server shares its IP address with other installs and hits GitHub's anonymous API limit, put `GITHUB_TOKEN=github_pat_xxx` in front of `php` (see [Optional GitHub token](../README.md#optional-github-token)).
 
 Without `--dir`, the installer creates a `dixlase/` subdirectory in the current directory, so pass the path explicitly. The one-liner is for the first install only: run again over an existing site, it stops without changing anything (see [Updating Dixlase later](#updating-dixlase-later)).
 
@@ -166,7 +166,7 @@ The one-liner is for *initial* install; run over an existing site, it refuses. U
 sudo -iu dixlase bash -lc '
     cd /var/www/dixlase
     php artisan down
-    GITHUB_TOKEN=github_pat_xxx composer update --no-dev --optimize-autoloader
+    composer update --no-dev --optimize-autoloader
     php artisan migrate --force
 '
 

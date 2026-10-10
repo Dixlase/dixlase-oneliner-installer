@@ -129,23 +129,14 @@ Target directory already exists and is not empty: 	Target directory already exis
   Support: https://github.com/	  Support: https://github.com/
 /issues	/issues
 // GitHub authentication	// GitHub authentication
- * Read the GitHub token from the environment (used for private-repo installs).	 * Read the GitHub token from the environment (used for private-repo installs).
  * DIXLASE_GITHUB_TOKEN takes precedence over the conventional GITHUB_TOKEN.	 * DIXLASE_GITHUB_TOKEN takes precedence over the conventional GITHUB_TOKEN.
  * Decide whether the token may be sent to a given host. The token is attached	 * Decide whether the token may be sent to a given host. The token is attached
  * only to GitHub hosts, or to a host explicitly configured through the URL	 * only to GitHub hosts, or to a host explicitly configured through the URL
  * override env vars, so it can never leak to an unrelated mirror.	 * override env vars, so it can never leak to an unrelated mirror.
  * Build the HTTP request header block for a request to $url. An Authorization	 * Build the HTTP request header block for a request to $url. An Authorization
  * header is appended when a token is set and the host is allowed to receive it.	 * header is appended when a token is set and the host is allowed to receive it.
-// Private repo: resolve the package straight from its Git VCS rather	// Private repo: resolve the package straight from its Git VCS rather
-// than Packagist, and hand Composer the token via COMPOSER_AUTH (passed	// than Packagist, and hand Composer the token via COMPOSER_AUTH (passed
-// through the environment so it never appears in the process list).	// through the environment so it never appears in the process list).
-// Allow dev versions for private installs (untagged branches). With	// Allow dev versions for private installs (untagged branches). With
-// prefer-stable still in effect on the project, tagged releases win	// prefer-stable still in effect on the project, tagged releases win
-// automatically once they exist, so this stays safe long-term.	// automatically once they exist, so this stays safe long-term.
 GitHub authentication	GitHub authentication
-Token detected — private repository access enabled	Token detected — private repository access enabled
 Environment:	Environment:
-  GITHUB_TOKEN        GitHub token for installing from a private Dixlase repo	  GITHUB_TOKEN        GitHub token for installing from a private Dixlase repo
 // Composer output filtering	// Composer output filtering
  * Decide whether a Composer subprocess line should be surfaced to the user.	 * Decide whether a Composer subprocess line should be surfaced to the user.
  * Lines matching the noise list are dropped from STDOUT but still recorded in	 * Lines matching the noise list are dropped from STDOUT but still recorded in
@@ -156,7 +147,6 @@ Environment:	Environment:
  * for the caller to display on failure (it lives under sys_get_temp_dir()).	 * for the caller to display on failure (it lives under sys_get_temp_dir()).
 Full log saved to 	Full log saved to 
 Check the log above for errors.	Check the log above for errors.
-No GITHUB_TOKEN detected — needed if installing from a private repository.	No GITHUB_TOKEN detected — needed if installing from a private repository.
 // Frontend asset build (npm install / npm ci + npm run build via Vite)	// Frontend asset build (npm install / npm ci + npm run build via Vite)
 Building frontend assets	Building frontend assets
 Frontend assets built	Frontend assets built
@@ -215,3 +205,16 @@ Failed to move files into 	Failed to move files into
 // Version of this installer script, independent of the Dixlase core version	// Version of this installer script, independent of the Dixlase core version
 // that --version selects. Keep it in step with the newest CHANGELOG entry	// that --version selects. Keep it in step with the newest CHANGELOG entry
 // (tests/08_version.bats checks this).	// (tests/08_version.bats checks this).
+ * Whether the git command is available on PATH.	 * Whether the git command is available on PATH.
+ * Read the optional GitHub token from the environment (raises the API rate limit).	 * Read the optional GitHub token from the environment (raises the API rate limit).
+// The package is not published on Packagist, so always resolve it from its	// The package is not published on Packagist, so always resolve it from its
+// GitHub VCS repository. No --stability flag: the core ships tagged	// GitHub VCS repository. No --stability flag: the core ships tagged
+// releases, and "dev" stability would make create-project pick dev-main.	// releases, and "dev" stability would make create-project pick dev-main.
+// Without a token, read the repository with git instead of the GitHub	// Without a token, read the repository with git instead of the GitHub
+// REST API: one resolution can use up most of the anonymous API limit.	// REST API: one resolution can use up most of the anonymous API limit.
+// Hand Composer the token via COMPOSER_AUTH (passed through the	// Hand Composer the token via COMPOSER_AUTH (passed through the
+// environment so it never appears in the process list).	// environment so it never appears in the process list).
+Token detected — authenticated GitHub requests enabled	Token detected — authenticated GitHub requests enabled
+  GITHUB_TOKEN        Optional GitHub token (raises the GitHub API rate limit)	  GITHUB_TOKEN        Optional GitHub token (raises the GitHub API rate limit)
+Common causes: no network access to github.com, a GitHub outage or rate limit, or a PHP requirement reported above.	Common causes: no network access to github.com, a GitHub outage or rate limit, or a PHP requirement reported above.
+The release ZIP needs none of this to resolve — retry with --method=zip.	The release ZIP needs none of this to resolve — retry with --method=zip.

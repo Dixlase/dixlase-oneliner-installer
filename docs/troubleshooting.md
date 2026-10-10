@@ -9,11 +9,13 @@ Common failure modes when running `curl -sS https://install.dixlase.net | php`, 
   ✗ Could not fetch release information from GitHub. Check your network connection.
 ```
 
-Three possible causes — the right fix depends on which:
+No token is needed for this request — the repository is public. Possible causes:
 
-1. **You are not sending a GitHub token, and the Dixlase Core repository is private.** Add `GITHUB_TOKEN=github_pat_xxx` in front of `php` and retry. See the [README's private-repositories section](../README.md#private-repositories) for how to create a token.
-2. **A token is set but does not have access to `Dixlase/dixlase-core`.** Edit the token's "Repository access" list to include the repo and grant **Contents: Read-only**.
-3. **There are no GitHub Releases yet on the repository.** The API returns 404 in that case. The composer path (the primary delivery path) does not need a release; if composer is installed locally the script will use it instead. To force the composer path explicitly: add `--method=composer` to the install command.
+1. **No network access to `api.github.com`**, or a GitHub outage. Check that the host can reach GitHub over HTTPS.
+2. **The anonymous GitHub API limit is used up.** Anonymous requests share 60 per hour per IP address, so a shared IP (CI, an office, shared hosting) can exhaust it. Wait an hour, or pass a token (see [Optional GitHub token](../README.md#optional-github-token)).
+3. **A token is set but is invalid or expired.** GitHub rejects the request instead of treating it as anonymous. Fix the token, or drop it — it is optional.
+
+With `--method=auto` (the default), the installer falls back to `composer create-project` when Composer is installed.
 
 ## "Could not find package dixlase/dixlase-core with stability stable"
 
@@ -24,10 +26,14 @@ In CreateProjectCommand.php line 424:
   Could not find package dixlase/dixlase-core with stability stable.
 ```
 
-Either:
+`dixlase/dixlase-core` is not on Packagist, so Composer can only find it through the GitHub repository the installer passes with `--repository`. Either:
 
-- **The Dixlase Core repository's `composer.json` doesn't have `"name": "dixlase/dixlase-core"`.** Once the upstream rename PR is merged this resolves on its own.
-- **The repository has no tagged release**, so composer cannot find a stable version. The installer passes `--stability=dev` when a token is set, which sidesteps this. If you still see this error, your token is not being detected — re-check that `GITHUB_TOKEN=` is on the same line as `php`.
+- **You are running an old copy of the installer.** Installer 0.1.1 and earlier passed the repository only when a token was set, so an anonymous `--method=composer` always ended here. Fetch the current installer from `https://install.dixlase.net`, or use `--method=zip`.
+- **`--version` names a release that has no tag** (for example a typo). Check the tags at <https://github.com/Dixlase/dixlase-core/releases>.
+
+## "composer create-project failed" / "Could not authenticate against github.com"
+
+Composer could not read the Dixlase Core repository. The installer lists the usual causes: no network access to `github.com`, a GitHub outage or rate limit, or a PHP requirement Composer reported. Without a token, the installer has Composer read the repository with `git` (so the anonymous API limit does not apply) — but only when `git` is installed. Without `git`, Composer falls back to the GitHub API, and "Could not authenticate against github.com" usually means its anonymous limit is used up. Install `git`, wait an hour, or pass a token. The simplest fix is `--method=zip`: the release ZIP ships pre-built and needs no resolution.
 
 ## "Project directory ... is not empty"
 
@@ -43,7 +49,7 @@ cd ~
 rm -rf /path/to/install
 mkdir -p /path/to/install
 cd /path/to/install
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=... php
+curl -sS https://install.dixlase.net | php
 ```
 
 ## "stream_context_create(): Argument #1 must be ... cannot access protected method"
@@ -75,7 +81,7 @@ Warning: The lock file is not up to date with the latest changes in composer.jso
 The Dixlase Core repository pushed `composer.json` changes without regenerating `composer.lock`. This is an upstream bug — open an issue at <https://github.com/Dixlase/dixlase-core/issues>. As a workaround, install via the ZIP fallback explicitly:
 
 ```bash
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=... php -- --method=zip
+curl -sS https://install.dixlase.net | php -- --method=zip
 ```
 
 ## "Failed to extract: ... ???something.blade.php"

@@ -26,13 +26,15 @@
 ssh user@your-rental.example.jp
 cd ~/www                              # パネル管理の Web ルート (ホストによる)
 mkdir dixlase && cd dixlase
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
+curl -sS https://install.dixlase.net | php
 ```
+
+GitHub トークンは不要です。ただし共有ホスティングでは多数のアカウントが 1 つの IP アドレスを共有し、GitHub の匿名 API の上限 (1 時間 60 回) も共有になることがあります。インストーラがレート制限を報告したら、1 時間待つかトークンを渡してください: `curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php` ([オプション: GitHub トークン](../../README.ja.md#オプション-github-トークン) を参照)。
 
 デフォルト PATH の `php` が古い場合 (パネルでは PHP 8.3+ を選んでいても SSH の既定が古いケースは多い)、ホストが用意している `/usr/local/php/8.3/bin/php` 等のパスを明示してください:
 
 ```bash
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx /usr/local/php/8.3/bin/php
+curl -sS https://install.dixlase.net | /usr/local/php/8.3/bin/php
 ```
 
 ### 2. ドキュメントルートを `dixlase/public` に向ける
@@ -120,7 +122,7 @@ php /path/to/public_html/artisan migrate --force
 
 1. `Dixlase/dixlase-core` を自分の GitHub アカウントに fork または clone (private で OK)
 2. プラットフォーム指定のデプロイ記述子 (`Procfile`、`render.yaml`、`fly.toml`、`Dockerfile` 等) を追加
-3. `COMPOSER_AUTH` / `GITHUB_TOKEN` をビルド時のシークレットとして設定し、テーマ依存が解決できるようにする
+3. ビルド時のシークレットは不要。コアと同梱テーマは public なので、`composer install` は匿名で解決できる。fork を private にした場合だけ `COMPOSER_AUTH` を追加する
 4. push → プラットフォーム側で `composer install` が走る
 
 雛形には [DixlaseInstallerDocker](https://github.com/Dixlase/dixlase-installer-docker) の Dockerfile が出発点として使えます。

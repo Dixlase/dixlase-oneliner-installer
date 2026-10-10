@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 A release is cut when the script's behaviour changes, and `install.dixlase.net` is updated to serve the latest release at the same time.
 
+## [Unreleased]
+
+### Fixed
+
+- `--method=composer` works without a GitHub token: the installer always points Composer at the core's GitHub repository (it is not on Packagist), and without a token has Composer read it with `git` rather than the rate-limited GitHub API (#19).
+- The Composer path no longer passes `--stability=dev`, which made a token-authenticated install without `--version` pick the unreleased `dev-main` instead of the latest tagged release (#19).
+- When `composer create-project` fails, the hint lists the real causes and suggests `--method=zip`, instead of saying a token is needed for a private repository (#19).
+
+### Changed
+
+- The README and docs describe the GitHub token as optional: it only raises the GitHub API rate limit or reaches a private fork (#19).
+
 ## [0.1.1] — 2026-10-03
 
 ### Added
