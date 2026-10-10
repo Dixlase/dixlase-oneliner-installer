@@ -26,13 +26,15 @@ Examples that typically fit: Sakura Rental Server (Standard+), X-Server, mixhost
 ssh user@your-rental.example.jp
 cd ~/www                              # the panel-managed web root (varies by host)
 mkdir dixlase && cd dixlase
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
+curl -sS https://install.dixlase.net | php
 ```
+
+No GitHub token is needed. On a shared host, though, many accounts can share one IP address and with it GitHub's anonymous API limit (60 requests per hour). If the installer reports a rate limit, wait an hour or pass a token: `curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php` (see [Optional GitHub token](../README.md#optional-github-token)).
 
 If `php` on the default PATH is too old (the panel says PHP 8.3+ but the SSH default is older), most hosts publish a path like `/usr/local/php/8.3/bin/php`. Invoke that explicitly:
 
 ```bash
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx /usr/local/php/8.3/bin/php
+curl -sS https://install.dixlase.net | /usr/local/php/8.3/bin/php
 ```
 
 ### 2. Point the document root at `dixlase/public`
@@ -120,7 +122,7 @@ Managed platforms don't expose a persistent shell, and the build step compiles t
 
 1. Fork or clone `Dixlase/dixlase-core` into your own GitHub account (private is fine).
 2. Add the platform's deploy descriptor (`Procfile`, `render.yaml`, `fly.toml`, `Dockerfile`, etc.).
-3. Configure `COMPOSER_AUTH` / `GITHUB_TOKEN` as a build-time secret so the theme dependency resolves.
+3. No build-time secret is needed: the core and its bundled theme are public, so `composer install` resolves them anonymously. Add `COMPOSER_AUTH` only if your fork is private.
 4. Push — the platform runs `composer install` for you.
 
 You can copy ideas from the [DixlaseInstallerDocker](https://github.com/Dixlase/dixlase-installer-docker) Dockerfile as a starting point.

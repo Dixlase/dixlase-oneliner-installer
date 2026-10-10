@@ -9,11 +9,13 @@
   ✗ Could not fetch release information from GitHub. Check your network connection.
 ```
 
-3 つの原因が考えられます。どれかによって対応が異なります:
+このリクエストにトークンは不要です (リポジトリは public)。考えられる原因:
 
-1. **GitHub トークンを送っていない、かつ Dixlase Core リポジトリが private のまま**。`php` の前に `GITHUB_TOKEN=github_pat_xxx` を付けて再実行してください。トークン作成手順は [README.ja.md のプライベートリポジトリ節](../../README.ja.md#プライベートリポジトリ) を参照。
-2. **トークンは設定済みだが `Dixlase/dixlase-core` へのアクセス権が無い**。トークンの「Repository access」に該当リポを追加し、**Contents: Read-only** を付与してください。
-3. **リポジトリにまだ GitHub Release が 1 つも作られていない**。その場合 API は 404 を返します。composer 経路 (主配布経路) はリリース不要なので、Composer がローカルにあればそちらで動きます。明示的に composer 経路を強制する場合は `--method=composer` を追加してください。
+1. **`api.github.com` に接続できない**、または GitHub の障害。ホストから HTTPS で GitHub に届くか確認してください。
+2. **GitHub の匿名 API の上限を使い切った**。匿名のリクエストは IP アドレスごとに 1 時間 60 回までなので、IP を共有している環境 (CI・社内ネットワーク・共有ホスティング) では使い切ることがあります。1 時間待つか、トークンを渡してください ([オプション: GitHub トークン](../../README.ja.md#オプション-github-トークン) を参照)。
+3. **トークンを設定しているが、無効または期限切れ**。GitHub は匿名扱いにせずリクエストを拒否します。トークンを直すか、外してください (トークンは任意です)。
+
+`--method=auto` (既定) では、Composer がインストールされていれば `composer create-project` に切り替えます。
 
 ## 「Could not find package dixlase/dixlase-core with stability stable」
 
@@ -24,10 +26,14 @@ In CreateProjectCommand.php line 424:
   Could not find package dixlase/dixlase-core with stability stable.
 ```
 
-原因は次のいずれか:
+`dixlase/dixlase-core` は Packagist に無いので、Composer はインストーラが `--repository` で渡す GitHub リポジトリからしか見つけられません。原因は次のいずれか:
 
-- **Dixlase Core の `composer.json` が `"name": "dixlase/dixlase-core"` になっていない**。上流のリネーム PR がマージされれば自然に解消します。
-- **リポジトリにタグ付きリリースが無い**ので composer が安定版を見つけられない。インストーラはトークンが設定されているとき `--stability=dev` を渡してこれを回避します。それでも出る場合はトークンが検出されていないので、`GITHUB_TOKEN=` が `php` と同じ行にあるか再確認してください。
+- **古いインストーラを使っている**。インストーラ 0.1.1 以前は、トークンがある時だけリポジトリを渡していたので、匿名の `--method=composer` は必ずここで止まりました。`https://install.dixlase.net` から最新のインストーラを取得するか、`--method=zip` を使ってください。
+- **`--version` にタグの無い版を指定した** (打ち間違いなど)。タグは <https://github.com/Dixlase/dixlase-core/releases> で確認できます。
+
+## 「composer create-project failed」/「Could not authenticate against github.com」
+
+Composer が Dixlase Core のリポジトリを読めなかった状態です。インストーラはよくある原因として、`github.com` に接続できない・GitHub の障害やレート制限・Composer が表示した PHP の要件を挙げます。トークンが無いとき、インストーラは Composer に `git` でリポジトリを読ませます (匿名 API の上限に数えられない) — ただし `git` がインストールされている場合だけです。`git` が無いと Composer は GitHub API を使い、「Could not authenticate against github.com」はたいてい匿名の上限を使い切ったことを意味します。`git` を入れる・1 時間待つ・トークンを渡す、のいずれかで直ります。いちばん簡単なのは `--method=zip` です — リリース ZIP はビルド済みで、依存の解決が要りません。
 
 ## 「Project directory ... is not empty」
 
@@ -43,7 +49,7 @@ cd ~
 rm -rf /path/to/install
 mkdir -p /path/to/install
 cd /path/to/install
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=... php
+curl -sS https://install.dixlase.net | php
 ```
 
 ## 「stream_context_create(): Argument #1 must be ... cannot access protected method」
@@ -75,7 +81,7 @@ Warning: The lock file is not up to date with the latest changes in composer.jso
 Dixlase Core 側で `composer.json` を変更したのに `composer.lock` を再生成せず push してしまっている状態。上流の問題なので <https://github.com/Dixlase/dixlase-core/issues> に Issue を立ててください。当座の回避策として ZIP fallback を明示:
 
 ```bash
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=... php -- --method=zip
+curl -sS https://install.dixlase.net | php -- --method=zip
 ```
 
 ## 「Failed to extract: ... ???something.blade.php」

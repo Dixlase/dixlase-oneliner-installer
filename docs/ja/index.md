@@ -19,15 +19,9 @@
 インストーラーは常に以下を必要とします:
 
 - **PHP 8.3 以降** と標準拡張 (`openssl`、`pdo`、`mbstring`、`tokenizer`、`xml`、`ctype`、`json`、`bcmath`、`curl`、`fileinfo`、`gd`)
-- **Composer** (推奨。主配布経路で使用)
+- **Composer** (推奨。ZIP に `vendor/` が無いときと `--method=composer` の経路で使用)
 - **Node.js 24** (または `^20.19 || >=22.12` の範囲) — フロントエンドアセットのビルドが必要な場合のみ。`--no-build` でビルド自体を省略可能
 - **外向き HTTPS** が `github.com` / `api.github.com` / `packagist.org` / `install.dixlase.net` に対して通ること
 - `curl ... | php` を実行できる**シェル** (したがって SFTP のみのホストでは直接使えません。回避策は [deploy-shared-hosting.md](./deploy-shared-hosting.md) を参照)
 
-Dixlase Core がプライベートリポジトリのうちは、加えて **GitHub Fine-grained PAT** (`Dixlase/dixlase-core` と `Dixlase/theme-dixlase-onepage` の **Contents: Read-only**) が必要です。シェル履歴に残さないため `GITHUB_TOKEN` 環境変数で渡してください:
-
-```bash
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
-```
-
-トークンの設計理由は [README.ja.md](../../README.ja.md#プライベートリポジトリ)、Composer 連携の詳細は [動作の仕組み](../../README.ja.md#動作の仕組み) を参照してください。
+GitHub トークンは不要です — Dixlase のリポジトリはすべて public です。トークンは GitHub API のレート制限 (匿名は IP ごとに 1 時間 60 回) を上げるだけで、役に立つ場面は [README.ja.md](../../README.ja.md#オプション-github-トークン)、配布経路の詳細は [動作の仕組み](../../README.ja.md#動作の仕組み) を参照してください。

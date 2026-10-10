@@ -15,7 +15,7 @@
  *   curl -sS https://install.dixlase.net | php -- --method=zip
  *   php install.php                                  # interactive
  *   php install.php --non-interactive --yes          # CI mode
- *   curl -sS https://install.dixlase.net | GITHUB_TOKEN=... php   # private repo
+ *   curl -sS https://install.dixlase.net | GITHUB_TOKEN=... php   # optional token
  *
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2026 exc-D inc.
@@ -415,7 +415,7 @@ Options:
   -h, --help          Show this help message
 
 Environment:
-  GITHUB_TOKEN        GitHub token for installing from a private Dixlase repo
+  GITHUB_TOKEN        Optional GitHub token (raises the GitHub API rate limit)
 
 HELP
     );
@@ -486,6 +486,16 @@ function check_composer(): bool
 }
 
 /**
+ * Whether the git command is available on PATH.
+ */
+function git_available(): bool
+{
+    exec('command -v git 2>/dev/null', $output, $code);
+
+    return $code === 0 && ! empty($output[0]);
+}
+
+/**
  * Resolve the Composer binary path.
  */
 function composer_bin(): string
@@ -508,7 +518,7 @@ function composer_bin(): string
 // ---------------------------------------------------------------------------
 
 /**
- * Read the GitHub token from the environment (used for private-repo installs).
+ * Read the optional GitHub token from the environment (raises the API rate limit).
  * DIXLASE_GITHUB_TOKEN takes precedence over the conventional GITHUB_TOKEN.
  */
 function github_token(): string
@@ -1192,21 +1202,25 @@ function composer_create_project(string $dir, ?string $version): bool
 
     $token = github_token();
 
+    // The package is not published on Packagist, so always resolve it from its
+    // GitHub VCS repository. No --stability flag: the core ships tagged
+    // releases, and "dev" stability would make create-project pick dev-main.
+    $repo = [
+        'type' => 'vcs',
+        'url'  => 'https://github.com/' . DIXLASE_REPO,
+    ];
+
+    if ($token === '' && git_available()) {
+        // Without a token, read the repository with git instead of the GitHub
+        // REST API: one resolution can use up most of the anonymous API limit.
+        $repo['no-api'] = true;
+    }
+
+    $command .= ' --repository=' . escapeshellarg((string) json_encode($repo));
+
     if ($token !== '') {
-        // Private repo: resolve the package straight from its Git VCS rather
-        // than Packagist, and hand Composer the token via COMPOSER_AUTH (passed
-        // through the environment so it never appears in the process list).
-        $repo = json_encode([
-            'type' => 'vcs',
-            'url'  => 'https://github.com/' . DIXLASE_REPO,
-        ]);
-        $command .= ' --repository=' . escapeshellarg((string) $repo);
-
-        // Allow dev versions for private installs (untagged branches). With
-        // prefer-stable still in effect on the project, tagged releases win
-        // automatically once they exist, so this stays safe long-term.
-        $command .= ' --stability=dev';
-
+        // Hand Composer the token via COMPOSER_AUTH (passed through the
+        // environment so it never appears in the process list).
         putenv('COMPOSER_AUTH=' . json_encode([
             'github-oauth' => ['github.com' => $token],
         ]));
@@ -1227,9 +1241,8 @@ function composer_create_project(string $dir, ?string $version): bool
         if ($logFile !== null) {
             warn('Full log saved to ' . $logFile);
         }
-        if (github_token() === '') {
-            warn('No GITHUB_TOKEN detected — needed if installing from a private repository.');
-        }
+        warn('Common causes: no network access to github.com, a GitHub outage or rate limit, or a PHP requirement reported above.');
+        warn('The release ZIP needs none of this to resolve — retry with --method=zip.');
         return false;
     }
 
@@ -1812,7 +1825,7 @@ function main(array $argv): int
 
     if (github_token() !== '') {
         step('GitHub authentication');
-        info('Token detected — private repository access enabled');
+        info('Token detected — authenticated GitHub requests enabled');
     }
 
     // --- Choose delivery method ---

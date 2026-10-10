@@ -41,11 +41,11 @@ sudo chown dixlase:dixlase /var/www/dixlase
 
 ```bash
 sudo -iu dixlase bash -lc '
-    curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php -- --dir=/var/www/dixlase
+    curl -sS https://install.dixlase.net | php -- --dir=/var/www/dixlase
 '
 ```
 
-トークンは Dixlase Core が private リポジトリの間のみ必要です。public 化されたら `GITHUB_TOKEN=` 接頭辞は不要になります。
+GitHub トークンは不要です。サーバーが IP アドレスを他と共有していて GitHub の匿名 API の上限に当たる場合は、`php` の前に `GITHUB_TOKEN=github_pat_xxx` を付けてください ([オプション: GitHub トークン](../../README.ja.md#オプション-github-トークン) を参照)。
 
 `--dir` を付けないと、カレントディレクトリに `dixlase/` サブディレクトリを作ってその中に入れるため、パスを明示してください。ワンライナーは初回インストール専用です。既存のサイトに対して再実行すると、何も変更せずに停止します ([アップデート運用](#アップデート運用) を参照)。
 
@@ -165,7 +165,7 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo -iu dixlase bash -lc '
     cd /var/www/dixlase
     php artisan down
-    GITHUB_TOKEN=github_pat_xxx composer update --no-dev --optimize-autoloader
+    composer update --no-dev --optimize-autoloader
     php artisan migrate --force
 '
 

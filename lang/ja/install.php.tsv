@@ -129,23 +129,14 @@ Target directory already exists and is not empty: 	インストール先ディ�
   Support: https://github.com/	  サポート: https://github.com/
 /issues	/issues
 // GitHub authentication	// GitHub 認証
- * Read the GitHub token from the environment (used for private-repo installs).	 * 環境変数から GitHub トークンを読み取る (プライベートリポジトリからのインストール用)。
  * DIXLASE_GITHUB_TOKEN takes precedence over the conventional GITHUB_TOKEN.	 * DIXLASE_GITHUB_TOKEN が慣用的な GITHUB_TOKEN より優先される。
  * Decide whether the token may be sent to a given host. The token is attached	 * トークンを指定ホストに送ってよいか判定する。トークンは GitHub ホスト、
  * only to GitHub hosts, or to a host explicitly configured through the URL	 * または URL 上書き環境変数で明示的に設定したホストにのみ付与され、
  * override env vars, so it can never leak to an unrelated mirror.	 * 無関係なミラーに漏れることはない。
  * Build the HTTP request header block for a request to $url. An Authorization	 * $url へのリクエスト用 HTTP ヘッダブロックを構築する。トークンが設定され
  * header is appended when a token is set and the host is allowed to receive it.	 * かつホストが受信を許可されているとき Authorization ヘッダを付加する。
-// Private repo: resolve the package straight from its Git VCS rather	// プライベートリポジトリ: パッケージを Packagist ではなく Git VCS から
-// than Packagist, and hand Composer the token via COMPOSER_AUTH (passed	// 直接解決し、トークンを COMPOSER_AUTH 経由で Composer に渡す
-// through the environment so it never appears in the process list).	// (環境変数で渡すためプロセス一覧に現れない)。
-// Allow dev versions for private installs (untagged branches). With	// プライベートインストール (タグ未付与ブランチ) のため dev 版を許容。
-// prefer-stable still in effect on the project, tagged releases win	// プロジェクトの prefer-stable は有効なので、タグ付きリリースが存在すれば
-// automatically once they exist, so this stays safe long-term.	// 自動的にそちらが選ばれ、長期的にも安全。
 GitHub authentication	GitHub 認証
-Token detected — private repository access enabled	トークンを検出 — プライベートリポジトリへのアクセスを有効化
 Environment:	環境変数:
-  GITHUB_TOKEN        GitHub token for installing from a private Dixlase repo	  GITHUB_TOKEN        プライベート Dixlase リポジトリからのインストール用 GitHub トークン
 // Composer output filtering	// Composer 出力フィルタ
  * Decide whether a Composer subprocess line should be surfaced to the user.	 * Composer サブプロセスの出力行をユーザーに見せるかどうかを判定する。
  * Lines matching the noise list are dropped from STDOUT but still recorded in	 * ノイズリストに合致する行は STDOUT から落とされるが、インストールログ
@@ -156,7 +147,6 @@ Environment:	環境変数:
  * for the caller to display on failure (it lives under sys_get_temp_dir()).	 * $logFile にログのパスがセットされる (sys_get_temp_dir() 配下)。
 Full log saved to 	フルログ保存先:
 Check the log above for errors.	エラーは上記ログを確認してください。
-No GITHUB_TOKEN detected — needed if installing from a private repository.	GITHUB_TOKEN が検出されませんでした — プライベートリポジトリからインストールする場合は必須です。
 // Frontend asset build (npm install / npm ci + npm run build via Vite)	// フロントエンドアセットビルド (Vite による npm install / npm ci + npm run build)
 Building frontend assets	フロントエンドアセットをビルド中
 Frontend assets built	フロントエンドアセットをビルド完了
@@ -215,3 +205,16 @@ Failed to move files into 	ファイルの移動に失敗しました。移動�
 // Version of this installer script, independent of the Dixlase core version	// このインストーラのスクリプトの版。--version で選ぶ Dixlase コアの版とは別
 // that --version selects. Keep it in step with the newest CHANGELOG entry	// のもの。CHANGELOG のいちばん新しい項目と揃えること
 // (tests/08_version.bats checks this).	// (tests/08_version.bats で確かめる)。
+ * Whether the git command is available on PATH.	 * git コマンドが PATH 上で使えるかどうか。
+ * Read the optional GitHub token from the environment (raises the API rate limit).	 * 環境変数から任意の GitHub トークンを読み取る (API のレート制限が上がる)。
+// The package is not published on Packagist, so always resolve it from its	// このパッケージは Packagist に公開されていないため、常に GitHub の
+// GitHub VCS repository. No --stability flag: the core ships tagged	// VCS リポジトリから解決する。--stability は付けない: コアはタグ付きリリースを
+// releases, and "dev" stability would make create-project pick dev-main.	// 出しており、"dev" にすると create-project が dev-main を選んでしまう。
+// Without a token, read the repository with git instead of the GitHub	// トークンが無いときは GitHub REST API ではなく git でリポジトリを読む:
+// REST API: one resolution can use up most of the anonymous API limit.	// 1 回の解決で匿名 API の上限の大半を使い切ることがある。
+// Hand Composer the token via COMPOSER_AUTH (passed through the	// トークンは COMPOSER_AUTH 経由で Composer に渡す
+// environment so it never appears in the process list).	// (環境変数で渡すためプロセス一覧に現れない)。
+Token detected — authenticated GitHub requests enabled	トークンを検出 — GitHub への認証付きリクエストを有効化
+  GITHUB_TOKEN        Optional GitHub token (raises the GitHub API rate limit)	  GITHUB_TOKEN        任意の GitHub トークン (GitHub API のレート制限が上がる)
+Common causes: no network access to github.com, a GitHub outage or rate limit, or a PHP requirement reported above.	よくある原因: github.com に接続できない、GitHub の障害やレート制限、または上に表示された PHP の要件。
+The release ZIP needs none of this to resolve — retry with --method=zip.	リリース ZIP なら依存の解決は不要です — --method=zip で再実行してください。

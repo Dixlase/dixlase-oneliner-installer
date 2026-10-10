@@ -19,15 +19,9 @@ For Japanese, see [ja/index.md](./ja/index.md).
 The installer always needs:
 
 - **PHP 8.3+** with the standard extensions (`openssl`, `pdo`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`, `fileinfo`, `gd`)
-- **Composer** (recommended — used by the primary delivery path)
+- **Composer** (recommended — used when a ZIP lacks `vendor/` and by the `--method=composer` path)
 - **Node.js 24** (or any `^20.19 || >=22.12`) — only when the frontend assets have to be built; pass `--no-build` to skip the build entirely
 - **Outbound HTTPS** to `github.com`, `api.github.com`, `packagist.org`, and `install.dixlase.net`
 - A shell where you can run `curl ... | php` (so plain SFTP-only hosts can't use it directly — see [deploy-shared-hosting.md](./deploy-shared-hosting.md) for the workaround)
 
-While Dixlase Core is still private, you also need a **GitHub fine-grained PAT** scoped to `Dixlase/dixlase-core` and `Dixlase/theme-dixlase-onepage` with **Contents: Read-only**. Pass it through the `GITHUB_TOKEN` environment variable so it never lands in shell history:
-
-```bash
-curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
-```
-
-See the main [README.md](../README.md#private-repositories) for the token rationale and the [Composer integration details](../README.md#how-it-works).
+No GitHub token is needed — every Dixlase repository is public. A token only raises the GitHub API rate limit (60 anonymous requests per hour per IP); see the main [README.md](../README.md#optional-github-token) for when it helps, and the [delivery path details](../README.md#how-it-works).

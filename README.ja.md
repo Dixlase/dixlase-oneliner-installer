@@ -19,18 +19,19 @@ curl -sS https://install.dixlase.net | php
 ## 動作要件
 
 - **PHP 8.3 以上** と標準拡張 (`openssl`、`pdo`、`mbstring`、`tokenizer`、`xml`、`ctype`、`json`、`bcmath`、`curl`、`fileinfo`、`gd`)
-- **Composer** (推奨)
+- **Composer** (推奨 — ZIP に `vendor/` が無いときの `composer install` と、`--method=composer` の経路で使う)
 - **Node.js 24** (または Vite 8 が対応する `^20.19 || >=22.12` の範囲) — フロントエンドアセットのビルドが必要な場合のみ。リリース ZIP はビルド済みアセットを同梱
-- **ネットワーク接続** (GitHub Releases / Packagist)
+- **ネットワーク接続** (GitHub — どちらの配布経路も GitHub から取得)
+- **GitHub トークンは不要** — Dixlase のリポジトリはすべて public です。[オプション: GitHub トークン](#オプション-github-トークン) を参照
 
 不足はインストーラーが事前チェックして対処手順を表示します。
 
 ## 動作の仕組み
 
-配布経路は 2 つあり、自動で選択されます:
+配布経路は 2 つあります。既定の `--method=auto` は ZIP を先に試し、だめなら Composer に切り替えます:
 
-1. **`composer create-project`** (優先) — `PATH` に Composer がある場合に使用、Packagist 経由で依存解決。
-2. **GitHub Releases ZIP** (フォールバック) — `dixlase-v<version>.zip` をダウンロード → SHA-256 検証 → 展開 → Composer があれば `composer install`。
+1. **GitHub Releases ZIP** (既定) — `dixlase-v<version>.zip` をダウンロード → (リリースにあれば) SHA-256 検証 → 展開。ZIP は `vendor/` とビルド済みアセットを同梱しているので依存の解決は不要で、`vendor/` が無い場合だけ `composer install` を実行。
+2. **`composer create-project`** (フォールバック、または `--method=composer`) — `PATH` に Composer が必要。`dixlase/dixlase-core` は Packagist に無いので、インストーラが GitHub のリポジトリを VCS として指定 (`--repository`) し、最新のタグ付きリリース (または `--version` で指定した版) を入れる。トークンが無いときは Composer が GitHub API ではなく `git` でリポジトリを読むため、匿名 API のレート制限に当たりにくい。
 
 どちらの経路でも `.env` 生成、`APP_KEY` 生成 (空の場合のみ)、`storage/` 等の権限設定、`storage:link` の共通後処理が走ります。DB・管理者・メールの設定は初回ブラウザアクセス時のウィザードで案内されます。
 
@@ -74,6 +75,24 @@ php install.php --non-interactive --yes --dir=/srv/dixlase
 ```bash
 curl -sS https://raw.githubusercontent.com/Dixlase/dixlase-oneliner-installer/v0.1.1/install.php | php
 ```
+
+## オプション: GitHub トークン
+
+**トークンは不要です。** Dixlase のリポジトリはすべて public で、どちらの配布経路も匿名で動きます。
+
+トークンが役に立つのは次の 2 つの場合です:
+
+- **GitHub API のレート制限** — 匿名のリクエストは IP アドレスごとに 1 時間 60 回まで。繰り返しインストールする場合や、IP を他と共有している場合 (CI・社内ネットワーク・共有ホスティング) は、トークンで上限が上がります。
+- **自分の private フォーク** — インストーラをリポジトリの private なコピーに向ける場合。
+
+```bash
+curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
+```
+
+- リポジトリへの **Contents: Read-only** を持つ **Fine-grained personal access token** で足ります (レート制限のためだけなら、public リポジトリへの読み取り権限だけで十分)。
+- トークンは `DIXLASE_GITHUB_TOKEN` (優先) または `GITHUB_TOKEN` から読みます。シェル履歴やプロセス一覧に残らないよう、CLI 引数ではなく必ず環境変数で渡してください。
+- トークンを送るのは GitHub のホスト (と、下記の URL 上書き用の環境変数で明示したホスト) **だけ**で、第三者のミラーには渡しません。
+- Composer の経路は、トークンの有無にかかわらず `dixlase/dixlase-core` を GitHub のリポジトリから解決します。トークンはそのリクエストの認証にだけ使います。`install.php` は `COMPOSER_AUTH` でトークンを Composer に渡し、Composer の終了後に環境変数から消します。設定するのは `GITHUB_TOKEN` だけです。
 
 ## ローカライゼーション
 
