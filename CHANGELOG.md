@@ -15,6 +15,7 @@ A release is cut when the script's behaviour changes, and `install.dixlase.net` 
 ### Fixed
 
 - `public/storage` is now the relative link `../storage/app/public`, so it keeps working when the site is moved or installed locally and uploaded (shared hosting, Path B). It was an absolute link from `artisan storage:link`, which then pointed at the local machine and every public-disk file answered 404. An existing `public/storage` is left alone, and `artisan storage:link` remains the fallback (#24).
+- The permission step skips symbolic links under `storage/` and `bootstrap/cache/`. It followed them and changed the mode of their targets, which may lie outside the install directory (#25).
 
 ## [0.1.2] — 2026-10-10
 
