@@ -4,13 +4,13 @@
 
 The one-liner installer (`install.php`) is **not** the right tool for a Docker setup. Dixlase already ships a dedicated Docker installer repository:
 
-**[Dixlase/dixlase-installer-docker](https://github.com/Dixlase/dixlase-installer-docker)**
+**[Dixlase/dixlase-docker-installer](https://github.com/Dixlase/dixlase-docker-installer)**
 
 This guide is mostly a pointer to that repo, with a brief explanation of *why* they're separate and when each makes sense.
 
 ## Why two installers?
 
-| | `dixlase-oneliner-installer` (this repo) | `dixlase-installer-docker` |
+| | `dixlase-oneliner-installer` (this repo) | `dixlase-docker-installer` |
 | --- | --- | --- |
 | Audience | Operators provisioning a single server | Developers / evaluators on a laptop |
 | Surface | One PHP script served at `install.dixlase.net` | A repo with `setup.sh` + Docker Compose |
@@ -24,7 +24,7 @@ They both end up running the same Dixlase Core source — they just differ in ho
 ## Quick start with the Docker installer
 
 ```bash
-git clone https://github.com/Dixlase/dixlase-installer-docker.git ~/dixlase-docker
+git clone https://github.com/Dixlase/dixlase-docker-installer.git ~/dixlase-docker
 cd ~/dixlase-docker
 ./setup.sh
 
@@ -46,7 +46,7 @@ The Dixlase install wizard takes over on the first browser visit.
 Sometimes you've already run `install.dixlase.net | php` somewhere and you'd like to wrap *that* tree with the Docker installer's services. This is **not the supported path** (the Docker installer expects to clone the core itself), but it is achievable:
 
 1. Note the absolute path of your existing install (e.g. `/var/www/dixlase`).
-2. Clone `dixlase-installer-docker` into a sibling directory.
+2. Clone `dixlase-docker-installer` into a sibling directory.
 3. Edit `docker-compose.apps.yml` to replace the `html/` volume mount with a bind mount to your existing install path.
 4. Skip the `setup.sh` step that clones the core (`./setup.sh` re-runs are otherwise idempotent).
 
@@ -86,4 +86,4 @@ volumes:
   mysql_data:
 ```
 
-Bootstrap the app on the host with the one-liner first, then mount the result. The `dixlase-installer-docker` repo's `docker-compose.*.yml` files are the closest production-ish reference; lift configuration from there as needed.
+Bootstrap the app on the host with the one-liner first, then mount the result. The `dixlase-docker-installer` repo's `docker-compose.*.yml` files are the closest production-ish reference; lift configuration from there as needed.

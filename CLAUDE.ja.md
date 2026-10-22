@@ -8,9 +8,9 @@ For English, see [CLAUDE.md](./CLAUDE.md).
 
 - ワンライナーインストーラ: `curl -sS https://install.dixlase.net | php`
 - 単一ファイルの PHP スクリプト (`install.php`)。PHP 8.3+ 以外の実行時依存はなし
-- 2 つの配布経路をサポート:
-  - `composer create-project dixlase/dixlase-core` (Composer が PATH にあるとき優先)
-  - GitHub Releases ZIP フォールバック (Composer がないとき)
+- 2 つの配布経路をサポート(既定の `--method=auto` はこの順に試す):
+  - GitHub Releases ZIP (`vendor/` とビルド済みアセットを同梱)
+  - `composer create-project dixlase/dixlase-core` へのフォールバック。GitHub の VCS リポジトリから解決する(Packagist には無い)。`--method=composer` で強制もできる
 - 対象: Dixlase。リポジトリは `Dixlase/dixlase-core`
 
 ## コミットメッセージ規約

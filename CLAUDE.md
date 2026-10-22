@@ -8,9 +8,9 @@ Rules every contributor (human or AI) must follow when working in this repositor
 
 - Pipe-friendly installer: `curl -sS https://install.dixlase.net | php`
 - Single-file PHP script (`install.php`); no runtime dependencies beyond a PHP 8.3+ interpreter
-- Two delivery paths:
-  - `composer create-project dixlase/dixlase-core` (preferred when Composer is on PATH)
-  - GitHub Releases ZIP fallback (when Composer is missing)
+- Two delivery paths (`--method=auto`, the default, tries them in this order):
+  - GitHub Releases ZIP (ships `vendor/` and the built assets)
+  - `composer create-project dixlase/dixlase-core` fallback, resolved from the GitHub VCS repository (the package is not on Packagist), or forced with `--method=composer`
 - Target: Dixlase — repo `Dixlase/dixlase-core`
 
 ## Commit message convention
