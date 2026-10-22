@@ -1701,8 +1701,33 @@ function chmod_recursive(string $path, int $dirMode, int $fileMode): void
     }
 }
 
+/**
+ * Create public/storage as a relative link to storage/app/public.
+ *
+ * `artisan storage:link` writes an absolute link, which breaks once the site
+ * is moved or installed locally and uploaded (docs/deploy-shared-hosting.md,
+ * Path B), and its --relative option needs symfony/filesystem, which the
+ * release ZIP does not ship. artisan remains the fallback, e.g. on Windows
+ * without the right to create symbolic links.
+ */
 function create_storage_link(string $dir): void
 {
+    $link = $dir . '/public/storage';
+
+    // Leave whatever is already there alone (a reinstall keeps the old link).
+    if (is_link($link) || file_exists($link)) {
+        info('Storage symlink already exists');
+
+        return;
+    }
+
+    if (is_dir($dir . '/storage/app/public') && is_dir($dir . '/public')
+        && @symlink('../storage/app/public', $link)) {
+        info('Storage symlink created');
+
+        return;
+    }
+
     $artisan = $dir . '/artisan';
 
     if (! file_exists($artisan)) {
