@@ -177,3 +177,5 @@ sudo systemctl reload php8.3-fpm
 # 3) As the app user: lift maintenance.
 sudo -iu dixlase bash -lc 'cd /var/www/dixlase && php artisan up'
 ```
+
+Updating Dixlase does not update PHP. Apply PHP security releases separately — see [Keeping PHP up to date](./index.md#keeping-php-up-to-date).

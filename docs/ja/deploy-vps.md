@@ -176,3 +176,5 @@ sudo systemctl reload php8.3-fpm
 # 3) アプリユーザーで: メンテナンス解除
 sudo -iu dixlase bash -lc 'cd /var/www/dixlase && php artisan up'
 ```
+
+Dixlase を更新しても PHP は更新されません。PHP のセキュリティリリースは別に当ててください — [PHP を最新に保つ](./index.md#php-を最新に保つ) を参照。

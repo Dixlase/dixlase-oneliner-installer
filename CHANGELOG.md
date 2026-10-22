@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 A release is cut when the script's behaviour changes, and `install.dixlase.net` is updated to serve the latest release at the same time.
 
+## [Unreleased]
+
+### Added
+
+- The PHP check warns when the running PHP is missing the latest security fixes for its branch (8.3.36 / 8.4.27 / 8.5.12), and says that updating Dixlase never updates PHP. The install still continues. The docs gain "Keeping PHP up to date" (#23).
+
 ## [0.1.2] — 2026-10-10
 
 ### Fixed

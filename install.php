@@ -32,6 +32,14 @@
 // (tests/08_version.bats checks this).
 define('DIXLASE_INSTALLER_VERSION', '0.1.2');
 define('DIXLASE_MIN_PHP', '8.3.0');
+// Oldest patch release per supported PHP branch that carries the latest
+// security fixes. An older PHP gets a warning, never a stop. Update this
+// table when PHP ships a security release (last: 2026-10-21).
+define('DIXLASE_PHP_SECURITY_RELEASES', [
+    '8.3' => '8.3.36',
+    '8.4' => '8.4.27',
+    '8.5' => '8.5.12',
+]);
 // Node floor for the Vite asset build, used when core's package.json declares
 // no engines.node. Vite 8 supports 20.19+ within 20.x and 22.12+ from there on
 // (21.x and 22.0-22.11 are out); core builds on Node 24.
@@ -436,6 +444,14 @@ function check_php_version(): void
     }
 
     info("PHP {$current}");
+
+    $branch = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+    $secure = DIXLASE_PHP_SECURITY_RELEASES[$branch] ?? null;
+
+    if ($secure !== null && version_compare($current, $secure, '<')) {
+        warn("PHP {$current} is missing security fixes. Update PHP to {$secure} or later.");
+        warn('Updating Dixlase never updates PHP. See https://github.com/' . DIXLASE_INSTALLER_REPO . '/blob/main/docs/index.md#keeping-php-up-to-date');
+    }
 }
 
 function check_extensions(): void
