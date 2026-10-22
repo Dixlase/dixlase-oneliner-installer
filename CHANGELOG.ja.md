@@ -6,7 +6,7 @@ Dixlase のワンライナーのインストーラ(`install.php`、`install.dixl
 
 リリースは、スクリプトの動きが変わるときに出し、同時に `install.dixlase.net` で配るファイルを最新のリリースに更新します。
 
-## [Unreleased]
+## [0.1.3] — 2026-10-22
 
 ### Added
 
@@ -16,6 +16,13 @@ Dixlase のワンライナーのインストーラ(`install.php`、`install.dixl
 
 - `public/storage` を相対リンク `../storage/app/public` にし、サイトを移したりローカルでインストールしてアップロードしたり(共用サーバーの Path B)しても働くようにした。これまでは `artisan storage:link` による絶対パスのリンクで、アップロード先ではローカルのパスを指し、public ディスクのファイルがすべて 404 になっていた。既にある `public/storage` には触れず、`artisan storage:link` は代替として残す(#24)。
 - 権限の設定で、`storage/` と `bootstrap/cache/` の下のシンボリックリンクを飛ばすようにした。これまではリンクをたどり、インストール先の外にあることもあるリンク先の権限を変えていた(#25)。
+
+### アップグレード時の注意
+
+インストーラについては対応不要です。実行のたびにスクリプトを新しくダウンロードするためです。
+
+- 0.1.2 以前でインストールしたサイトの `public/storage` は絶対パスのリンクです。インストール後にサイトを移したりアップロードしたり(共用サーバーの Path B)して public のファイルが 404 になる場合は、サイトのルートでリンクを作り直してください: `rm public/storage && ln -s ../storage/app/public public/storage`。
+- インストーラが PHP について警告を出すようになったら、PHP 自体を更新してください — [PHP を最新に保つ](docs/ja/index.md#php-を最新に保つ) を参照。Dixlase を更新しても PHP は更新されません。
 
 ## [0.1.2] — 2026-10-10
 

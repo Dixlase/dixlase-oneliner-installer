@@ -80,12 +80,12 @@ php install.php --non-interactive --yes --dir=/srv/dixlase
 
 ## Installer version
 
-The installer has its own version, shown under the banner (`Installer v0.1.2`) and listed in [CHANGELOG.md](./CHANGELOG.md). It is independent of Dixlase core: `--version` above selects the **core** version to install.
+The installer has its own version, shown under the banner (`Installer v0.1.3`) and listed in [CHANGELOG.md](./CHANGELOG.md). It is independent of Dixlase core: `--version` above selects the **core** version to install.
 
 `install.dixlase.net` serves the latest installer release. To run a fixed installer version, fetch it from its tag:
 
 ```bash
-curl -sS https://raw.githubusercontent.com/Dixlase/dixlase-oneliner-installer/v0.1.2/install.php | php
+curl -sS https://raw.githubusercontent.com/Dixlase/dixlase-oneliner-installer/v0.1.3/install.php | php
 ```
 
 ## Optional GitHub token
