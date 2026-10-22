@@ -127,4 +127,4 @@ Managed platforms don't expose a persistent shell, and the build step compiles t
 3. No build-time secret is needed: the core and its bundled theme are public, so `composer install` resolves them anonymously. Add `COMPOSER_AUTH` only if your fork is private.
 4. Push — the platform runs `composer install` for you.
 
-You can copy ideas from the [DixlaseInstallerDocker](https://github.com/Dixlase/dixlase-installer-docker) Dockerfile as a starting point.
+You can copy ideas from the [Docker installer](https://github.com/Dixlase/dixlase-docker-installer) Dockerfile as a starting point.

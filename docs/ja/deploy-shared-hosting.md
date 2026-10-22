@@ -127,4 +127,4 @@ php /path/to/public_html/artisan migrate --force
 3. ビルド時のシークレットは不要。コアと同梱テーマは public なので、`composer install` は匿名で解決できる。fork を private にした場合だけ `COMPOSER_AUTH` を追加する
 4. push → プラットフォーム側で `composer install` が走る
 
-雛形には [DixlaseInstallerDocker](https://github.com/Dixlase/dixlase-installer-docker) の Dockerfile が出発点として使えます。
+雛形には [Docker インストーラ](https://github.com/Dixlase/dixlase-docker-installer) の Dockerfile が出発点として使えます。

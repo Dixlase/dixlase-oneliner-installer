@@ -4,13 +4,13 @@
 
 ワンライナーインストーラ (`install.php`) は Docker セットアップ用の道具では**ありません**。Dixlase には専用の Docker インストーラリポジトリがあります:
 
-**[Dixlase/dixlase-installer-docker](https://github.com/Dixlase/dixlase-installer-docker)**
+**[Dixlase/dixlase-docker-installer](https://github.com/Dixlase/dixlase-docker-installer)**
 
 このガイドは基本的にそちらへの案内です。なぜ別リポなのか、それぞれの適用シーンを補足します。
 
 ## なぜ 2 つのインストーラがある?
 
-| | `dixlase-oneliner-installer` (本リポ) | `dixlase-installer-docker` |
+| | `dixlase-oneliner-installer` (本リポ) | `dixlase-docker-installer` |
 | --- | --- | --- |
 | 想定ユーザー | サーバを 1 台プロビジョニングするオペレーター | ローカル開発者 / 評価者 |
 | 配布形態 | `install.dixlase.net` で配信される PHP 1 ファイル | `setup.sh` + Docker Compose を含むリポジトリ |
@@ -24,7 +24,7 @@
 ## Docker インストーラのクイックスタート
 
 ```bash
-git clone https://github.com/Dixlase/dixlase-installer-docker.git ~/dixlase-docker
+git clone https://github.com/Dixlase/dixlase-docker-installer.git ~/dixlase-docker
 cd ~/dixlase-docker
 ./setup.sh
 
@@ -46,7 +46,7 @@ cd ~/dixlase-docker
 `install.dixlase.net | php` で既に作成したインストールを Docker インストーラのサービス層でラップしたい、というケースは**サポート対象外の使い方**ですが (Docker インストーラは内部で core をクローンする前提) 、可能です:
 
 1. 既存のインストール先絶対パスを控える (例: `/var/www/dixlase`)
-2. `dixlase-installer-docker` を隣接ディレクトリにクローン
+2. `dixlase-docker-installer` を隣接ディレクトリにクローン
 3. `docker-compose.apps.yml` の `html/` ボリュームマウントを、既存インストール先への bind マウントに置換
 4. core クローンを行う `setup.sh` のステップをスキップ (それ以外は冪等)
 
@@ -86,4 +86,4 @@ volumes:
   mysql_data:
 ```
 
-アプリ本体はホスト側でワンライナーを使ってブートストラップしてから、結果ツリーをマウントするのが楽です。`dixlase-installer-docker` リポの `docker-compose.*.yml` が一番近い実例リファレンスになるので、必要な設定はそちらから取り込んでください。
+アプリ本体はホスト側でワンライナーを使ってブートストラップしてから、結果ツリーをマウントするのが楽です。`dixlase-docker-installer` リポの `docker-compose.*.yml` が一番近い実例リファレンスになるので、必要な設定はそちらから取り込んでください。
