@@ -223,3 +223,11 @@ The release ZIP needs none of this to resolve — retry with --method=zip.	The r
 // table when PHP ships a security release (last: 2026-10-21).	// table when PHP ships a security release (last: 2026-10-21).
 PHP {$current} is missing security fixes. Update PHP to {$secure} or later.	PHP {$current} is missing security fixes. Update PHP to {$secure} or later.
 Updating Dixlase never updates PHP. See https://github.com/	Updating Dixlase never updates PHP. See https://github.com/
+ * Create public/storage as a relative link to storage/app/public.	 * Create public/storage as a relative link to storage/app/public.
+ * `artisan storage:link` writes an absolute link, which breaks once the site	 * `artisan storage:link` writes an absolute link, which breaks once the site
+ * is moved or installed locally and uploaded (docs/deploy-shared-hosting.md,	 * is moved or installed locally and uploaded (docs/deploy-shared-hosting.md,
+ * Path B), and its --relative option needs symfony/filesystem, which the	 * Path B), and its --relative option needs symfony/filesystem, which the
+ * release ZIP does not ship. artisan remains the fallback, e.g. on Windows	 * release ZIP does not ship. artisan remains the fallback, e.g. on Windows
+ * without the right to create symbolic links.	 * without the right to create symbolic links.
+// Leave whatever is already there alone (a reinstall keeps the old link).	// Leave whatever is already there alone (a reinstall keeps the old link).
+Storage symlink already exists	Storage symlink already exists

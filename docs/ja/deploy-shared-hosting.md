@@ -82,6 +82,8 @@ rsync -avz \
     /path/to/dixlase-install/  user@host:/path/to/public_html/
 ```
 
+`public/storage` は相対のシンボリックリンク(`../storage/app/public`)なので、移した先でも働きます。`rsync -a` はリンクのままコピーします。リンクを送れない SFTP クライアントの場合は、管理画面のファイルマネージャでホスト上に作るか、管理画面のタスクから `php artisan storage:link` を一度実行してください。
+
 ### 3. ホスト側の `.env` をセットアップ
 
 SFTP やパネルのファイルマネージャから `.env.example` を `.env` にコピーし、ホストの DB 認証情報を埋めます。

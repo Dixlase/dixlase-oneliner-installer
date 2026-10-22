@@ -19,6 +19,8 @@ switch ($cmd) {
         echo "Application key set successfully.\n";
         exit(0);
     case 'storage:link':
+        // Leave a marker so tests can tell the installer fell back to artisan.
+        touch(__DIR__ . '/.storage-link-by-artisan');
         echo "The [public/storage] link has been connected.\n";
         exit(0);
     default:

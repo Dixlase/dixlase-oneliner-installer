@@ -82,6 +82,8 @@ rsync -avz \
     /path/to/dixlase-install/  user@host:/path/to/public_html/
 ```
 
+`public/storage` is a relative symbolic link (`../storage/app/public`), so it works at the new path. `rsync -a` copies it as a link; with a plain SFTP client that cannot upload links, create it on the host from the panel's file manager, or run `php artisan storage:link` from a panel task once.
+
 ### 3. Set up `.env` on the host
 
 Create `.env` on the server (via SFTP or the panel's file manager) by copying `.env.example` and filling in the host's DB credentials.
