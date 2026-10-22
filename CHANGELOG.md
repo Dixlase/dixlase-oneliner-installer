@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 A release is cut when the script's behaviour changes, and `install.dixlase.net` is updated to serve the latest release at the same time.
 
-## [Unreleased]
+## [0.1.3] — 2026-10-22
 
 ### Added
 
@@ -16,6 +16,13 @@ A release is cut when the script's behaviour changes, and `install.dixlase.net` 
 
 - `public/storage` is now the relative link `../storage/app/public`, so it keeps working when the site is moved or installed locally and uploaded (shared hosting, Path B). It was an absolute link from `artisan storage:link`, which then pointed at the local machine and every public-disk file answered 404. An existing `public/storage` is left alone, and `artisan storage:link` remains the fallback (#24).
 - The permission step skips symbolic links under `storage/` and `bootstrap/cache/`. It followed them and changed the mode of their targets, which may lie outside the install directory (#25).
+
+### Upgrade notes
+
+Nothing to do for the installer: every run downloads the script afresh.
+
+- A site installed with 0.1.2 or earlier has an absolute `public/storage` link. If the site was moved or uploaded after installing (shared hosting, Path B) and public files answer 404, recreate the link from the site root: `rm public/storage && ln -s ../storage/app/public public/storage`.
+- If the installer now warns about PHP, update PHP itself — see [Keeping PHP up to date](docs/index.md#keeping-php-up-to-date). Updating Dixlase never updates PHP.
 
 ## [0.1.2] — 2026-10-10
 

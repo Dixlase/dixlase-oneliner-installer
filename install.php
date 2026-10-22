@@ -30,7 +30,7 @@
 // Version of this installer script, independent of the Dixlase core version
 // that --version selects. Keep it in step with the newest CHANGELOG entry
 // (tests/08_version.bats checks this).
-define('DIXLASE_INSTALLER_VERSION', '0.1.2');
+define('DIXLASE_INSTALLER_VERSION', '0.1.3');
 define('DIXLASE_MIN_PHP', '8.3.0');
 // Oldest patch release per supported PHP branch that carries the latest
 // security fixes. An older PHP gets a warning, never a stop. Update this
