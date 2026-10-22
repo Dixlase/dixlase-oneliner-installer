@@ -1680,6 +1680,10 @@ function set_permissions(string $dir): void
 
 /**
  * Recursively set permissions on files and directories.
+ *
+ * Symbolic links are skipped: chmod() follows a link and would change its
+ * target, which may lie outside the install directory. Every real entry is
+ * reached by the iterator itself.
  */
 function chmod_recursive(string $path, int $dirMode, int $fileMode): void
 {
@@ -1693,6 +1697,10 @@ function chmod_recursive(string $path, int $dirMode, int $fileMode): void
     );
 
     foreach ($iterator as $item) {
+        if ($item->isLink()) {
+            continue;
+        }
+
         if ($item->isDir()) {
             @chmod($item->getPathname(), $dirMode);
         } else {

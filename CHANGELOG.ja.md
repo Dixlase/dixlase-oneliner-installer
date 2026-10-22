@@ -15,6 +15,7 @@ Dixlase のワンライナーのインストーラ(`install.php`、`install.dixl
 ### Fixed
 
 - `public/storage` を相対リンク `../storage/app/public` にし、サイトを移したりローカルでインストールしてアップロードしたり(共用サーバーの Path B)しても働くようにした。これまでは `artisan storage:link` による絶対パスのリンクで、アップロード先ではローカルのパスを指し、public ディスクのファイルがすべて 404 になっていた。既にある `public/storage` には触れず、`artisan storage:link` は代替として残す(#24)。
+- 権限の設定で、`storage/` と `bootstrap/cache/` の下のシンボリックリンクを飛ばすようにした。これまではリンクをたどり、インストール先の外にあることもあるリンク先の権限を変えていた(#25)。
 
 ## [0.1.2] — 2026-10-10
 

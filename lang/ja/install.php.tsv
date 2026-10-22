@@ -231,3 +231,6 @@ Updating Dixlase never updates PHP. See https://github.com/	Dixlase を更新し
  * without the right to create symbolic links.	 * 作る権限の無い Windows)。
 // Leave whatever is already there alone (a reinstall keeps the old link).	// 既にあるものには触れない(入れ直しでは古いリンクを残す)。
 Storage symlink already exists	Storage シンボリックリンクは既にあります
+ * Symbolic links are skipped: chmod() follows a link and would change its	 * シンボリックリンクは飛ばす。chmod() はリンクをたどり、リンク先を変えてしまう。
+ * target, which may lie outside the install directory. Every real entry is	 * リンク先はインストール先の外にあることもある。実体はすべて
+ * reached by the iterator itself.	 * イテレータ自身が回る。
