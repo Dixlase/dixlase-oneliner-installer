@@ -218,3 +218,8 @@ Token detected — authenticated GitHub requests enabled	Token detected — auth
   GITHUB_TOKEN        Optional GitHub token (raises the GitHub API rate limit)	  GITHUB_TOKEN        Optional GitHub token (raises the GitHub API rate limit)
 Common causes: no network access to github.com, a GitHub outage or rate limit, or a PHP requirement reported above.	Common causes: no network access to github.com, a GitHub outage or rate limit, or a PHP requirement reported above.
 The release ZIP needs none of this to resolve — retry with --method=zip.	The release ZIP needs none of this to resolve — retry with --method=zip.
+// Oldest patch release per supported PHP branch that carries the latest	// Oldest patch release per supported PHP branch that carries the latest
+// security fixes. An older PHP gets a warning, never a stop. Update this	// security fixes. An older PHP gets a warning, never a stop. Update this
+// table when PHP ships a security release (last: 2026-10-21).	// table when PHP ships a security release (last: 2026-10-21).
+PHP {$current} is missing security fixes. Update PHP to {$secure} or later.	PHP {$current} is missing security fixes. Update PHP to {$secure} or later.
+Updating Dixlase never updates PHP. See https://github.com/	Updating Dixlase never updates PHP. See https://github.com/
