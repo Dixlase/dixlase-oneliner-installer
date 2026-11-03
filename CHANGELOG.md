@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 A release is cut when the script's behaviour changes, and `install.dixlase.net` is updated to serve the latest release at the same time.
 
+## [Unreleased]
+
+### Changed
+
+- `--method=composer` resolves `dixlase/dixlase-core` from Packagist. It no longer adds the GitHub repository as a VCS repository (with `no-api` when anonymous), so the Composer path needs neither `git` nor any GitHub API call to find the package. A token is still passed to Composer through `COMPOSER_AUTH` when one is set, and the release ZIP path is unchanged (#34).
+
 ## [0.1.3] — 2026-10-22
 
 ### Added

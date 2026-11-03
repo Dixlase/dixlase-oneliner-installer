@@ -205,18 +205,16 @@ Failed to move files into 	Failed to move files into
 // Version of this installer script, independent of the Dixlase core version	// Version of this installer script, independent of the Dixlase core version
 // that --version selects. Keep it in step with the newest CHANGELOG entry	// that --version selects. Keep it in step with the newest CHANGELOG entry
 // (tests/08_version.bats checks this).	// (tests/08_version.bats checks this).
- * Whether the git command is available on PATH.	 * Whether the git command is available on PATH.
  * Read the optional GitHub token from the environment (raises the API rate limit).	 * Read the optional GitHub token from the environment (raises the API rate limit).
-// The package is not published on Packagist, so always resolve it from its	// The package is not published on Packagist, so always resolve it from its
-// GitHub VCS repository. No --stability flag: the core ships tagged	// GitHub VCS repository. No --stability flag: the core ships tagged
-// releases, and "dev" stability would make create-project pick dev-main.	// releases, and "dev" stability would make create-project pick dev-main.
-// Without a token, read the repository with git instead of the GitHub	// Without a token, read the repository with git instead of the GitHub
-// REST API: one resolution can use up most of the anonymous API limit.	// REST API: one resolution can use up most of the anonymous API limit.
+// Resolved from Packagist, so no repository is added and no GitHub API	// Resolved from Packagist, so no repository is added and no GitHub API
+// call is needed to find the package. No --stability flag: the core ships	// call is needed to find the package. No --stability flag: the core ships
+// tagged releases, and "dev" stability would make create-project pick	// tagged releases, and "dev" stability would make create-project pick
+// dev-next.	// dev-next.
 // Hand Composer the token via COMPOSER_AUTH (passed through the	// Hand Composer the token via COMPOSER_AUTH (passed through the
 // environment so it never appears in the process list).	// environment so it never appears in the process list).
 Token detected — authenticated GitHub requests enabled	Token detected — authenticated GitHub requests enabled
   GITHUB_TOKEN        Optional GitHub token (raises the GitHub API rate limit)	  GITHUB_TOKEN        Optional GitHub token (raises the GitHub API rate limit)
-Common causes: no network access to github.com, a GitHub outage or rate limit, or a PHP requirement reported above.	Common causes: no network access to github.com, a GitHub outage or rate limit, or a PHP requirement reported above.
+Common causes: no network access to packagist.org or github.com, an outage, or a PHP requirement reported above.	Common causes: no network access to packagist.org or github.com, an outage, or a PHP requirement reported above.
 The release ZIP needs none of this to resolve — retry with --method=zip.	The release ZIP needs none of this to resolve — retry with --method=zip.
 // Oldest patch release per supported PHP branch that carries the latest	// Oldest patch release per supported PHP branch that carries the latest
 // security fixes. An older PHP gets a warning, never a stop. Update this	// security fixes. An older PHP gets a warning, never a stop. Update this

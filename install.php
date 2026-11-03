@@ -502,16 +502,6 @@ function check_composer(): bool
 }
 
 /**
- * Whether the git command is available on PATH.
- */
-function git_available(): bool
-{
-    exec('command -v git 2>/dev/null', $output, $code);
-
-    return $code === 0 && ! empty($output[0]);
-}
-
-/**
  * Resolve the Composer binary path.
  */
 function composer_bin(): string
@@ -1218,21 +1208,10 @@ function composer_create_project(string $dir, ?string $version): bool
 
     $token = github_token();
 
-    // The package is not published on Packagist, so always resolve it from its
-    // GitHub VCS repository. No --stability flag: the core ships tagged
-    // releases, and "dev" stability would make create-project pick dev-main.
-    $repo = [
-        'type' => 'vcs',
-        'url'  => 'https://github.com/' . DIXLASE_REPO,
-    ];
-
-    if ($token === '' && git_available()) {
-        // Without a token, read the repository with git instead of the GitHub
-        // REST API: one resolution can use up most of the anonymous API limit.
-        $repo['no-api'] = true;
-    }
-
-    $command .= ' --repository=' . escapeshellarg((string) json_encode($repo));
+    // Resolved from Packagist, so no repository is added and no GitHub API
+    // call is needed to find the package. No --stability flag: the core ships
+    // tagged releases, and "dev" stability would make create-project pick
+    // dev-next.
 
     if ($token !== '') {
         // Hand Composer the token via COMPOSER_AUTH (passed through the
@@ -1257,7 +1236,7 @@ function composer_create_project(string $dir, ?string $version): bool
         if ($logFile !== null) {
             warn('Full log saved to ' . $logFile);
         }
-        warn('Common causes: no network access to github.com, a GitHub outage or rate limit, or a PHP requirement reported above.');
+        warn('Common causes: no network access to packagist.org or github.com, an outage, or a PHP requirement reported above.');
         warn('The release ZIP needs none of this to resolve — retry with --method=zip.');
         return false;
     }
