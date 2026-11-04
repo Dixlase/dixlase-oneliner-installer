@@ -26,14 +26,15 @@ In CreateProjectCommand.php line 424:
   Could not find package dixlase/dixlase-core with stability stable.
 ```
 
-`dixlase/dixlase-core` は Packagist に無いので、Composer はインストーラが `--repository` で渡す GitHub リポジトリからしか見つけられません。原因は次のいずれか:
+Composer は `dixlase/dixlase-core` を [Packagist](https://packagist.org/packages/dixlase/dixlase-core) で探します。原因は次のいずれか:
 
-- **古いインストーラを使っている**。インストーラ 0.1.1 以前は、トークンがある時だけリポジトリを渡していたので、匿名の `--method=composer` は必ずここで止まりました。`https://install.dixlase.net` から最新のインストーラを取得するか、`--method=zip` を使ってください。
 - **`--version` にタグの無い版を指定した** (打ち間違いなど)。タグは <https://github.com/Dixlase/dixlase-core/releases> で確認できます。
+- **Composer が `packagist.org` に接続できない** — ファイアウォールやプロキシで遮られている、または `repo.packagist.org` が止まっている。Packagist を使わない `--method=zip` を使ってください。
+- **古いインストーラを使っている**。インストーラ 0.1.1 以前は、匿名ではパッケージをまったく解決できませんでした。`https://install.dixlase.net` から最新のインストーラを取得するか、`--method=zip` を使ってください。
 
 ## 「composer create-project failed」/「Could not authenticate against github.com」
 
-Composer が Dixlase Core のリポジトリを読めなかった状態です。インストーラはよくある原因として、`github.com` に接続できない・GitHub の障害やレート制限・Composer が表示した PHP の要件を挙げます。トークンが無いとき、インストーラは Composer に `git` でリポジトリを読ませます (匿名 API の上限に数えられない) — ただし `git` がインストールされている場合だけです。`git` が無いと Composer は GitHub API を使い、「Could not authenticate against github.com」はたいてい匿名の上限を使い切ったことを意味します。`git` を入れる・1 時間待つ・トークンを渡す、のいずれかで直ります。いちばん簡単なのは `--method=zip` です — リリース ZIP はビルド済みで、依存の解決が要りません。
+Composer がインストールを終えられなかった状態です。インストーラはよくある原因として、`packagist.org` や `github.com` に接続できない・サービスの障害・Composer が表示した PHP の要件を挙げます。Composer はパッケージを Packagist で見つけ、GitHub からダウンロードします。そのダウンロード中の「Could not authenticate against github.com」は、たいていこの IP アドレスの GitHub の匿名の上限を使い切ったことを意味します。1 時間待つか、トークンを渡してください。いちばん簡単なのは `--method=zip` です — リリース ZIP はビルド済みで、依存の解決が要りません。
 
 ## 「Project directory ... is not empty」
 

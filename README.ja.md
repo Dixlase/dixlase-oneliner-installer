@@ -31,7 +31,7 @@ curl -sS https://install.dixlase.net | php
 配布経路は 2 つあります。既定の `--method=auto` は ZIP を先に試し、だめなら Composer に切り替えます:
 
 1. **GitHub Releases ZIP** (既定) — `dixlase-v<version>.zip` をダウンロード → (リリースにあれば) SHA-256 検証 → 展開。ZIP は `vendor/` とビルド済みアセットを同梱しているので依存の解決は不要で、`vendor/` が無い場合だけ `composer install` を実行。
-2. **`composer create-project`** (フォールバック、または `--method=composer`) — `PATH` に Composer が必要。`dixlase/dixlase-core` は Packagist に無いので、インストーラが GitHub のリポジトリを VCS として指定 (`--repository`) し、最新のタグ付きリリース (または `--version` で指定した版) を入れる。トークンが無いときは Composer が GitHub API ではなく `git` でリポジトリを読むため、匿名 API のレート制限に当たりにくい。
+2. **`composer create-project`** (フォールバック、または `--method=composer`) — `PATH` に Composer が必要。Composer が `dixlase/dixlase-core` を [Packagist](https://packagist.org/packages/dixlase/dixlase-core) から解決し、最新のタグ付きリリース (または `--version` で指定した版) を入れる。パッケージを探すのに GitHub API を使わないため、匿名 API のレート制限に当たりにくい。
 
 どちらの経路でも `.env` 生成、`APP_KEY` 生成 (空の場合のみ)、`storage/` 等の権限設定、`storage:link` の共通後処理が走ります。DB・管理者・メールの設定は初回ブラウザアクセス時のウィザードで案内されます。
 
@@ -83,7 +83,7 @@ curl -sS https://raw.githubusercontent.com/Dixlase/dixlase-oneliner-installer/v0
 トークンが役に立つのは次の 2 つの場合です:
 
 - **GitHub API のレート制限** — 匿名のリクエストは IP アドレスごとに 1 時間 60 回まで。繰り返しインストールする場合や、IP を他と共有している場合 (CI・社内ネットワーク・共有ホスティング) は、トークンで上限が上がります。
-- **自分の private フォーク** — インストーラをリポジトリの private なコピーに向ける場合。
+- **自分の private フォーク** — 下記の URL 上書き用の環境変数で、ZIP の経路をリポジトリの private なコピーに向ける場合。Composer の経路は、常に Packagist の公開パッケージを入れます。
 
 ```bash
 curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
@@ -92,7 +92,7 @@ curl -sS https://install.dixlase.net | GITHUB_TOKEN=github_pat_xxx php
 - リポジトリへの **Contents: Read-only** を持つ **Fine-grained personal access token** で足ります (レート制限のためだけなら、public リポジトリへの読み取り権限だけで十分)。
 - トークンは `DIXLASE_GITHUB_TOKEN` (優先) または `GITHUB_TOKEN` から読みます。シェル履歴やプロセス一覧に残らないよう、CLI 引数ではなく必ず環境変数で渡してください。
 - トークンを送るのは GitHub のホスト (と、下記の URL 上書き用の環境変数で明示したホスト) **だけ**で、第三者のミラーには渡しません。
-- Composer の経路は、トークンの有無にかかわらず `dixlase/dixlase-core` を GitHub のリポジトリから解決します。トークンはそのリクエストの認証にだけ使います。`install.php` は `COMPOSER_AUTH` でトークンを Composer に渡し、Composer の終了後に環境変数から消します。設定するのは `GITHUB_TOKEN` だけです。
+- Composer の経路は、トークンの有無にかかわらず `dixlase/dixlase-core` を Packagist から解決します。そのあと Composer が GitHub からパッケージをダウンロードし、トークンはそのダウンロードの認証にだけ使います。`install.php` は `COMPOSER_AUTH` でトークンを Composer に渡し、Composer の終了後に環境変数から消します。設定するのは `GITHUB_TOKEN` だけです。
 
 ## ローカライゼーション
 

@@ -26,14 +26,15 @@ In CreateProjectCommand.php line 424:
   Could not find package dixlase/dixlase-core with stability stable.
 ```
 
-`dixlase/dixlase-core` is not on Packagist, so Composer can only find it through the GitHub repository the installer passes with `--repository`. Either:
+Composer looks `dixlase/dixlase-core` up on [Packagist](https://packagist.org/packages/dixlase/dixlase-core). Either:
 
-- **You are running an old copy of the installer.** Installer 0.1.1 and earlier passed the repository only when a token was set, so an anonymous `--method=composer` always ended here. Fetch the current installer from `https://install.dixlase.net`, or use `--method=zip`.
 - **`--version` names a release that has no tag** (for example a typo). Check the tags at <https://github.com/Dixlase/dixlase-core/releases>.
+- **Composer cannot reach `packagist.org`** — a firewall or a proxy blocks it, or `repo.packagist.org` is down. Use `--method=zip`, which does not need Packagist.
+- **You are running an old copy of the installer.** Installer 0.1.1 and earlier could not resolve the package anonymously at all. Fetch the current installer from `https://install.dixlase.net`, or use `--method=zip`.
 
 ## "composer create-project failed" / "Could not authenticate against github.com"
 
-Composer could not read the Dixlase Core repository. The installer lists the usual causes: no network access to `github.com`, a GitHub outage or rate limit, or a PHP requirement Composer reported. Without a token, the installer has Composer read the repository with `git` (so the anonymous API limit does not apply) — but only when `git` is installed. Without `git`, Composer falls back to the GitHub API, and "Could not authenticate against github.com" usually means its anonymous limit is used up. Install `git`, wait an hour, or pass a token. The simplest fix is `--method=zip`: the release ZIP ships pre-built and needs no resolution.
+Composer could not finish the install. The installer lists the usual causes: no network access to `packagist.org` or `github.com`, an outage, or a PHP requirement Composer reported. Composer finds the packages on Packagist and downloads them from GitHub; "Could not authenticate against github.com" during those downloads usually means GitHub's anonymous limit for this IP address is used up. Wait an hour, or pass a token. The simplest fix is `--method=zip`: the release ZIP ships pre-built and needs no resolution.
 
 ## "Project directory ... is not empty"
 

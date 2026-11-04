@@ -6,6 +6,12 @@ Dixlase のワンライナーのインストーラ(`install.php`、`install.dixl
 
 リリースは、スクリプトの動きが変わるときに出し、同時に `install.dixlase.net` で配るファイルを最新のリリースに更新します。
 
+## [Unreleased]
+
+### 変更
+
+- `--method=composer` が `dixlase/dixlase-core` を Packagist から解決するようにした。GitHub のリポジトリを VCS リポジトリとして追加する処理(匿名のときは `no-api` 付き)をやめたため、Composer の経路はパッケージを探すのに `git` も GitHub API も使わない。トークンがあれば引き続き `COMPOSER_AUTH` で Composer に渡す。リリース ZIP の経路は変わらない(#34)。
+
 ## [0.1.3] — 2026-10-22
 
 ### 追加
