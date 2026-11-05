@@ -249,3 +249,10 @@ Could not record the install method in .env.	.env にインストール方法を
 // Whether .env predates this run: a reinstall keeps its .env untouched,	// .env が今回の実行より前からあるか。入れ直しでは .env に触れず、
 // while a .env this run creates (the ZIP path's copy, or create-project)	// 今回の実行で作った .env(ZIP の経路でのコピー、または create-project)は
 // is marked as a one-line install.	// ワンライナーでのインストールとして記録する。
+ * Line filter for `composer create-project`: the composer noise filter, plus	 * `composer create-project` 用の行の絞り込み。composer の雑音の絞り込みに加えて、
+ * the core's post-create message hidden.	 * コアの作成後のメッセージを隠す。
+ * The core's last post-create script prints an "Installation Complete!" box	 * コアの最後の作成後のスクリプトは、「Installation Complete!」の枠と、
+ * and next steps for someone running create-project by hand. This installer	 * create-project を手で実行する人向けの次の手順を出す。このインストーラは
+ * prints its own, and does some of those steps itself, so everything from	 * 自分のものを出し、その手順の一部を自分で行うので、そのスクリプトの行から
+ * that script's line onward is hidden. It is the last script, so nothing	 * 後ろはすべて隠す。最後のスクリプトなので、ほかに失われるものは
+ * else is lost, and the log file keeps the full output.	 * 無く、ログファイルには全文が残る。

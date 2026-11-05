@@ -963,6 +963,29 @@ function should_show_composer_line(string $line): bool
 }
 
 /**
+ * Line filter for `composer create-project`: the composer noise filter, plus
+ * the core's post-create message hidden.
+ *
+ * The core's last post-create script prints an "Installation Complete!" box
+ * and next steps for someone running create-project by hand. This installer
+ * prints its own, and does some of those steps itself, so everything from
+ * that script's line onward is hidden. It is the last script, so nothing
+ * else is lost, and the log file keeps the full output.
+ */
+function create_project_line_filter(): Closure
+{
+    $hiding = false;
+
+    return function (string $line) use (&$hiding): bool {
+        if (! $hiding && preg_match('/^> @php scripts\/post-create-message\.php/', ltrim($line)) === 1) {
+            $hiding = true;
+        }
+
+        return ! $hiding && should_show_composer_line($line);
+    };
+}
+
+/**
  * Stream a subprocess to STDOUT, filtering noise via the given callable, and
  * capture the full unfiltered output to a temporary log file so failures can
  * be debugged afterwards.
@@ -1224,7 +1247,7 @@ function composer_create_project(string $dir, ?string $version): bool
     $command .= ' 2>&1';
 
     $logFile  = null;
-    $exitCode = run_filtered_tool($command, should_show_composer_line(...), $logFile);
+    $exitCode = run_filtered_tool($command, create_project_line_filter(), $logFile);
 
     if ($exitCode === 127) {
         error('Failed to launch Composer.');
