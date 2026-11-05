@@ -232,3 +232,20 @@ Storage symlink already exists	Storage シンボリックリンクは既にあ�
  * Symbolic links are skipped: chmod() follows a link and would change its	 * シンボリックリンクは飛ばす。chmod() はリンクをたどり、リンク先を変えてしまう。
  * target, which may lie outside the install directory. Every real entry is	 * リンク先はインストール先の外にあることもある。実体はすべて
  * reached by the iterator itself.	 * イテレータ自身が回る。
+ * Create .env when missing, record the install method, and make sure	 * .env が無ければ作り、インストール方法を記録し、APP_KEY が
+ * APP_KEY is set.	 * 設定されていることを確かめる。
+ * $envExisted says whether .env was there before this run downloaded	 * $envExisted は、今回の実行が何かをダウンロードする前から .env が
+ * anything. Only a .env this run created is marked as a one-line install:	 * あったかどうか。今回の実行で作った .env だけをワンライナーでのインストールとして記録する。
+ * one that predates the run belongs to a site being reinstalled.	 * 実行より前からある .env は、入れ直しているサイトのもの。
+Install method recorded (DIXLASE_INSTALL_METHOD=oneliner)	インストール方法を記録しました (DIXLASE_INSTALL_METHOD=oneliner)
+Could not record the install method in .env.	.env にインストール方法を記録できませんでした。
+ * Set DIXLASE_INSTALL_METHOD=oneliner in the .env file at $envFile.	 * $envFile の .env に DIXLASE_INSTALL_METHOD=oneliner を設定する。
+ * The setup wizard reads it to choose its defaults and guidance. Unlike the	 * セットアップウィザードはこれを読んで既定値と案内を選ぶ。コア自身の
+ * core's own marker, an existing value is replaced: on the Composer path,	 * 記録処理と違い、既にある値は置き換える。Composer の経路では、
+ * create-project has already written "composer" by the time this runs. The	 * ここが動く時点で create-project が "composer" を書き込んでいるため。
+ * value goes on the commented placeholder that .env.example carries, or is	 * 値は .env.example にあるコメントの行に入れる。その行が無ければ
+ * appended when the file has none (a core that predates the variable	 * 末尾に足す(この変数より前のコアは
+ * ignores it).	 * これを無視する)。
+// Whether .env predates this run: a reinstall keeps its .env untouched,	// .env が今回の実行より前からあるか。入れ直しでは .env に触れず、
+// while a .env this run creates (the ZIP path's copy, or create-project)	// 今回の実行で作った .env(ZIP の経路でのコピー、または create-project)は
+// is marked as a one-line install.	// ワンライナーでのインストールとして記録する。

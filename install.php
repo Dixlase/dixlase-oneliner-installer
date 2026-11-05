@@ -1572,7 +1572,15 @@ function build_assets(string $dir, bool $skip): string
     return 'built';
 }
 
-function setup_environment(string $dir): void
+/**
+ * Create .env when missing, record the install method, and make sure
+ * APP_KEY is set.
+ *
+ * $envExisted says whether .env was there before this run downloaded
+ * anything. Only a .env this run created is marked as a one-line install:
+ * one that predates the run belongs to a site being reinstalled.
+ */
+function setup_environment(string $dir, bool $envExisted): void
 {
     step('Setting up environment');
 
@@ -1592,6 +1600,14 @@ function setup_environment(string $dir): void
         }
 
         info('.env file created');
+    }
+
+    if (! $envExisted) {
+        if (mark_install_method($envFile)) {
+            info('Install method recorded (DIXLASE_INSTALL_METHOD=oneliner)');
+        } else {
+            warn('Could not record the install method in .env.');
+        }
     }
 
     // Generate APP_KEY only when it is empty. Replacing an existing key
@@ -1616,6 +1632,37 @@ function setup_environment(string $dir): void
     } else {
         warn('artisan not found — skipping key generation.');
     }
+}
+
+/**
+ * Set DIXLASE_INSTALL_METHOD=oneliner in the .env file at $envFile.
+ *
+ * The setup wizard reads it to choose its defaults and guidance. Unlike the
+ * core's own marker, an existing value is replaced: on the Composer path,
+ * create-project has already written "composer" by the time this runs. The
+ * value goes on the commented placeholder that .env.example carries, or is
+ * appended when the file has none (a core that predates the variable
+ * ignores it).
+ */
+function mark_install_method(string $envFile): bool
+{
+    $env = @file_get_contents($envFile);
+
+    if ($env === false) {
+        return false;
+    }
+
+    $line = 'DIXLASE_INSTALL_METHOD=oneliner';
+
+    if (preg_match('/^DIXLASE_INSTALL_METHOD=.*$/m', $env) === 1) {
+        $env = (string) preg_replace('/^DIXLASE_INSTALL_METHOD=.*$/m', $line, $env, 1);
+    } elseif (preg_match('/^#[ \t]*DIXLASE_INSTALL_METHOD=[ \t]*$/m', $env) === 1) {
+        $env = (string) preg_replace('/^#[ \t]*DIXLASE_INSTALL_METHOD=[ \t]*$/m', $line, $env, 1);
+    } else {
+        $env = rtrim($env, "\n") . "\n\n# How Dixlase was installed (read by the setup wizard)\n" . $line . "\n";
+    }
+
+    return @file_put_contents($envFile, $env) !== false;
 }
 
 /**
@@ -1948,6 +1995,11 @@ function main(array $argv): int
         fatal("Directory is not writable: {$dir}");
     }
 
+    // Whether .env predates this run: a reinstall keeps its .env untouched,
+    // while a .env this run creates (the ZIP path's copy, or create-project)
+    // is marked as a one-line install.
+    $envExisted = file_exists($dir . '/.env');
+
     // --- Run the chosen delivery path ---
     //
     // Order: ZIP first when auto (or explicit zip), composer second. If zip
@@ -2015,7 +2067,7 @@ function main(array $argv): int
     // chmod_recursive() does not walk the freshly-created node_modules tree
     // (slow + unnecessary).
 
-    setup_environment($dir);
+    setup_environment($dir, $envExisted);
     $assetsStatus = build_assets($dir, $options['no_build']);
     set_permissions($dir);
     create_storage_link($dir);
