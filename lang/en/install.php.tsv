@@ -232,3 +232,20 @@ Storage symlink already exists	Storage symlink already exists
  * Symbolic links are skipped: chmod() follows a link and would change its	 * Symbolic links are skipped: chmod() follows a link and would change its
  * target, which may lie outside the install directory. Every real entry is	 * target, which may lie outside the install directory. Every real entry is
  * reached by the iterator itself.	 * reached by the iterator itself.
+ * Create .env when missing, record the install method, and make sure	 * Create .env when missing, record the install method, and make sure
+ * APP_KEY is set.	 * APP_KEY is set.
+ * $envExisted says whether .env was there before this run downloaded	 * $envExisted says whether .env was there before this run downloaded
+ * anything. Only a .env this run created is marked as a one-line install:	 * anything. Only a .env this run created is marked as a one-line install:
+ * one that predates the run belongs to a site being reinstalled.	 * one that predates the run belongs to a site being reinstalled.
+Install method recorded (DIXLASE_INSTALL_METHOD=oneliner)	Install method recorded (DIXLASE_INSTALL_METHOD=oneliner)
+Could not record the install method in .env.	Could not record the install method in .env.
+ * Set DIXLASE_INSTALL_METHOD=oneliner in the .env file at $envFile.	 * Set DIXLASE_INSTALL_METHOD=oneliner in the .env file at $envFile.
+ * The setup wizard reads it to choose its defaults and guidance. Unlike the	 * The setup wizard reads it to choose its defaults and guidance. Unlike the
+ * core's own marker, an existing value is replaced: on the Composer path,	 * core's own marker, an existing value is replaced: on the Composer path,
+ * create-project has already written "composer" by the time this runs. The	 * create-project has already written "composer" by the time this runs. The
+ * value goes on the commented placeholder that .env.example carries, or is	 * value goes on the commented placeholder that .env.example carries, or is
+ * appended when the file has none (a core that predates the variable	 * appended when the file has none (a core that predates the variable
+ * ignores it).	 * ignores it).
+// Whether .env predates this run: a reinstall keeps its .env untouched,	// Whether .env predates this run: a reinstall keeps its .env untouched,
+// while a .env this run creates (the ZIP path's copy, or create-project)	// while a .env this run creates (the ZIP path's copy, or create-project)
+// is marked as a one-line install.	// is marked as a one-line install.
