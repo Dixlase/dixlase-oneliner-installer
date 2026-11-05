@@ -16,12 +16,15 @@ curl -sS https://install.dixlase.net | php
 
 **データベース:** お試しや小規模なサイトなら、インストールウィザードの Database で **SQLite** を選んでください。DB サーバは不要です (PHP の `pdo_sqlite` 拡張だけ必要)。本番運用では MySQL / MariaDB を使ってください ([docs/ja/deploy-vps.md](docs/ja/deploy-vps.md) を参照)。
 
+**メール:** このインストーラはメールの送信先を用意しません。メールサーバ (SMTP) か外部のメール配信サービス (Mailgun・Amazon SES・Postmark など) を別途ご用意ください。**多要素認証は、管理画面でメールの設定とメールのテストをすべて終えるまでオンにできません** (認証のコードをメールで送るためです。パスキーが使えないときの代わりの手段もメールです)。パスワードの再設定や問い合わせの通知にもメールを使います。ウィザードのメールの手順は後回しにでき、メールが無くてもサイトは動きます。ローカルで試すだけなら、Mailpit などのメールキャッチャーか `MAIL_MAILER=log` で足ります ([docs/ja/deploy-local-dev.md](docs/ja/deploy-local-dev.md#開発中のメール) を参照)。
+
 ## 動作要件
 
 - **PHP 8.3 以上** と標準拡張 (`openssl`、`pdo`、`mbstring`、`tokenizer`、`xml`、`ctype`、`json`、`bcmath`、`curl`、`fileinfo`、`gd`)
 - **Composer** (推奨 — ZIP に `vendor/` が無いときの `composer install` と、`--method=composer` の経路で使う)
 - **Node.js 24** (または Vite 8 が対応する `^20.19 || >=22.12` の範囲) — フロントエンドアセットのビルドが必要な場合のみ。リリース ZIP はビルド済みアセットを同梱
 - **ネットワーク接続** (GitHub — どちらの配布経路も GitHub から取得)
+- **メールサーバ (SMTP) または外部のメール配信サービス** — インストールには不要。多要素認証などメールを使う機能に必要で、後から設定できます
 - **GitHub トークンは不要** — Dixlase のリポジトリはすべて public です。[オプション: GitHub トークン](#オプション-github-トークン) を参照
 
 不足はインストーラーが事前チェックして対処手順を表示します。
