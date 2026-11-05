@@ -6,11 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 A release is cut when the script's behaviour changes, and `install.dixlase.net` is updated to serve the latest release at the same time.
 
-## [Unreleased]
+## [0.1.5] — 2026-11-06
 
 ### Added
 
 - A new install's `.env` records `DIXLASE_INSTALL_METHOD=oneliner`, so the core's setup wizard can choose its defaults and guidance for a one-line install. It is set on both delivery paths — on the Composer path it replaces the `composer` that `create-project` wrote — on the commented placeholder in `.env.example`, or appended when there is none. A `.env` that existed before the run (a reinstall) is left alone. A core that does not read the variable ignores it (#38).
+
+### Upgrade notes
+
+Nothing to do for the installer: every run downloads the script afresh. The setup wizard reads `DIXLASE_INSTALL_METHOD` from core v0.2.6; an older core ignores it.
 
 ## [0.1.4] — 2026-11-04
 
