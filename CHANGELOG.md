@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 A release is cut when the script's behaviour changes, and `install.dixlase.net` is updated to serve the latest release at the same time.
 
+## [Unreleased]
+
+### Changed
+
+- The Composer path no longer shows the core's post-create message (its own "Installation Complete!" box and next steps), which repeated the installer's completion message and listed steps the installer or the install wizard already does. The core's other post-create lines still show, and the full output stays in the log file (#42).
+
 ## [0.1.5] — 2026-11-06
 
 ### Added

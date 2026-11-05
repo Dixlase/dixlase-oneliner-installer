@@ -249,3 +249,10 @@ Could not record the install method in .env.	Could not record the install method
 // Whether .env predates this run: a reinstall keeps its .env untouched,	// Whether .env predates this run: a reinstall keeps its .env untouched,
 // while a .env this run creates (the ZIP path's copy, or create-project)	// while a .env this run creates (the ZIP path's copy, or create-project)
 // is marked as a one-line install.	// is marked as a one-line install.
+ * Line filter for `composer create-project`: the composer noise filter, plus	 * Line filter for `composer create-project`: the composer noise filter, plus
+ * the core's post-create message hidden.	 * the core's post-create message hidden.
+ * The core's last post-create script prints an "Installation Complete!" box	 * The core's last post-create script prints an "Installation Complete!" box
+ * and next steps for someone running create-project by hand. This installer	 * and next steps for someone running create-project by hand. This installer
+ * prints its own, and does some of those steps itself, so everything from	 * prints its own, and does some of those steps itself, so everything from
+ * that script's line onward is hidden. It is the last script, so nothing	 * that script's line onward is hidden. It is the last script, so nothing
+ * else is lost, and the log file keeps the full output.	 * else is lost, and the log file keeps the full output.
