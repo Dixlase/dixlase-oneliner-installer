@@ -135,7 +135,7 @@ Open `https://dixlase.example.com` — the Dixlase install wizard takes over:
 
 1. Confirm the database connection
 2. Create the initial admin account
-3. Set the mail server (or leave it for later)
+3. Set the mail server — the details of an SMTP server or an external mail service (it can be left for later, but two-factor authentication cannot be turned on until mail is set up and tested)
 
 When the wizard is finished, remove the `allow` / `deny` lines from both locations and reload nginx:
 

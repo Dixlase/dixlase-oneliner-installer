@@ -16,12 +16,15 @@ That's it. The script picks the best delivery path for your environment and walk
 
 **Database:** to try Dixlase or run a small site, choose **SQLite** in the install wizard's Database step — it needs no database server (only PHP's `pdo_sqlite` extension). For production, use MySQL / MariaDB (see [docs/deploy-vps.md](docs/deploy-vps.md)).
 
+**Mail:** this installer provides no mail delivery. Prepare an SMTP server or an external mail service (Mailgun, Amazon SES, Postmark and others). **Two-factor authentication cannot be turned on until the mail settings and all mail tests are complete in the admin panel** — the codes are sent by mail, and mail is also the fallback when a passkey cannot be used. Password reset and inquiry notifications use mail too. The wizard's mail step can be left for later, and the site runs without mail. To try Dixlase locally, a mail catcher such as Mailpit or `MAIL_MAILER=log` is enough (see [docs/deploy-local-dev.md](docs/deploy-local-dev.md#mail-in-development)).
+
 ## Prerequisites
 
 - **PHP 8.3+** with the standard extensions (`openssl`, `pdo`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`, `fileinfo`, `gd`)
 - **Composer** (recommended — runs `composer install` when a ZIP lacks `vendor/`, and powers the `--method=composer` path)
 - **Node.js 24** (or any `^20.19 || >=22.12`, the range Vite 8 supports) — only when the frontend assets have to be built; release ZIPs ship them pre-built
 - **Network access** to GitHub (both delivery paths download from it)
+- **An SMTP server or an external mail service** — not needed to install; needed for two-factor authentication and other mail features, and can be set up later
 - **No GitHub token** — every Dixlase repository is public; see [Optional GitHub token](#optional-github-token)
 
 The installer pre-checks all of the above and prints a clear remediation hint if something is missing.
