@@ -18,6 +18,17 @@ That's it. The script picks the best delivery path for your environment and walk
 
 **Mail:** this installer provides no mail delivery. Prepare an SMTP server or an external mail service (Mailgun, Amazon SES, Postmark and others). **Two-factor authentication cannot be turned on until the mail settings and all mail tests are complete in the admin panel** — the codes are sent by mail, and mail is also the fallback when a passkey cannot be used. Password reset and inquiry notifications use mail too. The wizard's mail step can be left for later, and the site runs without mail. To try Dixlase locally, a mail catcher such as Mailpit or `MAIL_MAILER=log` is enough (see [docs/deploy-local-dev.md](docs/deploy-local-dev.md#mail-in-development)).
 
+### Starting the site again (local)
+
+When you try Dixlase on your own machine, the installer ends by printing a command that starts PHP's built-in server. To start the site again after stopping it (Ctrl+C) or closing the terminal, run the same command from the install directory's `public/`:
+
+```bash
+cd /path/to/dixlase/public
+PHP_CLI_SERVER_WORKERS=4 php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
+```
+
+Then open http://127.0.0.1:8000. Run it from `public/`: the server treats the current directory as the web root. On Windows, drop `PHP_CLI_SERVER_WORKERS=4`. Use this rather than `php artisan serve` while the install wizard is unfinished — the wizard rewrites `.env` as it goes, which `artisan serve` does not survive. After a core update or rollback, stop the server and start it again. On a VPS or shared hosting, the web server keeps the site running and no command is needed. Details: [docs/deploy-local-dev.md](docs/deploy-local-dev.md).
+
 ## Prerequisites
 
 - **PHP 8.3+** with the standard extensions (`openssl`, `pdo`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`, `fileinfo`, `gd`)

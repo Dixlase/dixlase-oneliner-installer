@@ -18,6 +18,17 @@ curl -sS https://install.dixlase.net | php
 
 **メール:** このインストーラはメールの送信先を用意しません。メールサーバ (SMTP) か外部のメール配信サービス (Mailgun・Amazon SES・Postmark など) を別途ご用意ください。**多要素認証は、管理画面でメールの設定とメールのテストをすべて終えるまでオンにできません** (認証のコードをメールで送るためです。パスキーが使えないときの代わりの手段もメールです)。パスワードの再設定や問い合わせの通知にもメールを使います。ウィザードのメールの手順は後回しにでき、メールが無くてもサイトは動きます。ローカルで試すだけなら、Mailpit などのメールキャッチャーか `MAIL_MAILER=log` で足ります ([docs/ja/deploy-local-dev.md](docs/ja/deploy-local-dev.md#開発中のメール) を参照)。
 
+### サイトをもう一度起動する (ローカル)
+
+自分のマシンで試す場合、インストーラは最後に PHP の組み込みサーバを起動するコマンドを表示します。サーバを止めた (Ctrl+C) あとやターミナルを閉じたあとにサイトをもう一度起動するには、インストール先の `public/` で同じコマンドを実行します:
+
+```bash
+cd /path/to/dixlase/public
+PHP_CLI_SERVER_WORKERS=4 php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
+```
+
+起動したら http://127.0.0.1:8000 を開きます。サーバは実行した場所を Web のルートとして扱うので、必ず `public/` で実行してください。Windows では `PHP_CLI_SERVER_WORKERS=4` を外します。インストールウィザードが終わるまでは `php artisan serve` ではなくこのコマンドを使ってください — ウィザードは進行中に `.env` を書き換え、`artisan serve` はそれに耐えられません。コアの更新・ロールバックのあとは、サーバを止めて起動し直してください。VPS や共用サーバでは Web サーバがサイトを動かし続けるので、コマンドは要りません。詳しくは [docs/ja/deploy-local-dev.md](docs/ja/deploy-local-dev.md) を参照してください。
+
 ## 動作要件
 
 - **PHP 8.3 以上** と標準拡張 (`openssl`、`pdo`、`mbstring`、`tokenizer`、`xml`、`ctype`、`json`、`bcmath`、`curl`、`fileinfo`、`gd`)
