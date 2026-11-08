@@ -121,7 +121,8 @@ Target directory already exists and is not empty: 	インストール先ディ�
 . Start the local server:	. ローカルサーバを起動:
 '     ' . dim('Use this instead of php artisan serve: the wizard rewrites .env as it goes,')	'     ' . dim('php artisan serve の代わりにこちらを使ってください: ウィザードは進行中に .env を書き換えますが、')
 '     ' . dim('and artisan serve either restarts mid-request (the final step dies) or, with')	'     ' . dim('artisan serve はリクエスト処理中に再起動して最終ステップが落ちるか、')
-'     ' . dim('--no-reload, keeps the old values. Start it from public/ as shown.')	'     ' . dim('--no-reload では古い値のままになります。上のとおり public/ から起動してください。')
+'     ' . dim('--no-reload, keeps the old values.')	'     ' . dim('--no-reload では古い値のままになります。')
+'     ' . dim('Start it from public/ as shown.')	'     ' . dim('上のとおり public/ から起動してください。')
      Then open 	     ブラウザで
  in your browser.	 を開く。
 '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.'	'     ' . bold('インストールウィザード') . ' がデータベース・管理者・メール設定を案内します。'
