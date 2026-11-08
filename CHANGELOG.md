@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 A release is cut when the script's behaviour changes, and `install.dixlase.net` is updated to serve the latest release at the same time.
 
+## [0.1.7] — 2026-11-08
+
+### Changed
+
+- The completion message gives the short `php scripts/serve.php` to start the local server when the installed core has it (core v0.2.9 and later). An older core still gets the long command (#50).
+
+### Changed (docs)
+
+- The README and the local development guide lead with `php scripts/serve.php` and keep the long command for sites without the script (#50).
+
+### Upgrade notes
+
+Nothing to do for the installer: every run downloads the script afresh.
+
 ## [0.1.6] — 2026-11-06
 
 ### Changed
