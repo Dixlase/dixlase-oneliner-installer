@@ -18,15 +18,21 @@ sed -i.bak \
     .env && rm -f .env.bak
 
 php artisan migrate --graceful
-cd public && PHP_CLI_SERVER_WORKERS=4 php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
+php scripts/serve.php
 # → http://127.0.0.1:8000
 ```
 
 Windows users without `sed`: open `.env` in an editor and make the same three changes by hand.
 
-The built-in server is meant for development only — fine for clicking through the install wizard, not for production traffic. `PHP_CLI_SERVER_WORKERS=4` lets it answer four requests at once; with the default single worker, one slow request (the admin's plugin list fetches every thumbnail from GitHub server-side) stalls every other page. On Windows drop the `PHP_CLI_SERVER_WORKERS=4` prefix: the variable is not supported there.
+`php scripts/serve.php` is in the core from v0.2.9. If the file is missing (the site started on an older core; a core update does not add it), run the long command it wraps, from the install directory:
 
-**Start the built-in server directly, not with `artisan serve`.** The command above runs PHP's built-in server with the same router script `php artisan serve` uses, but without the two behaviours that break the install wizard. The wizard rewrites `.env` as it goes (the final step writes it three times around `migrate`). `artisan serve`'s default watcher restarts the server on every `.env` change and kills the request in flight — the final step dies partway through `migrate`, leaving a half-built database. With `--no-reload` it instead injects the boot-time `.env` as real environment variables, which win over every later `.env` write, so the final step talks to the database configured before you started and the finished site keeps `INSTALLED=false`. `-d variables_order=EGPCS` puts the real environment (including `PATH`) into `$_ENV`; without it the core's `composer dump-autoload` subprocess cannot find `php` once Laravel has loaded `.env`. `-d max_execution_time=300` lifts the common 30-second default. Run it from `public/`: the router treats the current directory as the web root. No restart is needed after the wizard finishes.
+```bash
+cd public && PHP_CLI_SERVER_WORKERS=4 php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
+```
+
+The built-in server is meant for development only — fine for clicking through the install wizard, not for production traffic. `PHP_CLI_SERVER_WORKERS=4` lets it answer four requests at once; with the default single worker, one slow request (the admin's plugin list fetches every thumbnail from GitHub server-side) stalls every other page. The variable is not supported on Windows: `scripts/serve.php` leaves it out there, and with the long command you drop the `PHP_CLI_SERVER_WORKERS=4` prefix yourself.
+
+**Start the built-in server directly, not with `artisan serve`.** Both commands above run PHP's built-in server with the same router script `php artisan serve` uses, but without the two behaviours that break the install wizard. The wizard rewrites `.env` as it goes (the final step writes it three times around `migrate`). `artisan serve`'s default watcher restarts the server on every `.env` change and kills the request in flight — the final step dies partway through `migrate`, leaving a half-built database. With `--no-reload` it instead injects the boot-time `.env` as real environment variables, which win over every later `.env` write, so the final step talks to the database configured before you started and the finished site keeps `INSTALLED=false`. `-d variables_order=EGPCS` puts the real environment (including `PATH`) into `$_ENV`; without it the core's `composer dump-autoload` subprocess cannot find `php` once Laravel has loaded `.env`. `-d max_execution_time=300` lifts the common 30-second default. The long command has to run from `public/`, because the router treats the current directory as the web root; `scripts/serve.php` changes to it for you. No restart is needed after the wizard finishes.
 
 **Restart the server after a core update or rollback.** Updating or rolling back the core (from the admin panel or `php artisan dls:core:update` / `dls:core:rollback`) recreates `public/`. The running server keeps the old, now-deleted directory as its working directory, so every request fails with `Failed opening required '/index.php'`. Stop it with Ctrl+C and run the same command again; the update itself has already finished.
 

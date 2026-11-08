@@ -1837,24 +1837,31 @@ function show_complete(string $dir, string $assetsStatus = 'built'): void
     }
 
     fwrite(STDOUT, '  ' . $step . '. Start the local server:' . PHP_EOL);
-    // PHP's built-in server started directly, with the same router script
-    // `php artisan serve` uses. artisan serve cannot run this wizard: its
-    // .env watcher restarts the server mid-request (the final step writes
-    // .env three times around `migrate`, so it dies there), and with
-    // --no-reload it injects the boot-time .env as real environment
-    // variables, which then win over every later .env write.
-    // variables_order=EGPCS puts the real environment (PATH included) into
-    // $_ENV; without it, Symfony Process drops PATH once Laravel has loaded
-    // .env into $_SERVER, and the core's `composer dump-autoload` subprocess
-    // fails with "env: php: No such file or directory".
-    // The router uses the current directory as the web root, hence public/.
-    // PHP_CLI_SERVER_WORKERS lets the server answer several requests at
-    // once; with the default single worker, one slow request (the admin's
-    // plugin list fetches every thumbnail from GitHub server-side) stalls
-    // every other page. Windows has neither the variable nor the
-    // `VAR=value command` syntax, so it keeps the single worker.
-    $workers = PHP_OS_FAMILY === 'Windows' ? '' : 'PHP_CLI_SERVER_WORKERS=4 ';
-    fwrite(STDOUT, '     ' . cyan('cd ' . $dir . '/public && ' . $workers . 'php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php') . PHP_EOL);
+    // scripts/serve.php is the core's short entry point for this server, from
+    // core 0.2.9 on. An older core, which --version can still install, lacks it.
+    $hasServeScript = is_file($dir . '/scripts/serve.php');
+    if ($hasServeScript) {
+        fwrite(STDOUT, '     ' . cyan('cd ' . $dir . ' && php scripts/serve.php') . PHP_EOL);
+    } else {
+        // PHP's built-in server started directly, with the same router script
+        // `php artisan serve` uses. artisan serve cannot run this wizard: its
+        // .env watcher restarts the server mid-request (the final step writes
+        // .env three times around `migrate`, so it dies there), and with
+        // --no-reload it injects the boot-time .env as real environment
+        // variables, which then win over every later .env write.
+        // variables_order=EGPCS puts the real environment (PATH included) into
+        // $_ENV; without it, Symfony Process drops PATH once Laravel has loaded
+        // .env into $_SERVER, and the core's `composer dump-autoload` subprocess
+        // fails with "env: php: No such file or directory".
+        // The router uses the current directory as the web root, hence public/.
+        // PHP_CLI_SERVER_WORKERS lets the server answer several requests at
+        // once; with the default single worker, one slow request (the admin's
+        // plugin list fetches every thumbnail from GitHub server-side) stalls
+        // every other page. Windows has neither the variable nor the
+        // `VAR=value command` syntax, so it keeps the single worker.
+        $workers = PHP_OS_FAMILY === 'Windows' ? '' : 'PHP_CLI_SERVER_WORKERS=4 ';
+        fwrite(STDOUT, '     ' . cyan('cd ' . $dir . '/public && ' . $workers . 'php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php') . PHP_EOL);
+    }
     fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, '     Then open ' . cyan('http://127.0.0.1:8000') . ' in your browser.' . PHP_EOL);
     fwrite(STDOUT, '     The ' . bold('Installation Wizard') . ' guides you through database, admin, and mail setup.' . PHP_EOL);
@@ -1873,7 +1880,10 @@ function show_complete(string $dir, string $assetsStatus = 'built'): void
     fwrite(STDOUT, PHP_EOL);
     fwrite(STDOUT, '     ' . dim('Use this instead of php artisan serve: the wizard rewrites .env as it goes,') . PHP_EOL);
     fwrite(STDOUT, '     ' . dim('and artisan serve either restarts mid-request (the final step dies) or, with') . PHP_EOL);
-    fwrite(STDOUT, '     ' . dim('--no-reload, keeps the old values. Start it from public/ as shown.') . PHP_EOL);
+    fwrite(STDOUT, '     ' . dim('--no-reload, keeps the old values.') . PHP_EOL);
+    if (!$hasServeScript) {
+        fwrite(STDOUT, '     ' . dim('Start it from public/ as shown.') . PHP_EOL);
+    }
     // A core update or rollback recreates public/, so the running server's
     // working directory no longer exists and every request fails with
     // "Failed opening required '/index.php'" until it is restarted.

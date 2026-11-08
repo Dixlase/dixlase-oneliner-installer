@@ -20,14 +20,21 @@ curl -sS https://install.dixlase.net | php
 
 ### サイトをもう一度起動する (ローカル)
 
-自分のマシンで試す場合、インストーラは最後に PHP の組み込みサーバを起動するコマンドを表示します。サーバを止めた (Ctrl+C) あとやターミナルを閉じたあとにサイトをもう一度起動するには、インストール先の `public/` で同じコマンドを実行します:
+自分のマシンで試す場合、インストーラは最後に PHP の組み込みサーバを起動するコマンドを表示します。サーバを止めた (Ctrl+C) あとやターミナルを閉じたあとにサイトをもう一度起動するには、インストール先で次を実行します:
+
+```bash
+cd /path/to/dixlase
+php scripts/serve.php
+```
+
+起動したら http://127.0.0.1:8000 を開きます。別のポートを使うときは `--port=8080` を付けます。インストールウィザードが終わるまでは `php artisan serve` ではなくこのコマンドを使ってください — ウィザードは進行中に `.env` を書き換え、`artisan serve` はそれに耐えられません。コアの更新・ロールバックのあとは、サーバを止めて起動し直してください。VPS や共用サーバでは Web サーバがサイトを動かし続けるので、コマンドは要りません。詳しくは [docs/ja/deploy-local-dev.md](docs/ja/deploy-local-dev.md) を参照してください。
+
+`scripts/serve.php` が無いときは、v0.2.9 より古いコアからインストールしたサイトです(コアの更新ではこのファイルは増えません)。代わりに次の長いコマンドを `public/` で実行してください。サーバは実行した場所を Web のルートとして扱います。Windows では `PHP_CLI_SERVER_WORKERS=4` を外します。
 
 ```bash
 cd /path/to/dixlase/public
 PHP_CLI_SERVER_WORKERS=4 php -d variables_order=EGPCS -d max_execution_time=300 -S 127.0.0.1:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
 ```
-
-起動したら http://127.0.0.1:8000 を開きます。サーバは実行した場所を Web のルートとして扱うので、必ず `public/` で実行してください。Windows では `PHP_CLI_SERVER_WORKERS=4` を外します。インストールウィザードが終わるまでは `php artisan serve` ではなくこのコマンドを使ってください — ウィザードは進行中に `.env` を書き換え、`artisan serve` はそれに耐えられません。コアの更新・ロールバックのあとは、サーバを止めて起動し直してください。VPS や共用サーバでは Web サーバがサイトを動かし続けるので、コマンドは要りません。詳しくは [docs/ja/deploy-local-dev.md](docs/ja/deploy-local-dev.md) を参照してください。
 
 ## 動作要件
 
