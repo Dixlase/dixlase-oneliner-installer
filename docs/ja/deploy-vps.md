@@ -1,6 +1,6 @@
 # VPS / クラウド VM へのインストール
 
-> Dixlase をセルフホストするときの推奨経路。以下の例は Ubuntu 22.04 LTS を前提とします。他ディストリの場合はパッケージ名を読み替えてください。
+> Dixlase をセルフホストするときの推奨経路。以下の例は Ubuntu 24.04 LTS（`mariadb-server` は 10.11）を前提とします。他ディストリの場合はパッケージ名を読み替えてください。Dixlase には MariaDB 10.11 以上か MySQL 8.4 以上が必要なので、Ubuntu 22.04（MariaDB 10.6）では MariaDB 公式のリポジトリから入れてください。
 
 ワンライナーはアプリケーション層のブートストラップ (ダウンロード、依存解決、key 生成、権限設定、storage link) を担当します。Web サーバ・PHP ランタイム・データベースの導入は別途必要です。
 
@@ -20,7 +20,7 @@ sudo apt install -y \
 curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
 
-# Nginx + MariaDB (Postgres でも可)
+# Nginx + MariaDB
 sudo apt install -y nginx mariadb-server unzip
 sudo mysql_secure_installation
 ```
