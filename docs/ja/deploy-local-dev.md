@@ -90,13 +90,12 @@ Apache/Nginx + MySQL + PHP のバンドル、auto-vhost 付き。`C:\laragon\www
 
 ## データベースを選ぶ
 
-Dixlase の評価だけなら **SQLite** で十分、セットアップ不要です。それ以外は **MySQL 8 / MariaDB 10.6+** が本番ターゲットなので推奨。
+Dixlase の評価だけなら **SQLite** で十分、セットアップ不要です。それ以外は **MySQL 8.4+ / MariaDB 10.11+** が本番ターゲットなので推奨。
 
 | エンジン | 用途 |
 | --- | --- |
 | SQLite | 動作確認、ウィザードを開くだけ |
 | MySQL / MariaDB | 本格的なローカル開発、本番と同等 |
-| Postgres | Laravel 自体は対応するが、Dixlase は MySQL が主検証対象。強い理由が無ければ非推奨 |
 
 MySQL / MariaDB の場合、`.env` を以下に変更:
 

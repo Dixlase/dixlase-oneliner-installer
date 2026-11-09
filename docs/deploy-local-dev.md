@@ -90,13 +90,12 @@ Older but still works. Point the document root at `/path/to/dixlase-install/publ
 
 ## Pick a database
 
-If you only need to evaluate Dixlase, **SQLite** is enough and requires zero setup. For anything beyond that, prefer **MySQL 8 / MariaDB 10.6+** which Dixlase targets in production.
+If you only need to evaluate Dixlase, **SQLite** is enough and requires zero setup. For anything beyond that, prefer **MySQL 8.4+ / MariaDB 10.11+**, which Dixlase targets in production.
 
 | Engine | When |
 | --- | --- |
 | SQLite | Smoke tests, "just open the wizard" |
 | MySQL / MariaDB | Realistic local dev, mirrors production |
-| Postgres | Works (Laravel supports it) but Dixlase is primarily tested on MySQL — use only if you have a strong reason |
 
 For MySQL / MariaDB, set in `.env`:
 

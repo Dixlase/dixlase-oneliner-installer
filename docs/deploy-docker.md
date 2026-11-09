@@ -73,7 +73,7 @@ services:
     depends_on: [app]
 
   mysql:
-    image: mariadb:10.11
+    image: mariadb:12.3
     environment:
       MARIADB_DATABASE: dixlase
       MARIADB_USER: dixlase
